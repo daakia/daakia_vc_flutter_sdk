@@ -1,4 +1,5 @@
 import 'package:daakia_vc_flutter_sdk/daakia_vc_flutter_sdk.dart';
+import 'package:daakia_vc_flutter_sdk/screens/prejoin_screen.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/material.dart';
 
@@ -63,6 +64,7 @@ class _DataEntryState extends State<DataEntryScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
+              initialValue: "0D16716AFADABE17F5A42C6642CF2711ED9F59F2C89C12B2",
               decoration: const InputDecoration(
                 labelText: 'License Key*', // Equivalent to hint="Name*"
                 border: OutlineInputBorder(),
@@ -80,6 +82,7 @@ class _DataEntryState extends State<DataEntryScreen> {
             ),
             const SizedBox(height: 20),
             TextFormField(
+              initialValue: "13f8511dd0f043e6fe2e0091",
               decoration: const InputDecoration(
                 labelText: 'Meeting UID*', // Equivalent to hint="Name*"
                 border: OutlineInputBorder(),
@@ -114,6 +117,7 @@ class _DataEntryState extends State<DataEntryScreen> {
                 onPressed: () async {
                   if(licenseKey.isEmpty || meetingUID.isEmpty){
                     Utils.showSnackBar(context, message: "Those fields are mandatory!");
+                    return;
                   }
                   await Navigator.push<void>(
                     context,

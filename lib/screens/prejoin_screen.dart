@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:daakia_vc_flutter_sdk/model/features.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -11,20 +12,29 @@ import '../livekit/room.dart';
 import '../resources/colors/color.dart';
 import '../utils/utils.dart';
 
+@protected
 class PreJoinScreen extends StatefulWidget {
-  PreJoinScreen({required this.meetingId, required this.secretKey, this.isHost = false, super.key});
+  PreJoinScreen(
+      {required this.meetingId,
+      required this.secretKey,
+      this.isHost = false,
+      super.key});
+
   String meetingId;
   String secretKey;
   bool isHost;
 
   @override
   State<StatefulWidget> createState() {
-    return _PreJoinState(meetingId: meetingId, secretKey: secretKey, isHost: isHost);
+    return _PreJoinState(
+        meetingId: meetingId, secretKey: secretKey, isHost: isHost);
   }
 }
 
 class _PreJoinState extends State<PreJoinScreen> {
-  _PreJoinState({required this.meetingId, required this.secretKey, this.isHost = false});
+  _PreJoinState(
+      {required this.meetingId, required this.secretKey, this.isHost = false});
+
   String meetingId;
   String secretKey;
   bool isHost;
@@ -52,6 +62,8 @@ class _PreJoinState extends State<PreJoinScreen> {
       VideoParametersPresets.h720_169;
 
   LocalAudioTrack? _audioTrack;
+  
+  Features? features;
 
   @override
   void initState() {
@@ -110,7 +122,7 @@ class _PreJoinState extends State<PreJoinScreen> {
       _audioTrack = await LocalAudioTrack.create(AudioCaptureOptions(
         deviceId: _selectedAudioDevice!.deviceId,
       ));
-      if(_enableAudio) {
+      if (_enableAudio) {
         await _audioTrack!.start();
       }
     }
@@ -139,7 +151,7 @@ class _PreJoinState extends State<PreJoinScreen> {
         deviceId: _selectedVideoDevice!.deviceId,
         params: _selectedVideoParameters,
       ));
-      if(_enableVideo) {
+      if (_enableVideo) {
         await _videoTrack!.start();
       }
     }
@@ -161,38 +173,55 @@ class _PreJoinState extends State<PreJoinScreen> {
       "display_name": name
     };
 
-    apiClient.getMeetingJoinDetail(token, body).then((response){
-      if(response.success == 1){
-        _join(context, stopLoading, livekitUrl: response.data?.livekitServerURL??"", livekitToken: response.data?.accessToken??"");
-        if(response.data == null){
+    apiClient.getMeetingJoinDetail(token, body).then((response) {
+      if (response.success == 1) {
+        // _join(context, stopLoading, livekitUrl: response.data?.livekitServerURL??"", livekitToken: response.data?.accessToken??"");
+        if (response.data == null) {
           Utils.showSnackBar(context, message: "Something went wrong!");
           return;
         }
         var it = response.data!;
         if (!isHost) {
-          if (it.isRejected== true){
+          if (it.accessToken == null ||
+              it.livekitServerURL == null ||
+              it.accessToken?.isEmpty == true ||
+              it.livekitServerURL?.isEmpty == true) {
+            setState(() {
+              alertMessage = response.message ?? "";
+            });
+            meetingNotStarted(stopLoading);
+            return;
+          }
+
+          if (it.isRejected == true) {
             isRejected = true;
             setState(() {
-              alertMessage = response.message??"";
+              alertMessage = response.message ?? "";
               Utils.showSnackBar(context, message: alertMessage);
               Navigator.of(context).pop();
             });
             return;
           }
-          if (it.accessToken.toString().isEmpty || it.livekitServerURL.toString().isEmpty){
-            meetingNotStarted(stopLoading);
-            return;
-          }
           if (it.participantCanJoin == true) {
             // isUserCanJoin = true TODO:: Need to work on lobby
-            _join(context, stopLoading, livekitUrl: response.data?.livekitServerURL??"", livekitToken: response.data?.accessToken??"");
+            _join(context, stopLoading,
+                livekitUrl: response.data?.livekitServerURL ?? "",
+                livekitToken: response.data?.accessToken ?? "");
           }
         } else {
-          if (it.accessToken.toString().isEmpty || it.livekitServerURL.toString().isEmpty){
+          if (it.accessToken == null ||
+              it.livekitServerURL == null ||
+              it.accessToken?.isEmpty == true ||
+              it.livekitServerURL?.isEmpty == true) {
+            setState(() {
+              alertMessage = response.message ?? "";
+            });
             meetingNotStarted(stopLoading);
             return;
           }
-          _join(context, stopLoading, livekitUrl: response.data?.livekitServerURL??"", livekitToken: response.data?.accessToken??"");
+          _join(context, stopLoading,
+              livekitUrl: response.data?.livekitServerURL ?? "",
+              livekitToken: response.data?.accessToken ?? "");
         }
       }
     }).onError((handleError, stackStress) {
@@ -205,7 +234,7 @@ class _PreJoinState extends State<PreJoinScreen> {
   }
 
   Future<void> meetingNotStarted(Function stopLoading) async {
-    await Future.delayed(Duration(seconds: 10));
+    await Future.delayed(const Duration(seconds: 10));
     joinMeeting(stopLoading);
   }
 
@@ -218,12 +247,12 @@ class _PreJoinState extends State<PreJoinScreen> {
       "meeting_id": meetingId
     };
 
-    apiClient.verifyHostToken(body).then((response){
-      if(response.success == 1){
+    apiClient.verifyHostToken(body).then((response) {
+      if (response.success == 1) {
         Utils.showSnackBar(context, message: response.message ?? "");
         isHostVerified = true;
-        hostToken = response.data?.token??"";
-        joinMeeting(stopLoading);
+        hostToken = response.data?.token ?? "";
+        getFeaturesAndJoinMeeting(stopLoading);
         Navigator.of(context).pop();
       } else {
         Utils.showSnackBar(context, message: response.message ?? "Invalid Pin");
@@ -306,8 +335,8 @@ class _PreJoinState extends State<PreJoinScreen> {
     var status = await [Permission.camera, Permission.microphone].request();
   }
 
-
-  _join(BuildContext context, Function stopLoading, {required String livekitUrl, required String livekitToken}) async {
+  _join(BuildContext context, Function stopLoading,
+      {required String livekitUrl, required String livekitToken}) async {
     isLoading = true;
 
     setState(() {});
@@ -360,7 +389,7 @@ class _PreJoinState extends State<PreJoinScreen> {
       // Create a Listener before connecting
       final listener = room.createListener();
 
-      await room.prepareConnection(livekitUrl,livekitToken);
+      await room.prepareConnection(livekitUrl, livekitToken);
 
       // Try to connect to the room
       // This will throw an Exception if it fails for any reason.
@@ -399,6 +428,9 @@ class _PreJoinState extends State<PreJoinScreen> {
         backgroundColor: themeColor,
         elevation: 3,
         shadowColor: Colors.grey,
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Set the color you want for the back button here
+        ),
       ),
       body: Stack(
         children: [
@@ -472,7 +504,9 @@ class _PreJoinState extends State<PreJoinScreen> {
                                   ),
                                   IconButton(
                                     icon: Icon(
-                                        _enableAudio ? Icons.mic : Icons.mic_off,
+                                        _enableAudio
+                                            ? Icons.mic
+                                            : Icons.mic_off,
                                         color: Colors.white),
                                     iconSize: 30,
                                     onPressed: () {
@@ -493,7 +527,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                   const SizedBox(
                     height: 20,
                   ),
-                   Center(
+                  Center(
                     child: Text(
                       alertMessage,
                       textAlign:
@@ -510,9 +544,8 @@ class _PreJoinState extends State<PreJoinScreen> {
                   ),
                   Container(
                     margin: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical:
-                            10), // Equivalent to marginHorizontal="20dp" and marginTop="10dp"
+                        horizontal: 20, vertical: 10),
+                    // Equivalent to marginHorizontal="20dp" and marginTop="10dp"
                     child: TextFormField(
                       decoration: const InputDecoration(
                         labelText: 'Name*', // Equivalent to hint="Name*"
@@ -551,16 +584,20 @@ class _PreJoinState extends State<PreJoinScreen> {
                     ),
                     onTap: (startLoading, stopLoading, btnState) async {
                       if (btnState == ButtonState.idle) {
-                        if(name.isEmpty){
-                          Utils.showSnackBar(context, message: "Please enter your name");
+                        if (name.isEmpty) {
+                          Utils.showSnackBar(context,
+                              message: "Please enter your name");
                           return;
                         }
                         startLoading();
-                        if(isLoading){
+                        if (isLoading) {
                           return;
                         } else {
-                          if(isHost && !isHostVerified) _showVerificationDialog(context, stopLoading);
-                          else joinMeeting(stopLoading);
+                          if (isHost && !isHostVerified) {
+                            _showVerificationDialog(context, stopLoading);
+                          } else {
+                            getFeaturesAndJoinMeeting(stopLoading);
+                          }
                         }
                       }
                     },
@@ -584,5 +621,27 @@ class _PreJoinState extends State<PreJoinScreen> {
   void dispose() {
     _subscription?.cancel();
     super.dispose();
+  }
+
+  void getFeaturesAndJoinMeeting(Function stopLoading) {
+    isLoading = true;
+    apiClient.getFeatures(meetingId).then((response){
+      if(response.success == 1){
+        features = response.data?.features;
+        joinMeeting(stopLoading);
+      } else {
+        setState(() {
+          isLoading = false;
+          stopLoading.call();
+        });
+        Utils.showSnackBar(context, message: response.message ?? "Something went wrong!");
+      }
+    }).onError((handleError, stackStress) {
+      setState(() {
+        isLoading = false;
+        stopLoading.call();
+      });
+      Utils.showSnackBar(context, message: "Something went wrong!");
+    });
   }
 }
