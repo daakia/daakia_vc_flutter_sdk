@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/chat_bottomsheet.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -41,6 +42,8 @@ class _LivekitControlState extends State<LivekitControls>{
   bool _speakerphoneOn = Hardware.instance.preferSpeakerOutput;
 
   LocalParticipant get participant => widget.participant;
+
+  bool isUnreadMessage = true;
 
   @override
   void initState() {
@@ -168,6 +171,17 @@ class _LivekitControlState extends State<LivekitControls>{
           //   ),
           //   iconSize: 30,
           // ),
+          // IconButton(onPressed: (){showChatBottomSheet();}, icon: Badge(
+          //   isLabelVisible: isUnreadMessage,
+          //   label: const Text("2"),
+          //   offset: const Offset(8, 8),
+          //   backgroundColor: Theme.of(context).colorScheme.secondary,
+          //   child: const Icon(
+          //     Icons.message,
+          //     color: Colors.white,
+          //   ),
+          // ),
+          //   iconSize: 30,),
           IconButton(
             onPressed: () {
               _onTapDisconnect();
@@ -193,6 +207,15 @@ class _LivekitControlState extends State<LivekitControls>{
         builder: (BuildContext context) {
           return const MoreOptionBottomSheet();
         });
+  }
+
+  void showChatBottomSheet() {
+    Navigator.of(context).push(MaterialPageRoute<Null>(
+        builder: (BuildContext context) {
+          return ChatBottomSheet();
+        },
+        fullscreenDialog: true
+    ));
   }
 
   void _onTapDisconnect() async {

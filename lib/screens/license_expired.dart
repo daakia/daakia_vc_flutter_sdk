@@ -12,12 +12,13 @@ class LicenseExpiredScreen extends StatelessWidget{
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.warning_amber, color: Colors.redAccent, size: 60), // Icon size 24
-          const SizedBox(width: 10), // Space between icon and text
+          const Icon(Icons.warning_amber, color: Colors.redAccent, size: 40), // Icon size 24
+          const SizedBox(height: 10), // Space between icon and text
           Text(
             text,
             style: const TextStyle(
               color: Colors.grey,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),

@@ -1,4 +1,5 @@
 
+import 'package:daakia_vc_flutter_sdk/model/feature_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/licence_verify_model.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
@@ -35,6 +36,11 @@ abstract class RestClient {
   @POST("saas/sdk/verify/key")
   Future<BaseResponse<LicenceVerifyModel>> licenceVerify(
       @Body() Map<String, dynamic> body,
+      );
+  
+  @GET("saas/meeting/features")
+  Future<BaseResponse<FeatureData>> getFeatures(
+      @Query("meeting_uid") String meeting_uid
       );
 
 }
