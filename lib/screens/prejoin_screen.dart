@@ -67,10 +67,8 @@ class _PreJoinState extends State<PreJoinScreen> {
 
   @override
   void initState() {
-    // getUser();
     checkPermission();
-    _subscription =
-        Hardware.instance.onDeviceChange.stream.listen(_loadDevices);
+    _subscription = Hardware.instance.onDeviceChange.stream.listen(_loadDevices);
     Hardware.instance.enumerateDevices().then(_loadDevices);
     super.initState();
   }
@@ -79,35 +77,28 @@ class _PreJoinState extends State<PreJoinScreen> {
     _audioInputs = devices.where((d) => d.kind == 'audioinput').toList();
     _videoInputs = devices.where((d) => d.kind == 'videoinput').toList();
 
-    if (_audioInputs.isNotEmpty) {
-      if (_selectedAudioDevice == null) {
-        _selectedAudioDevice = _audioInputs.first;
-        Future.delayed(const Duration(milliseconds: 100), () async {
-          await _changeLocalAudioTrack();
-          setState(() {});
-        });
-      }
+    if (_audioInputs.isNotEmpty && _selectedAudioDevice == null) {
+      _selectedAudioDevice = _audioInputs.first;
     }
 
-    if (_videoInputs.isNotEmpty) {
-      if (_selectedVideoDevice == null) {
-        _selectedVideoDevice = _videoInputs.first;
-        Future.delayed(const Duration(milliseconds: 100), () async {
-          await _changeLocalVideoTrack();
-          setState(() {});
-        });
-      }
+    if (_videoInputs.isNotEmpty && _selectedVideoDevice == null) {
+      // Try to find a front camera, otherwise default to the first available
+      _selectedVideoDevice = _videoInputs.firstWhere(
+            (device) => device.label.toLowerCase().contains('front'),
+        orElse: () => _videoInputs.first,
+      );
     }
-    setState(() {});
+
+    setState(() {}); // Update the UI with selected devices
   }
 
-  Future<void> _setEnableAudio(value) async {
+  Future<void> _setEnableAudio(bool value) async {
     _enableAudio = value;
-    if (!_enableAudio) {
+    if (_enableAudio) {
+      await _changeLocalAudioTrack();
+    } else {
       await _audioTrack?.stop();
       _audioTrack = null;
-    } else {
-      await _changeLocalAudioTrack();
     }
     setState(() {});
   }
@@ -118,23 +109,21 @@ class _PreJoinState extends State<PreJoinScreen> {
       _audioTrack = null;
     }
 
-    if (_selectedAudioDevice != null) {
+    if (_enableAudio && _selectedAudioDevice != null) {
       _audioTrack = await LocalAudioTrack.create(AudioCaptureOptions(
         deviceId: _selectedAudioDevice!.deviceId,
       ));
-      if (_enableAudio) {
-        await _audioTrack!.start();
-      }
+      await _audioTrack!.start();
     }
   }
 
-  Future<void> _setEnableVideo(value) async {
+  Future<void> _setEnableVideo(bool value) async {
     _enableVideo = value;
-    if (!_enableVideo) {
+    if (_enableVideo) {
+      await _changeLocalVideoTrack();
+    } else {
       await _videoTrack?.stop();
       _videoTrack = null;
-    } else {
-      await _changeLocalVideoTrack();
     }
     setState(() {});
   }
@@ -145,15 +134,12 @@ class _PreJoinState extends State<PreJoinScreen> {
       _videoTrack = null;
     }
 
-    if (_selectedVideoDevice != null) {
-      _videoTrack =
-          await LocalVideoTrack.createCameraTrack(CameraCaptureOptions(
+    if (_enableVideo && _selectedVideoDevice != null) {
+      _videoTrack = await LocalVideoTrack.createCameraTrack(CameraCaptureOptions(
         deviceId: _selectedVideoDevice!.deviceId,
         params: _selectedVideoParameters,
       ));
-      if (_enableVideo) {
-        await _videoTrack!.start();
-      }
+      await _videoTrack!.start();
     }
   }
 

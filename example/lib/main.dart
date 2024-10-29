@@ -64,7 +64,7 @@ class _DataEntryState extends State<DataEntryScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
-              initialValue: "0D16716AFADABE17F5A42C6642CF2711ED9F59F2C89C12B2",
+              // initialValue: "0D16716AFADABE17F5A42C6642CF2711ED9F59F2C89C12B2",
               decoration: const InputDecoration(
                 labelText: 'License Key*', // Equivalent to hint="Name*"
                 border: OutlineInputBorder(),
@@ -82,7 +82,7 @@ class _DataEntryState extends State<DataEntryScreen> {
             ),
             const SizedBox(height: 20),
             TextFormField(
-              initialValue: "13f8511dd0f043e6fe2e0091",
+              // initialValue: "13f8511dd0f043e6fe2e0091",
               decoration: const InputDecoration(
                 labelText: 'Meeting UID*', // Equivalent to hint="Name*"
                 border: OutlineInputBorder(),
