@@ -481,7 +481,9 @@ class _PreJoinState extends State<PreJoinScreen> {
                                             : Icons.videocam_off,
                                         color: Colors.white),
                                     iconSize: 30,
-                                    onPressed: () {
+                                    onPressed: () async {
+                                      bool permissionsGranted = await checkAndRequestPermissions(context, checkForAudio: false);
+                                      if (!permissionsGranted) return;
                                       setState(() {
                                         _enableVideo = !_enableVideo;
                                         _setEnableVideo(_enableVideo);
@@ -495,7 +497,9 @@ class _PreJoinState extends State<PreJoinScreen> {
                                             : Icons.mic_off,
                                         color: Colors.white),
                                     iconSize: 30,
-                                    onPressed: () {
+                                    onPressed: () async {
+                                      bool permissionsGranted = await checkAndRequestPermissions(context, checkForCamera: false);
+                                      if (!permissionsGranted) return;
                                       setState(() {
                                         _enableAudio = !_enableAudio;
                                         _setEnableAudio(_enableAudio);
@@ -575,6 +579,9 @@ class _PreJoinState extends State<PreJoinScreen> {
                               message: "Please enter your name");
                           return;
                         }
+                        // Check and request permissions
+                        bool permissionsGranted = await checkAndRequestPermissions(context);
+                        if (!permissionsGranted) return;
                         startLoading();
                         if (isLoading) {
                           return;
@@ -630,4 +637,87 @@ class _PreJoinState extends State<PreJoinScreen> {
       Utils.showSnackBar(context, message: "Something went wrong!");
     });
   }
+
+  Future<bool> checkAndRequestPermissions(BuildContext context, {bool checkForCamera = true, bool checkForAudio = true}) async {
+    // Check and request microphone permission
+    if(checkForAudio) {
+      if (await Permission.microphone.isDenied) {
+        // Request permission
+        PermissionStatus micStatus = await Permission.microphone.request();
+        if (micStatus.isDenied) {
+          _showPermissionDialog(context, "Microphone");
+          return false;
+        } else if (micStatus.isPermanentlyDenied) {
+          _showSettingsDialog(context, "Microphone");
+          return false;
+        }
+      }
+    }
+
+    if(checkForCamera) {
+      // Check and request camera permission
+      if (await Permission.camera.isDenied) {
+        // Request permission
+        PermissionStatus cameraStatus = await Permission.camera.request();
+        if (cameraStatus.isDenied) {
+          _showPermissionDialog(context, "Camera");
+          return false;
+        } else if (cameraStatus.isPermanentlyDenied) {
+          _showSettingsDialog(context, "Camera");
+          return false;
+        }
+      }
+    }
+
+    // Return true if both permissions are granted
+    return true;
+  }
+
+// Show dialog if permission is temporarily denied
+  void _showPermissionDialog(BuildContext context, String permissionType) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("$permissionType Permission Required"),
+          content: Text("Please allow $permissionType permission to join the meeting."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+// Show dialog with a link to app settings if permission is permanently denied
+  void _showSettingsDialog(BuildContext context, String permissionType) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("$permissionType Permission Required"),
+          content: Text(
+              "$permissionType permission is permanently denied. Please enable it from the app settings."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                openAppSettings(); // Open the app settings
+                Navigator.of(context).pop();
+              },
+              child: Text("Settings"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 }
