@@ -7,10 +7,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:livekit_client/livekit_client.dart';
+import 'package:provider/provider.dart';
 
 import '../../resources/colors/color.dart';
 import '../../screens/bottomsheet/more_option_bottomsheet.dart';
 import '../../utils/utils.dart';
+import '../../viewmodel/livekit_viewmodel.dart';
 
 class LivekitControls extends StatefulWidget{
 
@@ -42,8 +44,6 @@ class _LivekitControlState extends State<LivekitControls>{
   bool _speakerphoneOn = Hardware.instance.preferSpeakerOutput;
 
   LocalParticipant get participant => widget.participant;
-
-  bool isUnreadMessage = true;
 
   @override
   void initState() {
@@ -118,6 +118,7 @@ class _LivekitControlState extends State<LivekitControls>{
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = Provider.of<LivekitViewmodel>(context);
     return Container(
       color: transparentMaskColor,
       child: Row(
@@ -171,17 +172,17 @@ class _LivekitControlState extends State<LivekitControls>{
           //   ),
           //   iconSize: 30,
           // ),
-          // IconButton(onPressed: (){showChatBottomSheet();}, icon: Badge(
-          //   isLabelVisible: isUnreadMessage,
-          //   label: const Text("2"),
-          //   offset: const Offset(8, 8),
-          //   backgroundColor: Theme.of(context).colorScheme.secondary,
-          //   child: const Icon(
-          //     Icons.message,
-          //     color: Colors.white,
-          //   ),
-          // ),
-          //   iconSize: 30,),
+          IconButton(onPressed: (){showChatBottomSheet();}, icon: Badge(
+            isLabelVisible: viewModel.getUnReadCount() > 0,
+            label: Text(viewModel.getUnReadCount().toString(), style: const TextStyle(color: Colors.white),),
+            offset: const Offset(8, 8),
+            backgroundColor: Colors.red,
+            child: const Icon(
+              Icons.message,
+              color: Colors.white,
+            ),
+          ),
+            iconSize: 30,),
           IconButton(
             onPressed: () {
               _onTapDisconnect();
@@ -212,7 +213,7 @@ class _LivekitControlState extends State<LivekitControls>{
   void showChatBottomSheet() {
     Navigator.of(context).push(MaterialPageRoute<Null>(
         builder: (BuildContext context) {
-          return ChatBottomSheet();
+          return const ChatBottomSheet();
         },
         fullscreenDialog: true
     ));
