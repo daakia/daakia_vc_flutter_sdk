@@ -6,9 +6,11 @@ import 'package:daakia_vc_flutter_sdk/livekit/widgets/livekit_controls.dart';
 import 'package:daakia_vc_flutter_sdk/livekit/widgets/participant.dart';
 import 'package:daakia_vc_flutter_sdk/livekit/widgets/participant_info.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
+import 'package:daakia_vc_flutter_sdk/viewmodel/livekit_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 
+import '../model/remote_activity_data.dart';
 import '../utils/utils.dart';
 import 'method_channels/replay_kit_channel.dart';
 
@@ -133,6 +135,7 @@ class _RoomPageState extends State<RoomPage> {
       //   print('Failed to decode: $err');
       // }
       // context.showDataReceivedDialog(decoded);
+      _handleDataChannel(event);
     })
     ..on<AudioPlaybackStatusChanged>((event) async {
       if (!widget.room.canPlaybackAudio) {
@@ -143,6 +146,111 @@ class _RoomPageState extends State<RoomPage> {
         }
       }
     });
+
+  void _handleDataChannel(DataReceivedEvent event){
+    var identity = event.participant?.identity ?? "server";
+    var message = utf8.decode(event.data);
+    var _eventData = parseJsonData(event.data);
+    var eventData = _eventData.copyWith(identity: event.participant);
+    _checkReceivedDataType(eventData);
+  }
+
+  void _checkReceivedDataType(RemoteActivityData remoteData) {
+    var viewmodel = _livekitProviderKey.currentState?.viewModel;
+    switch (remoteData.action) {
+      // case "raise_hand":
+      //   showSnackBar("${remoteData.identity?.name ?? ''} raised hand");
+      //   break;
+      //
+      // case "stop_raise_hand":
+      // // Handle stop raise hand action if needed
+      //   break;
+
+      // case "send_private_message":
+      // // Handle send private message action if needed
+      //   break;
+      //
+      // case "lobby":
+      //   showLobbyRequest(remoteData);
+      //   break;
+      //
+      // case "heart":
+      // case "blush":
+      // case "clap":
+      // case "smile":
+      // case "thumbsUp":
+      //   showSnackBar("${remoteData.identity?.name ?? ''} sent a reaction");
+      //   showReaction(remoteData.action);
+      //   break;
+      //
+      // case "mute_camera":
+      //
+      //   viewModel.setCameraEnabled(false);
+      //   break;
+      //
+      // case "mute_mic":
+      //   viewModel.setMicEnabled(false);
+      //   break;
+      //
+      // case "ask_to_unmute_mic":
+      //   showSnackBar("Host is asking you to turn on your mic", actionLabel: "Accept", onAction: () {
+      //     viewModel.setMicEnabled(true);
+      //   });
+      //   break;
+
+      // case "ask_to_unmute_camera":
+      //   showSnackBar("Host is asking you to turn on your camera", actionLabel: "Accept", onAction: () {
+      //     viewModel.setCameraEnabled(true);
+      //   });
+      //   break;
+
+      // case "makeCoHost":
+      //   debugPrint("isCoHost: ${viewModel.checkCoHostPermission()}");
+      //   debugPrint("metadata: ${viewModel.room.localParticipant.metadata}");
+      //   if (viewModel.checkCoHostPermission()) {
+      //     viewModel.isCoHost = true;
+      //     viewModel.hostToken = remoteData.token ?? "";
+      //   } else {
+      //     viewModel.isCoHost = false;
+      //   }
+      //   break;
+
+      // case "force_mute_all":
+      //   viewModel.isAudioPermissionEnable = !remoteData.value;
+      //   if (!viewModel.isAudioPermissionEnable) {
+      //     viewModel.setMicEnabled(false);
+      //     setMicAlpha(0.8);
+      //   } else {
+      //     setMicAlpha(1.0);
+      //   }
+      //   break;
+
+      // case "force_video_off_all":
+      //   viewModel.isVideoPermissionEnable = !remoteData.value;
+      //   if (!viewModel.isVideoPermissionEnable) {
+      //     viewModel.setCameraEnabled(false);
+      //     setCameraAlpha(0.8);
+      //   } else {
+      //     setCameraAlpha(1.0);
+      //   }
+      //   break;
+
+      case "":
+      // Handle empty action case if needed
+        break;
+
+      default:
+      // Handle null or unknown action
+        viewmodel?.addMessage(remoteData);
+        Utils.showSnackBar(context, message: "${remoteData.identity?.name ?? ''} sent a message");
+    }
+  }
+
+  RemoteActivityData parseJsonData(List<int> jsonData) {
+    final jsonString = utf8.decode(jsonData); // Convert Uint8List to String
+    final Map<String, dynamic> jsonMap = json.decode(jsonString); // Decode the JSON string
+    return RemoteActivityData.fromJson(jsonMap); // Convert to RemoteActivityData
+  }
 
   void _askPublish() async {
     final result = await context.showPublishDialog();
@@ -248,47 +356,59 @@ class _RoomPageState extends State<RoomPage> {
       participantTracks = [...screenTracks, ...userMediaTracks];
     });
   }
+  final GlobalKey<LivekitProviderState> _livekitProviderKey = GlobalKey<LivekitProviderState>();
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        body: Container(
-          color: Colors.black,
-          child: Stack(
-            children: [
-              Column(
-                children: [
-                  Expanded(
-                      child: participantTracks.isNotEmpty
-                          ? ParticipantWidget.widgetFor(participantTracks.first,
-                              showStatsLayer: true)
-                          : Container()),
-                  if (widget.room.localParticipant != null)
-                    SafeArea(
-                      top: false,
-                      child: LivekitControls(
-                          widget.room, widget.room.localParticipant!),
-                    )
-                ],
-              ),
-              Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 50,
-                  child: SizedBox(
-                    height: 120,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: math.max(0, participantTracks.length - 1),
-                      itemBuilder: (BuildContext context, int index) => SizedBox(
-                        width: 180,
-                        height: 120,
-                        child: ParticipantWidget.widgetFor(
-                            participantTracks[index + 1]),
+  Widget build(BuildContext context) {
+    return LivekitProvider(
+      key: _livekitProviderKey,
+      room: widget.room,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: Container(
+            color: Colors.black,
+            child: Stack(
+              children: [
+                Column(
+                  children: [
+                    Expanded(
+                        child: participantTracks.isNotEmpty
+                            ? ParticipantWidget.widgetFor(
+                            participantTracks.first,
+                            showStatsLayer: true)
+                            : Container()),
+                    if (widget.room.localParticipant != null)
+                      SafeArea(
+                        top: false,
+                        child: LivekitControls(
+                            widget.room, widget.room.localParticipant!),
+                      )
+                  ],
+                ),
+                Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 50,
+                    child: SizedBox(
+                      height: 120,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: math.max(0, participantTracks.length - 1),
+                        itemBuilder: (BuildContext context, int index) =>
+                            SizedBox(
+                              width: 180,
+                              height: 120,
+                              child: ParticipantWidget.widgetFor(
+                                  participantTracks[index + 1]),
+                            ),
                       ),
-                    ),
-                  )),
-            ],
+                    )),
+              ],
+            ),
           ),
         ),
-      );
+      ),
+    );
+  }
 }
