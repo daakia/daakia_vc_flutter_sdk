@@ -1,14 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math' as math;
 
 import 'package:daakia_vc_flutter_sdk/livekit/widgets/livekit_controls.dart';
 import 'package:daakia_vc_flutter_sdk/livekit/widgets/participant.dart';
 import 'package:daakia_vc_flutter_sdk/livekit/widgets/participant_info.dart';
+import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/livekit_provider.dart';
+import 'package:daakia_vc_flutter_sdk/viewmodel/livekit_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
+import 'package:provider/provider.dart';
 
 import '../model/remote_activity_data.dart';
 import '../utils/utils.dart';
@@ -17,10 +19,12 @@ import 'method_channels/replay_kit_channel.dart';
 class RoomPage extends StatefulWidget {
   final Room room;
   final EventsListener<RoomEvent> listener;
+  final MeetingDetails meetingDetails;
 
   const RoomPage(
     this.room,
-    this.listener, {
+    this.listener,
+    this.meetingDetails, {
     super.key,
   });
 
@@ -30,9 +34,12 @@ class RoomPage extends StatefulWidget {
 
 class _RoomPageState extends State<RoomPage> {
   List<ParticipantTrack> participantTracks = [];
+
   EventsListener<RoomEvent> get _listener => widget.listener;
+
   bool get fastConnection => widget.room.engine.fastConnectOptions != null;
   bool _flagStartedReplayKit = false;
+
   @override
   void initState() {
     super.initState();
@@ -84,19 +91,41 @@ class _RoomPageState extends State<RoomPage> {
     ..on<RoomDisconnectedEvent>((event) async {
       if (event.reason != null) {
         print('Room disconnected: reason => ${event.reason}');
+        switch (event.reason){
+          case DisconnectReason.participantRemoved: {
+            showSnackBar(message: "Host has removed you from the meeting!");
+            Timer(const Duration(seconds: 3), () {
+              WidgetsBindingCompatible.instance?.addPostFrameCallback((timeStamp) => Navigator.popUntil(context, (route) => route.isFirst));
+            });
+            break;
+          }
+          case DisconnectReason.duplicateIdentity: {
+            showSnackBar(message: "You have joined with another device");
+            Timer(const Duration(seconds: 3), () {
+              WidgetsBindingCompatible.instance?.addPostFrameCallback((timeStamp) => Navigator.popUntil(context, (route) => route.isFirst));
+            });
+            break;
+          }
+          default: {
+            Timer(const Duration(seconds: 3), () {
+              WidgetsBindingCompatible.instance?.addPostFrameCallback((timeStamp) => Navigator.popUntil(context, (route) => route.isFirst));
+            });
+          }
+        }
       }
-      WidgetsBindingCompatible.instance?.addPostFrameCallback(
-          (timeStamp) => Navigator.popUntil(context, (route) => route.isFirst));
+    })
+    ..on<ParticipantConnectedEvent>((event) {
+      _sortParticipants();
     })
     ..on<ParticipantEvent>((event) {
       print('Participant event');
       // sort participants on many track events as noted in documentation linked above
       _sortParticipants();
     })
-    ..on<ParticipantConnectedEvent> ((event){
+    ..on<ParticipantConnectedEvent>((event) {
       _sortParticipants();
     })
-    ..on<ParticipantDisconnectedEvent> ((event){
+    ..on<ParticipantDisconnectedEvent>((event) {
       _sortParticipants();
     })
     ..on<RoomRecordingStatusChanged>((event) {
@@ -128,13 +157,7 @@ class _RoomPageState extends State<RoomPage> {
       print('Room metadata changed: ${event.metadata}');
     })
     ..on<DataReceivedEvent>((event) {
-      // String decoded = 'Failed to decode';
-      // try {
-      //   decoded = utf8.decode(event.data);
-      // } catch (err) {
-      //   print('Failed to decode: $err');
-      // }
-      // context.showDataReceivedDialog(decoded);
+      print('Participant DataReceivedEvent');
       _handleDataChannel(event);
     })
     ..on<AudioPlaybackStatusChanged>((event) async {
@@ -147,7 +170,7 @@ class _RoomPageState extends State<RoomPage> {
       }
     });
 
-  void _handleDataChannel(DataReceivedEvent event){
+  void _handleDataChannel(DataReceivedEvent event) {
     var identity = event.participant?.identity ?? "server";
     var message = utf8.decode(event.data);
     var _eventData = parseJsonData(event.data);
@@ -155,8 +178,9 @@ class _RoomPageState extends State<RoomPage> {
     _checkReceivedDataType(eventData);
   }
 
-  void _checkReceivedDataType(RemoteActivityData remoteData) {
-    var viewmodel = _livekitProviderKey.currentState?.viewModel;
+  Future<void> _checkReceivedDataType(RemoteActivityData remoteData) async {
+    var viewModel = _livekitProviderKey.currentState?.viewModel;
+    print("DataAction: ${remoteData.action}");
     switch (remoteData.action) {
       // case "raise_hand":
       //   showSnackBar("${remoteData.identity?.name ?? ''} raised hand");
@@ -183,73 +207,72 @@ class _RoomPageState extends State<RoomPage> {
       //   showReaction(remoteData.action);
       //   break;
       //
-      // case "mute_camera":
+      case "mute_camera":
+        viewModel?.disableVideo();
+        break;
+
+      case "mute_mic":
+        viewModel?.disableAudio();
+        break;
       //
-      //   viewModel.setCameraEnabled(false);
-      //   break;
-      //
-      // case "mute_mic":
-      //   viewModel.setMicEnabled(false);
-      //   break;
-      //
-      // case "ask_to_unmute_mic":
-      //   showSnackBar("Host is asking you to turn on your mic", actionLabel: "Accept", onAction: () {
-      //     viewModel.setMicEnabled(true);
-      //   });
-      //   break;
+      case "ask_to_unmute_mic":
+        showSnackBar(message: "Host is asking you to turn on your mic", actionText: "Accept", actionCallBack: () {
+          viewModel?.enableAudio();
+        });
+        final result = await context.showPermissionAskDialog("Host is asking you to turn on your mic");
+        if(result == true) viewModel?.enableAudio();
+        break;
 
-      // case "ask_to_unmute_camera":
-      //   showSnackBar("Host is asking you to turn on your camera", actionLabel: "Accept", onAction: () {
-      //     viewModel.setCameraEnabled(true);
-      //   });
-      //   break;
+      case "ask_to_unmute_camera":
+        final result = await context.showPermissionAskDialog("Host is asking you to turn on your camera");
+        if(result == true) viewModel?.enableVideo();
+        break;
 
-      // case "makeCoHost":
-      //   debugPrint("isCoHost: ${viewModel.checkCoHostPermission()}");
-      //   debugPrint("metadata: ${viewModel.room.localParticipant.metadata}");
-      //   if (viewModel.checkCoHostPermission()) {
-      //     viewModel.isCoHost = true;
-      //     viewModel.hostToken = remoteData.token ?? "";
-      //   } else {
-      //     viewModel.isCoHost = false;
-      //   }
-      //   break;
+      case "makeCoHost":
+        if (Utils.isCoHost(viewModel?.room.localParticipant?.metadata)) {
+          viewModel?.setCoHost(true);
+          viewModel?.meetingDetails.authorization_token = remoteData.token ?? "";
+        } else {
+          viewModel?.setCoHost(false);
+        }
+        break;
 
-      // case "force_mute_all":
-      //   viewModel.isAudioPermissionEnable = !remoteData.value;
-      //   if (!viewModel.isAudioPermissionEnable) {
-      //     viewModel.setMicEnabled(false);
-      //     setMicAlpha(0.8);
-      //   } else {
-      //     setMicAlpha(1.0);
-      //   }
-      //   break;
+      case "force_mute_all":
+        viewModel?.isAudioPermissionEnable = !remoteData.value;
+        if (!(viewModel?.isAudioPermissionEnable ?? false)) {
+          viewModel?.disableAudio();
+          viewModel?.setMicAlpha(0.8);
+        } else {
+          viewModel?.setMicAlpha(1.0);
+        }
+        break;
 
-      // case "force_video_off_all":
-      //   viewModel.isVideoPermissionEnable = !remoteData.value;
-      //   if (!viewModel.isVideoPermissionEnable) {
-      //     viewModel.setCameraEnabled(false);
-      //     setCameraAlpha(0.8);
-      //   } else {
-      //     setCameraAlpha(1.0);
-      //   }
-      //   break;
+      case "force_video_off_all":
+        viewModel?.isVideoPermissionEnable = !remoteData.value;
+        if (!(viewModel?.isVideoPermissionEnable ?? false)) {
+          viewModel?.disableVideo();
+          viewModel?.setCameraAlpha(0.8);
+        } else {
+          viewModel?.setCameraAlpha(1.0);
+        }
+        break;
 
       case "":
-      // Handle empty action case if needed
+        // Handle empty action case if needed
         break;
 
       default:
-      // Handle null or unknown action
-        viewmodel?.addMessage(remoteData);
-        Utils.showSnackBar(context, message: "${remoteData.identity?.name ?? ''} sent a message");
+        // Handle null or unknown action
+        viewModel?.addMessage(remoteData);
     }
   }
 
   RemoteActivityData parseJsonData(List<int> jsonData) {
     final jsonString = utf8.decode(jsonData); // Convert Uint8List to String
-    final Map<String, dynamic> jsonMap = json.decode(jsonString); // Decode the JSON string
-    return RemoteActivityData.fromJson(jsonMap); // Convert to RemoteActivityData
+    final Map<String, dynamic> jsonMap =
+        json.decode(jsonString); // Decode the JSON string
+    return RemoteActivityData.fromJson(
+        jsonMap); // Convert to RemoteActivityData
   }
 
   void _askPublish() async {
@@ -281,7 +304,11 @@ class _RoomPageState extends State<RoomPage> {
   void _sortParticipants() {
     List<ParticipantTrack> userMediaTracks = [];
     List<ParticipantTrack> screenTracks = [];
+
+    // Add remote participants
     for (var participant in widget.room.remoteParticipants.values) {
+      bool hasVideoTrack = false;
+
       for (var t in participant.videoTrackPublications) {
         if (t.isScreenShare) {
           screenTracks.add(ParticipantTrack(
@@ -289,22 +316,23 @@ class _RoomPageState extends State<RoomPage> {
             type: ParticipantTrackType.kScreenShare,
           ));
         } else {
+          hasVideoTrack = true;
           userMediaTracks.add(ParticipantTrack(participant: participant));
         }
       }
+
+      // Add participant if they don't have any video tracks
+      if (!hasVideoTrack) {
+        userMediaTracks.add(ParticipantTrack(participant: participant));
+      }
     }
-    // sort speakers for the grid
+
+    // Sort the user media tracks
     userMediaTracks.sort((a, b) {
-      // loudest speaker first
       if (a.participant.isSpeaking && b.participant.isSpeaking) {
-        if (a.participant.audioLevel > b.participant.audioLevel) {
-          return -1;
-        } else {
-          return 1;
-        }
+        return a.participant.audioLevel > b.participant.audioLevel ? -1 : 1;
       }
 
-      // last spoken at
       final aSpokeAt = a.participant.lastSpokeAt?.millisecondsSinceEpoch ?? 0;
       final bSpokeAt = b.participant.lastSpokeAt?.millisecondsSinceEpoch ?? 0;
 
@@ -312,98 +340,110 @@ class _RoomPageState extends State<RoomPage> {
         return aSpokeAt > bSpokeAt ? -1 : 1;
       }
 
-      // video on
       if (a.participant.hasVideo != b.participant.hasVideo) {
         return a.participant.hasVideo ? -1 : 1;
       }
 
-      // joinedAt
       return a.participant.joinedAt.millisecondsSinceEpoch -
           b.participant.joinedAt.millisecondsSinceEpoch;
     });
 
+    // Add local participant
     final localParticipantTracks =
         widget.room.localParticipant?.videoTrackPublications;
     if (localParticipantTracks != null) {
       for (var t in localParticipantTracks) {
         if (t.isScreenShare) {
-          if (lkPlatformIs(PlatformType.iOS)) {
-            if (!_flagStartedReplayKit) {
-              _flagStartedReplayKit = true;
-
-              ReplayKitChannel.startReplayKit();
-            }
+          if (lkPlatformIs(PlatformType.iOS) && !_flagStartedReplayKit) {
+            _flagStartedReplayKit = true;
+            ReplayKitChannel.startReplayKit();
           }
           screenTracks.add(ParticipantTrack(
             participant: widget.room.localParticipant!,
             type: ParticipantTrackType.kScreenShare,
           ));
         } else {
-          if (lkPlatformIs(PlatformType.iOS)) {
-            if (_flagStartedReplayKit) {
-              _flagStartedReplayKit = false;
-
-              ReplayKitChannel.closeReplayKit();
-            }
+          if (lkPlatformIs(PlatformType.iOS) && _flagStartedReplayKit) {
+            _flagStartedReplayKit = false;
+            ReplayKitChannel.closeReplayKit();
           }
-
           userMediaTracks.add(
               ParticipantTrack(participant: widget.room.localParticipant!));
         }
       }
     }
+
     setState(() {
       participantTracks = [...screenTracks, ...userMediaTracks];
     });
+    final viewmodel = _livekitProviderKey.currentState?.viewModel;
+    viewmodel?.addParticipant(participantTracks);
   }
-  final GlobalKey<LivekitProviderState> _livekitProviderKey = GlobalKey<LivekitProviderState>();
+
+  final GlobalKey<LivekitProviderState> _livekitProviderKey =
+      GlobalKey<LivekitProviderState>();
 
   @override
   Widget build(BuildContext context) {
     return LivekitProvider(
       key: _livekitProviderKey,
       room: widget.room,
+      meetingDetails: widget.meetingDetails,
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
           body: Container(
             color: Colors.black,
-            child: Stack(
+            child: Column(
               children: [
-                Column(
-                  children: [
-                    Expanded(
-                        child: participantTracks.isNotEmpty
-                            ? ParticipantWidget.widgetFor(
-                            participantTracks.first,
-                            showStatsLayer: true)
-                            : Container()),
-                    if (widget.room.localParticipant != null)
-                      SafeArea(
-                        top: false,
-                        child: LivekitControls(
-                            widget.room, widget.room.localParticipant!),
+                // Main content area for participants
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Column(
+                        children: [
+                          Expanded(
+                            child: participantTracks.isNotEmpty
+                                ? ParticipantWidget.widgetFor(
+                              participantTracks.first,
+                              showStatsLayer: true,
+                            )
+                                : Container(),
+                          ),
+                          // Horizontal list of participants positioned above LivekitControls
+                          if (participantTracks.length > 1)
+                            // Positioned(
+                            //   left: 0,
+                            //   right: 0,
+                            //   bottom: 50, // Fixed height above the LivekitControls
+                              SizedBox(
+                                height: 120, // Fixed height for the participant list
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: participantTracks.length - 1,
+                                  itemBuilder: (BuildContext context, int index) => SizedBox(
+                                    width: 180,
+                                    height: 120,
+                                    child: ParticipantWidget.widgetFor(
+                                        participantTracks[index + 1]),
+                                  ),
+                                ),
+                              ),
+                            // ),
+                        ],
                       )
-                  ],
+                    ],
+                  ),
                 ),
-                Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 50,
-                    child: SizedBox(
-                      height: 120,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: math.max(0, participantTracks.length - 1),
-                        itemBuilder: (BuildContext context, int index) =>
-                            SizedBox(
-                              width: 180,
-                              height: 120,
-                              child: ParticipantWidget.widgetFor(
-                                  participantTracks[index + 1]),
-                            ),
-                      ),
-                    )),
+                // LivekitControls positioned at the bottom
+                if (widget.room.localParticipant != null)
+                  SafeArea(
+                    top: false,
+                    child: LivekitControls(
+                      widget.room,
+                      widget.room.localParticipant!,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -411,4 +451,22 @@ class _RoomPageState extends State<RoomPage> {
       ),
     );
   }
+
+  void showSnackBar({required String message, String? actionText, Function? actionCallBack}){
+    final snackBar = SnackBar(
+      content: Text(message),
+      action: actionText != null? SnackBarAction(
+        label: actionText,
+        onPressed: () {
+          actionCallBack?.call();
+        },
+      ) : null,
+    );
+    print("Show Snackbar");
+    // Find the ScaffoldMessenger in the widget tree
+    // and use it to show a SnackBar.
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+
 }

@@ -20,9 +20,6 @@ class ChatBottomSheet extends StatefulWidget{
 class _ChatState extends State<ChatBottomSheet>{
   @override
   void initState() {
-    // final viewModel = Provider.of<LivekitViewmodel>(context, listen: false);
-    // viewModel.isChatOpen = true;
-    // viewModel.resetUnreadCount();
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final viewModel = Provider.of<LivekitViewmodel>(context, listen: false);

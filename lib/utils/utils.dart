@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -86,5 +87,74 @@ class Utils {
     final formatter = DateFormat('hh:mm a'); // 12-hour format
     return formatter.format(date);
   }
+
+  static String getInitials(String? fullName) {
+    // Return "U" if the full name is null
+    if (fullName == null || fullName.isEmpty) return "U";
+
+    // Split the full name by spaces
+    List<String> nameParts = fullName.split(" ");
+
+    // Filter out empty parts, get the first letter of each part, capitalize it, and join without spaces
+    return nameParts
+        .where((part) => part.isNotEmpty)
+        .map((part) => part[0].toUpperCase())
+        .join();
+  }
+
+  static Color generateUniqueColorFromInitials(String initials) {
+    // Convert the initials to a hash code and use modulo to limit the range
+    int hash = initials.hashCode.abs();
+    double hue = (hash % 360).toDouble(); // Map hash to hue angle (0-360 degrees)
+    double saturation = 0.7; // Set saturation (0-1)
+    double brightness = 0.9; // Set brightness (0-1)
+
+    // Convert HSB (Hue, Saturation, Brightness) to RGB
+    return HSVColor.fromAHSV(1.0, hue, saturation, brightness).toColor();
+  }
+
+  static int calculateMinutesSince(DateTime? joinedAt) {
+    if(joinedAt == null ) return 0;
+    final currentTime = DateTime.now();
+    final difference = currentTime.difference(joinedAt);
+    return difference.inMinutes;
+  }
+
+  static String getMetadataRole(String? metadata) {
+    if (metadata == null) return '';
+
+    try {
+      final jsonObject = jsonDecode(metadata);
+      return jsonObject['role_name'] ?? '';
+    } catch (e) {
+      // Handle parsing error, return a default value if needed
+      return '';
+    }
+  }
+
+  static String getParticipantType(String? metadata) {
+    String role = getMetadataRole(metadata);
+
+    switch (role) {
+      case 'moderator':
+        return ' (Host)';
+      case 'cohost':
+        return ' (Co-Host)';
+      default:
+        return '';
+    }
+  }
+
+  static bool isHost(String? metadata) {
+    String role = getMetadataRole(metadata);
+    return role == 'moderator';
+  }
+
+  static bool isCoHost(String? metadata) {
+    String role = getMetadataRole(metadata);
+    return role == 'cohost';
+  }
+
+
 
 }

@@ -52,7 +52,7 @@ class MessageBubble extends StatelessWidget {
                       // Message Text
                       Text(
                         message,
-                        style: TextStyle(color: Colors.black),
+                        style: const TextStyle(color: Colors.white),
                       ),
                       const SizedBox(height: 5.0),
 

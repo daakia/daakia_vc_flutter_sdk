@@ -204,6 +204,24 @@ extension LKExampleExt on BuildContext {
               .toList(),
         ),
       );
+
+  Future<bool?> showPermissionAskDialog(String message) => showDialog<bool>(
+    context: this,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: Colors.grey[900],
+      content: Text(message, style: const TextStyle(color: Colors.white),),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Reject', style: TextStyle(color: Colors.white),),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: const Text('Accept', style: TextStyle(color: Colors.white),),
+        ),
+      ],
+    ),
+  );
 }
 
 enum SimulateScenarioResult {
