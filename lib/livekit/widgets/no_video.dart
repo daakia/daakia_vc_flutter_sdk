@@ -1,3 +1,5 @@
+import 'package:daakia_vc_flutter_sdk/screens/customWidget/initials_circle.dart';
+import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
@@ -6,17 +8,15 @@ import '../../resources/colors/color.dart';
 
 class NoVideoWidget extends StatelessWidget {
   //
-  const NoVideoWidget({super.key});
+  NoVideoWidget({this.name, super.key});
+  String? name;
 
   @override
   Widget build(BuildContext context) => Container(
         alignment: Alignment.center,
-        child: LayoutBuilder(
-          builder: (ctx, constraints) => Icon(
-            Icons.videocam_off_outlined,
-            color: Colors.blue,
-            size: math.min(constraints.maxHeight, constraints.maxWidth) * 0.3,
-          ),
-        ),
+        child: InitialsCircle(
+            initials: Utils.getInitials(name),
+          backgroundColor: Utils.generateUniqueColorFromInitials(name??"U"),
+        )
       );
 }

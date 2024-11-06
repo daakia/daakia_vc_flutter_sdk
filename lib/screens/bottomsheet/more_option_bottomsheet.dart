@@ -1,3 +1,4 @@
+import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/all_participant_bottomsheet.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
@@ -75,6 +76,9 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                 context,
                 icon: Icons.people, // Replace with your participants icon
                 text: 'Participants',
+                onTap: (){
+                  showParticipantBottomSheet();
+                },
               ),
               // Live Stream
               buildOption(
@@ -88,29 +92,42 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
       ),
     );
   }
+
+  void showParticipantBottomSheet() {
+    Navigator.pop(context);
+    Navigator.of(context).push(MaterialPageRoute<Null>(
+        builder: (BuildContext context) {
+          return const AllParticipantBottomsheet();
+        },
+        fullscreenDialog: true
+    ));
+  }
 }
 
 Widget buildOption(BuildContext context,
-    {required IconData icon, required String text, Function? onTap}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-    child: GestureDetector(
-      onTap: () {
-        // Null-safe invocation of the callback
-        onTap?.call(); // callback will only be called if it's not null
-      },
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white, size: 24), // Icon size 24
-          const SizedBox(width: 10), // Space between icon and text
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+    {required IconData icon, required String text, bool isVisible = true, Function? onTap}) {
+  return Visibility(
+    visible: isVisible,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+      child: GestureDetector(
+        onTap: () {
+          // Null-safe invocation of the callback
+          onTap?.call(); // callback will only be called if it's not null
+        },
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 24), // Icon size 24
+            const SizedBox(width: 10), // Space between icon and text
+            Text(
+              text,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     ),
   );

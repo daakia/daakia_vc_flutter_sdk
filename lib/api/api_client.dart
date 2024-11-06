@@ -43,4 +43,16 @@ abstract class RestClient {
       @Query("meeting_uid") String meeting_uid
       );
 
+  @POST("rtc/meeting/remove/participant")
+  Future<BaseResponse> removeParticipant(
+      @Header("Authorization") String token,
+      @Body() Map<String, dynamic> body,
+      );
+
+  @POST("rtc/meeting/create/cohost")
+  Future<BaseResponse> makeCoHost(
+      @Header("Authorization") String token,
+      @Body() Map<String, dynamic> body,
+      );
+
 }

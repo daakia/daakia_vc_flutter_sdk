@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:daakia_vc_flutter_sdk/model/features.dart';
+import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -41,6 +42,8 @@ class _PreJoinState extends State<PreJoinScreen> {
 
   bool isHostVerified = false;
   String hostToken = "";
+
+  late MeetingDetails meetingDetails;
 
   var name = "";
 
@@ -388,9 +391,11 @@ class _PreJoinState extends State<PreJoinScreen> {
         ),
       );
 
+      meetingDetails = MeetingDetails(meeting_uid: meetingId, authorization_token: hostToken, features: features);
+
       await Navigator.push<void>(
         context,
-        MaterialPageRoute(builder: (_) => RoomPage(room, listener)),
+        MaterialPageRoute(builder: (_) => RoomPage(room, listener, meetingDetails)),
       );
     } catch (error) {
       print('Could not connect $error');

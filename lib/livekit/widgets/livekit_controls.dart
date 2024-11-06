@@ -78,22 +78,6 @@ class _LivekitControlState extends State<LivekitControls>{
 
   bool get isMuted => participant.isMuted;
 
-  void _disableAudio() async {
-    await participant.setMicrophoneEnabled(false);
-  }
-
-  Future<void> _enableAudio() async {
-    await participant.setMicrophoneEnabled(true);
-  }
-
-  void _disableVideo() async {
-    await participant.setCameraEnabled(false);
-  }
-
-  void _enableVideo() async {
-    await participant.setCameraEnabled(true);
-  }
-
   void _toggleCamera() async {
     final track = participant.videoTrackPublications.firstOrNull?.track;
     if (track == null) return;
@@ -129,12 +113,13 @@ class _LivekitControlState extends State<LivekitControls>{
                 ? _setSpeakerphoneOn
                 : null,
             icon: Icon(
-                _speakerphoneOn ? Icons.speaker_phone : Icons.phone_android),
+                _speakerphoneOn ? Icons.speaker_phone : Icons.phone_android,
+            color: Colors.white,),
             iconSize: 30,
           ),
           IconButton(
             onPressed: () {
-              participant.isCameraEnabled() ? _disableVideo() : _enableVideo();
+              participant.isCameraEnabled() ? viewModel.disableVideo() : viewModel.enableVideo();
             },
             icon: Icon(
               participant.isCameraEnabled() ? Icons.videocam : Icons.videocam_off,
@@ -144,7 +129,7 @@ class _LivekitControlState extends State<LivekitControls>{
           ),
           IconButton(
             onPressed: () {
-              participant.isMicrophoneEnabled() ? _disableAudio() : _enableAudio();
+              participant.isMicrophoneEnabled() ? viewModel.disableAudio() : viewModel.enableAudio();
             },
             icon: Icon(
               participant.isMicrophoneEnabled() ? Icons.mic : Icons.mic_off,
@@ -162,16 +147,16 @@ class _LivekitControlState extends State<LivekitControls>{
             ),
             iconSize: 30,
           ),
-          // IconButton(
-          //   onPressed: () {
-          //     showMoreOptionBottomSheet();
-          //   },
-          //   icon: const Icon(
-          //     Icons.more_horiz,
-          //     color: Colors.white,
-          //   ),
-          //   iconSize: 30,
-          // ),
+          IconButton(
+            onPressed: () {
+              showMoreOptionBottomSheet();
+            },
+            icon: const Icon(
+              Icons.more_horiz,
+              color: Colors.white,
+            ),
+            iconSize: 30,
+          ),
           IconButton(onPressed: (){showChatBottomSheet();}, icon: Badge(
             isLabelVisible: viewModel.getUnReadCount() > 0,
             label: Text(viewModel.getUnReadCount().toString(), style: const TextStyle(color: Colors.white),),
