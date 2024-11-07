@@ -2,9 +2,11 @@ import 'dart:convert';
 
 import 'package:daakia_vc_flutter_sdk/api/injection.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
+import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:uuid/uuid.dart';
+import 'package:collection/collection.dart';
 
 import '../livekit/widgets/participant_info.dart';
 import '../model/action_model.dart';
@@ -25,6 +27,8 @@ class LivekitViewmodel extends ChangeNotifier {
   int _unreadMessageCount = 0;
 
   bool _isCoHost = false;
+
+  bool _isRecording = false;
 
   void setCoHost(bool isCoHost){
     _isCoHost = isCoHost;
@@ -129,11 +133,31 @@ class LivekitViewmodel extends ChangeNotifier {
     }
   }
 
-  void addParticipant(List<ParticipantTrack> participant) {
+  void addParticipant(List<ParticipantTrack> participants) {
+    // Clear the existing list
     _participantTracks.clear();
-    _participantTracks.addAll(participant);
+
+    // Try to find the local participant based on identity
+    ParticipantTrack? localParticipant = participants.firstWhereOrNull(
+          (participant) => participant.participant.identity == room.localParticipant?.identity,
+    );
+
+    // Add the local participant first if it exists
+    if (localParticipant != null) {
+      _participantTracks.add(localParticipant);
+    }
+
+    // Add remaining participants, excluding the local participant if it exists
+    _participantTracks.addAll(
+      participants.where((participant) => participant.participant.identity != room.localParticipant?.identity),
+    );
+
+    // Notify listeners of the update
     notifyListeners();
   }
+
+
+
 
   List<ParticipantTrack> getParticipantList() {
     return _participantTracks;
@@ -227,6 +251,41 @@ class LivekitViewmodel extends ChangeNotifier {
     });
   }
 
+  void setRecording(bool isRecording){
+    _isRecording = isRecording;
+    notifyListeners();
+  }
+
+  bool get isRecording => _isRecording;
+
+  void startRecording() {
+    Map<String, dynamic> body = {
+      "meeting_uid": meetingDetails.meeting_uid,
+    };
+    apiClient.startRecording(meetingDetails.authorization_token, body).then((response){
+      if(response.success == 1){
+        setRecording(true);
+        sendMessageToUI("Recording Starting");
+      } else {
+        sendMessageToUI(response.message ?? "Something went wrong!");
+      }
+    });
+  }
+
+  void stopRecording() {
+    Map<String, dynamic> body = {
+      "meeting_uid": meetingDetails.meeting_uid,
+    };
+    apiClient.stopRecording(meetingDetails.authorization_token, body).then((response){
+      if(response.success == 1){
+        setRecording(false);
+        sendMessageToUI("Recording Starting");
+      } else {
+        sendMessageToUI(response.message ?? "Something went wrong!");
+      }
+    });
+  }
+
   void sendMessageToUI(String message){
     if(_uiMessage.isNotEmpty) {
       _uiMessage = message;
@@ -236,4 +295,12 @@ class LivekitViewmodel extends ChangeNotifier {
     _uiMessage = "";
   }
   String get uiMessage => _uiMessage;
+
+  bool isHost() {
+    return Utils.isHost(room.localParticipant?.metadata);
+  }
+
+  bool isCoHost() {
+    return Utils.isCoHost(room.localParticipant?.metadata);
+  }
 }

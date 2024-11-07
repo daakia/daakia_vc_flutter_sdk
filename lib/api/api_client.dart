@@ -55,4 +55,16 @@ abstract class RestClient {
       @Body() Map<String, dynamic> body,
       );
 
+  @POST("rtc/meeting/recording/start")
+  Future<BaseResponse> startRecording(
+      @Header("Authorization") String token,
+      @Body() Map<String, dynamic> body,
+      );
+
+  @POST("rtc/meeting/recording/stop")
+  Future<BaseResponse> stopRecording(
+      @Header("Authorization") String token,
+      @Body() Map<String, dynamic> body,
+      );
+
 }

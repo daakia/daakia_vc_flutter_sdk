@@ -141,4 +141,13 @@ class Features {
     data['is_basic'] = this.isBasic;
     return data;
   }
+
+  // Getter methods to check feature flags
+  bool isChatAllowed() => conferenceChat == 1;
+  bool isRecordingAllowed() => recordMeeting == 1;
+  bool isRaiseHandAllowed() => raiseHand == 1;
+  bool isScreenSharingAllowed() => screenSharing == 1;
+  bool isLiveStreamingAllowed() => liveStream == 1;
+  bool isMuteParticipantsAllowed() => muteParticipant == 1;
+  bool isDisableCameraAllowed() => disableCamera == 1;
 }

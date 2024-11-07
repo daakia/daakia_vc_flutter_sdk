@@ -115,10 +115,16 @@ class _RoomPageState extends State<RoomPage> {
       }
     })
     ..on<ParticipantConnectedEvent>((event) {
+      print("Recording Status: ${widget.room.isRecording}");
+      var viewModel = _livekitProviderKey.currentState?.viewModel;
+      viewModel?.setRecording(widget.room.isRecording);
       _sortParticipants();
     })
     ..on<ParticipantEvent>((event) {
       print('Participant event');
+      print("Recording Status: ${widget.room.isRecording}");
+      var viewModel = _livekitProviderKey.currentState?.viewModel;
+      viewModel?.setRecording(widget.room.isRecording);
       // sort participants on many track events as noted in documentation linked above
       _sortParticipants();
     })
@@ -129,7 +135,10 @@ class _RoomPageState extends State<RoomPage> {
       _sortParticipants();
     })
     ..on<RoomRecordingStatusChanged>((event) {
-      context.showRecordingStatusChangedDialog(event.activeRecording);
+      print("Recording Status: ${event.activeRecording}");
+      var viewModel = _livekitProviderKey.currentState?.viewModel;
+      viewModel?.setRecording(event.activeRecording);
+      // context.showRecordingStatusChangedDialog(event.activeRecording);
     })
     ..on<RoomAttemptReconnectEvent>((event) {
       print(
@@ -263,7 +272,9 @@ class _RoomPageState extends State<RoomPage> {
 
       default:
         // Handle null or unknown action
+      if(remoteData.message != null && remoteData.message?.isNotEmpty == true) {
         viewModel?.addMessage(remoteData);
+      }
     }
   }
 
@@ -327,6 +338,26 @@ class _RoomPageState extends State<RoomPage> {
       }
     }
 
+    // Add local participant if they exist
+    final localParticipant = widget.room.localParticipant;
+    if (localParticipant != null) {
+      userMediaTracks.add(ParticipantTrack(participant: localParticipant));
+
+      // Handle local video tracks (for screen share and video)
+      for (var t in localParticipant.videoTrackPublications) {
+        if (t.isScreenShare) {
+          if (lkPlatformIs(PlatformType.iOS) && !_flagStartedReplayKit) {
+            _flagStartedReplayKit = true;
+            ReplayKitChannel.startReplayKit();
+          }
+          screenTracks.add(ParticipantTrack(
+            participant: localParticipant,
+            type: ParticipantTrackType.kScreenShare,
+          ));
+        }
+      }
+    }
+
     // Sort the user media tracks
     userMediaTracks.sort((a, b) {
       if (a.participant.isSpeaking && b.participant.isSpeaking) {
@@ -348,37 +379,14 @@ class _RoomPageState extends State<RoomPage> {
           b.participant.joinedAt.millisecondsSinceEpoch;
     });
 
-    // Add local participant
-    final localParticipantTracks =
-        widget.room.localParticipant?.videoTrackPublications;
-    if (localParticipantTracks != null) {
-      for (var t in localParticipantTracks) {
-        if (t.isScreenShare) {
-          if (lkPlatformIs(PlatformType.iOS) && !_flagStartedReplayKit) {
-            _flagStartedReplayKit = true;
-            ReplayKitChannel.startReplayKit();
-          }
-          screenTracks.add(ParticipantTrack(
-            participant: widget.room.localParticipant!,
-            type: ParticipantTrackType.kScreenShare,
-          ));
-        } else {
-          if (lkPlatformIs(PlatformType.iOS) && _flagStartedReplayKit) {
-            _flagStartedReplayKit = false;
-            ReplayKitChannel.closeReplayKit();
-          }
-          userMediaTracks.add(
-              ParticipantTrack(participant: widget.room.localParticipant!));
-        }
-      }
-    }
-
+    // Update the participant tracks
     setState(() {
       participantTracks = [...screenTracks, ...userMediaTracks];
     });
     final viewmodel = _livekitProviderKey.currentState?.viewModel;
     viewmodel?.addParticipant(participantTracks);
   }
+
 
   final GlobalKey<LivekitProviderState> _livekitProviderKey =
       GlobalKey<LivekitProviderState>();
@@ -389,68 +397,117 @@ class _RoomPageState extends State<RoomPage> {
       key: _livekitProviderKey,
       room: widget.room,
       meetingDetails: widget.meetingDetails,
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Scaffold(
-          body: Container(
-            color: Colors.black,
-            child: Column(
-              children: [
-                // Main content area for participants
-                Expanded(
-                  child: Stack(
-                    children: [
-                      Column(
+      child: WillPopScope(
+        onWillPop: () async {
+          // Check if any dialogs or bottom sheets are open
+          bool isPopupOpen = Navigator.of(context).canPop();
+
+          if (isPopupOpen) {
+            // Close the current dialog/bottom sheet if any are open
+            Navigator.of(context).pop();
+            return false; // Prevent back navigation
+          } else {
+            // Show a confirmation dialog to exit
+            bool shouldExit = await _showExitConfirmationDialog(context);
+            return shouldExit;
+          }
+        },
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: Scaffold(
+            body: SafeArea(
+              child: Container(
+                color: Colors.black,
+                child: Column(
+                  children: [
+                    // Main content area for participants
+                    Expanded(
+                      child: Stack(
                         children: [
-                          Expanded(
-                            child: participantTracks.isNotEmpty
-                                ? ParticipantWidget.widgetFor(
-                              participantTracks.first,
-                              showStatsLayer: true,
-                            )
-                                : Container(),
-                          ),
-                          // Horizontal list of participants positioned above LivekitControls
-                          if (participantTracks.length > 1)
-                            // Positioned(
-                            //   left: 0,
-                            //   right: 0,
-                            //   bottom: 50, // Fixed height above the LivekitControls
-                              SizedBox(
-                                height: 120, // Fixed height for the participant list
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: participantTracks.length - 1,
-                                  itemBuilder: (BuildContext context, int index) => SizedBox(
-                                    width: 180,
-                                    height: 120,
-                                    child: ParticipantWidget.widgetFor(
-                                        participantTracks[index + 1]),
+                          Column(
+                            children: [
+                              Expanded(
+                                child: participantTracks.isNotEmpty
+                                    ? ParticipantWidget.widgetFor(
+                                  participantTracks.first,
+                                  showStatsLayer: true,
+                                )
+                                    : Container(),
+                              ),
+                              // Horizontal list of participants positioned above LivekitControls
+                              if (participantTracks.length > 1)
+                                SizedBox(
+                                  height: 120, // Fixed height for the participant list
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: participantTracks.length - 1,
+                                    itemBuilder: (BuildContext context, int index) => SizedBox(
+                                      width: 180,
+                                      height: 120,
+                                      child: ParticipantWidget.widgetFor(
+                                        participantTracks[index + 1],
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            // ),
+                            ],
+                          ),
+                          if (_livekitProviderKey.currentState?.viewModel.isRecording == true)
+                            const Positioned(
+                              right: 10,
+                              top: 10,
+                              child: Icon(Icons.radio_button_checked, color: Colors.red),
+                            ),
                         ],
-                      )
-                    ],
-                  ),
-                ),
-                // LivekitControls positioned at the bottom
-                if (widget.room.localParticipant != null)
-                  SafeArea(
-                    top: false,
-                    child: LivekitControls(
-                      widget.room,
-                      widget.room.localParticipant!,
+                      ),
                     ),
-                  ),
-              ],
+                    // LivekitControls positioned at the bottom
+                    if (widget.room.localParticipant != null)
+                      SafeArea(
+                        top: false,
+                        child: LivekitControls(
+                          widget.room,
+                          widget.room.localParticipant!,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
       ),
     );
   }
+
+  Future<bool> _showExitConfirmationDialog(BuildContext context) async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Exit Meeting'),
+          content: const Text('Are you sure you want to exit the meeting?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // Don't exit
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); // Exit
+              },
+              child: const Text('Exit'),
+            ),
+          ],
+        );
+      },
+    ) ??
+        false;
+  }
+
+
 
   void showSnackBar({required String message, String? actionText, Function? actionCallBack}){
     final snackBar = SnackBar(
