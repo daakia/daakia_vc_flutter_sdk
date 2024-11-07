@@ -1,8 +1,11 @@
 import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/all_participant_bottomsheet.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
 
 import '../../resources/colors/color.dart';
+import '../../viewmodel/livekit_viewmodel.dart';
+import 'chat_bottomsheet.dart';
 
 class MoreOptionBottomSheet extends StatefulWidget {
   const MoreOptionBottomSheet({super.key});
@@ -17,6 +20,7 @@ class MoreOptionBottomSheet extends StatefulWidget {
 class _MoreOptionState extends State<MoreOptionBottomSheet> {
   @override
   Widget build(BuildContext context) {
+    final viewModel = Provider.of<LivekitViewmodel>(context);
     return Container(
       width: double.maxFinite,
       color: emptyVideoColor,
@@ -37,39 +41,52 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
               ),
               // Chats Section
               buildOption(context, icon: Icons.message, text: 'Chats',
+                  isVisible: viewModel.meetingDetails.features!.isChatAllowed(),
+                  setBadge: BadgeData(viewModel.getUnReadCount()),
                   onTap: () {
                 Navigator.pop(context);
+                showChatBottomSheet();
               }),
               // Recording Section
               buildOption(
                 context,
                 icon: Icons
                     .fiber_manual_record, // Replace with your recording icon
-                text: 'Start Recording',
+                text: viewModel.isRecording ? 'Stop Recording' : 'Start Recording',
+                iconColor: viewModel.isRecording ? Colors.red : Colors.white,
+                isVisible: (viewModel.isHost() || viewModel.isCoHost()) && viewModel.meetingDetails.features!.isRecordingAllowed(),
+                onTap: (){
+                  viewModel.isRecording ? viewModel.stopRecording() : viewModel.startRecording();
+                  Navigator.pop(context);
+                }
               ),
               // Host Controls
               buildOption(
                 context,
                 icon: Icons.security, // Replace with your host control icon
                 text: 'Host Control',
+                isVisible: false, //TODO::
               ),
               // Screen Share
               buildOption(
                 context,
                 icon: Icons.screen_share, // Replace with your screen share icon
                 text: 'Start Screen Sharing',
+                isVisible: false, //TODO::
               ),
               // Raise Hand
               buildOption(
                 context,
                 icon: Icons.pan_tool, // Replace with your raise hand icon
                 text: 'Start Raise Hand',
+                isVisible: false, //TODO::
               ),
               // Reaction
               buildOption(
                 context,
                 icon: Icons.emoji_emotions, // Replace with your reaction icon
                 text: 'Reaction',
+                isVisible: false, //TODO::
               ),
               // Participants
               buildOption(
@@ -85,6 +102,7 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                 context,
                 icon: Icons.live_tv, // Replace with your live stream icon
                 text: 'Live Stream',
+                isVisible: false, //TODO::
               ),
             ],
           ),
@@ -102,10 +120,20 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
         fullscreenDialog: true
     ));
   }
+
+  void showChatBottomSheet() {
+    Navigator.of(context).push(MaterialPageRoute<Null>(
+        builder: (BuildContext context) {
+          return const ChatBottomSheet();
+        },
+        fullscreenDialog: true
+    ));
+  }
+
 }
 
 Widget buildOption(BuildContext context,
-    {required IconData icon, required String text, bool isVisible = true, Function? onTap}) {
+    {required IconData icon, Color iconColor = Colors.white, required String text, bool isVisible = true, Function? onTap, BadgeData? setBadge}) {
   return Visibility(
     visible: isVisible,
     child: Padding(
@@ -117,7 +145,12 @@ Widget buildOption(BuildContext context,
         },
         child: Row(
           children: [
-            Icon(icon, color: Colors.white, size: 24), // Icon size 24
+            if(setBadge == null) Icon(icon, color: iconColor, size: 24) else
+              Badge(isLabelVisible: setBadge.unreadCount > 0,
+                label: Text(setBadge.unreadCount.toString(), style: const TextStyle(color: Colors.white),),
+                offset: const Offset(4, 4),
+                backgroundColor: Colors.red,
+              child: Icon(icon, color: iconColor, size: 24),), // Icon size 24
             const SizedBox(width: 10), // Space between icon and text
             Text(
               text,
@@ -131,4 +164,9 @@ Widget buildOption(BuildContext context,
       ),
     ),
   );
+}
+
+class BadgeData {
+  int unreadCount;
+  BadgeData(this.unreadCount);
 }

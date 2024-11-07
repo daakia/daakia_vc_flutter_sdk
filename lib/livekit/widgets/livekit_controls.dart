@@ -11,7 +11,6 @@ import 'package:provider/provider.dart';
 
 import '../../resources/colors/color.dart';
 import '../../screens/bottomsheet/more_option_bottomsheet.dart';
-import '../../utils/utils.dart';
 import '../../viewmodel/livekit_viewmodel.dart';
 
 class LivekitControls extends StatefulWidget{
@@ -147,23 +146,23 @@ class _LivekitControlState extends State<LivekitControls>{
             ),
             iconSize: 30,
           ),
-          IconButton(
-            onPressed: () {
-              showMoreOptionBottomSheet();
-            },
-            icon: const Icon(
-              Icons.more_horiz,
-              color: Colors.white,
-            ),
-            iconSize: 30,
-          ),
-          IconButton(onPressed: (){showChatBottomSheet();}, icon: Badge(
+          // IconButton(
+          //   onPressed: () {
+          //     showMoreOptionBottomSheet();
+          //   },
+          //   icon: const Icon(
+          //     Icons.more_horiz,
+          //     color: Colors.white,
+          //   ),
+          //   iconSize: 30,
+          // ),
+          IconButton(onPressed: (){showMoreOptionBottomSheet();}, icon: Badge(
             isLabelVisible: viewModel.getUnReadCount() > 0,
             label: Text(viewModel.getUnReadCount().toString(), style: const TextStyle(color: Colors.white),),
             offset: const Offset(8, 8),
             backgroundColor: Colors.red,
             child: const Icon(
-              Icons.message,
+              Icons.more_horiz,
               color: Colors.white,
             ),
           ),
