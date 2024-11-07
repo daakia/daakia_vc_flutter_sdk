@@ -1,5 +1,4 @@
 import 'package:daakia_vc_flutter_sdk/daakia_vc_flutter_sdk.dart';
-import 'package:daakia_vc_flutter_sdk/screens/prejoin_screen.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/material.dart';
 
