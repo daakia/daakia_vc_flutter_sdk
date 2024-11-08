@@ -1,4 +1,4 @@
-## 0.0.1 (YYYY-MM-DD)
+## 0.0.1 (2024-11)
 
 - **Initial Release**:
     - Implemented LiveKit integration for real-time video and audio calls.

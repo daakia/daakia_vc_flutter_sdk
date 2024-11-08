@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -6,7 +7,6 @@ import 'package:livekit_client/livekit_client.dart';
 import '../../resources/colors/color.dart';
 import 'no_video.dart';
 import 'participant_info.dart';
-import 'participant_stats.dart';
 
 abstract class ParticipantWidget extends StatefulWidget {
   // Convenience method to return relevant widget for participant
@@ -97,7 +97,9 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
     _listener = widget.participant.createListener();
     _listener?.on<TranscriptionEvent>((e) {
       for (var seg in e.segments) {
-        print('Transcription: ${seg.text} ${seg.isFinal}');
+        if (kDebugMode) {
+          print('Transcription: ${seg.text} ${seg.isFinal}');
+        }
       }
     });
 
@@ -129,10 +131,10 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
 
   @override
   Widget build(BuildContext ctx) => Card(
-    elevation: 10,
-    color: emptyVideoColor,
-    clipBehavior: Clip.antiAliasWithSaveLayer,
-    child: Container(
+        elevation: 10,
+        color: emptyVideoColor,
+        clipBehavior: Clip.antiAliasWithSaveLayer,
+        child: Container(
           foregroundDecoration: BoxDecoration(
             border: widget.participant.isSpeaking && !isScreenShare
                 ? Border.all(
@@ -179,16 +181,16 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
                 ),
               ),
               // if (widget.showStatsLayer)
-                // Positioned(
-                //     top: 130,
-                //     right: 30,
-                //     child: ParticipantStatsWidget(
-                //       participant: widget.participant,
-                //     )),
+              // Positioned(
+              //     top: 130,
+              //     right: 30,
+              //     child: ParticipantStatsWidget(
+              //       participant: widget.participant,
+              //     )),
             ],
           ),
         ),
-  );
+      );
 }
 
 class _LocalParticipantWidgetState

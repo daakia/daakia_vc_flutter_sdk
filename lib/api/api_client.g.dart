@@ -24,46 +24,6 @@ class _RestClient implements RestClient {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<dynamic> getMeetingList(
-    String? deviceId,
-    String? token,
-    String? timeZone,
-    String? meetingType,
-  ) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{
-      r'time_zone': timeZone,
-      r'meeting_list_type': meetingType,
-    };
-    queryParameters.removeWhere((k, v) => v == null);
-    final _headers = <String, dynamic>{
-      r'Device-Id': deviceId,
-      r'Authorization': token,
-    };
-    _headers.removeWhere((k, v) => v == null);
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<dynamic>(Options(
-      method: 'GET',
-      headers: _headers,
-      extra: _extra,
-    )
-        .compose(
-          _dio.options,
-          'meeting/list',
-          queryParameters: queryParameters,
-          data: _data,
-        )
-        .copyWith(
-            baseUrl: _combineBaseUrls(
-          _dio.options.baseUrl,
-          baseUrl,
-        )));
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
-    return _value;
-  }
-
-  @override
   Future<BaseResponse<LiveKitData>> getMeetingJoinDetail(
     String token,
     Map<String, dynamic> body,
@@ -181,9 +141,9 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<BaseResponse<FeatureData>> getFeatures(String meeting_uid) async {
+  Future<BaseResponse<FeatureData>> getFeatures(String meetingUid) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'meeting_uid': meeting_uid};
+    final queryParameters = <String, dynamic>{r'meeting_uid': meetingUid};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<BaseResponse<FeatureData>>(Options(

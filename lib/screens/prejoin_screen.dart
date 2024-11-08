@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:daakia_vc_flutter_sdk/model/features.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:loading_btn/loading_btn.dart';
@@ -15,30 +16,23 @@ import '../utils/utils.dart';
 
 @protected
 class PreJoinScreen extends StatefulWidget {
-  PreJoinScreen(
+  const PreJoinScreen(
       {required this.meetingId,
       required this.secretKey,
       this.isHost = false,
       super.key});
 
-  String meetingId;
-  String secretKey;
-  bool isHost;
+  final String meetingId;
+  final String secretKey;
+  final bool isHost;
 
   @override
   State<StatefulWidget> createState() {
-    return _PreJoinState(
-        meetingId: meetingId, secretKey: secretKey, isHost: isHost);
+    return _PreJoinState();
   }
 }
 
 class _PreJoinState extends State<PreJoinScreen> {
-  _PreJoinState(
-      {required this.meetingId, required this.secretKey, this.isHost = false});
-
-  String meetingId;
-  String secretKey;
-  bool isHost;
 
   bool isHostVerified = false;
   String hostToken = "";
@@ -146,18 +140,13 @@ class _PreJoinState extends State<PreJoinScreen> {
     }
   }
 
-  void _actionBack(BuildContext context) async {
-    await _setEnableVideo(false);
-    await _setEnableAudio(false);
-    Navigator.of(context).pop();
-  }
 
   void joinMeeting(Function stopLoading) async {
     isLoading = true;
 
     var token = hostToken;
     Map<String, dynamic> body = {
-      "meeting_uid": meetingId,
+      "meeting_uid": widget.meetingId,
       "preferred_video_server_id": "ap1",
       "display_name": name
     };
@@ -170,7 +159,7 @@ class _PreJoinState extends State<PreJoinScreen> {
           return;
         }
         var it = response.data!;
-        if (!isHost) {
+        if (!widget.isHost) {
           if (it.accessToken == null ||
               it.livekitServerURL == null ||
               it.accessToken?.isEmpty == true ||
@@ -233,7 +222,7 @@ class _PreJoinState extends State<PreJoinScreen> {
     Map<String, dynamic> body = {
       "email": email,
       "pin": pin,
-      "meeting_id": meetingId
+      "meeting_id": widget.meetingId
     };
 
     apiClient.verifyHostToken(body).then((response) {
@@ -249,8 +238,6 @@ class _PreJoinState extends State<PreJoinScreen> {
       setState(() {
         isLoading = false;
       });
-
-      print("Api Value: ${response.message}");
     }).onError((handleError, stackStress) {
       setState(() {
         isLoading = false;
@@ -269,13 +256,13 @@ class _PreJoinState extends State<PreJoinScreen> {
       barrierDismissible: false, // Prevent dismissing by tapping outside
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Verify Email and PIN'),
+          title: const Text('Verify Email and PIN'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: emailController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Email',
                   hintText: 'Enter your email',
                 ),
@@ -284,7 +271,7 @@ class _PreJoinState extends State<PreJoinScreen> {
               ),
               TextField(
                 controller: pinController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'PIN',
                   hintText: 'Enter your PIN',
                 ),
@@ -300,7 +287,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                 stopLoading.call();
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
@@ -312,7 +299,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                 // Close the dialog
                 // Navigator.of(context).pop();
               },
-              child: Text('Verify'),
+              child: const Text('Verify'),
             ),
           ],
         );
@@ -391,14 +378,16 @@ class _PreJoinState extends State<PreJoinScreen> {
         ),
       );
 
-      meetingDetails = MeetingDetails(meeting_uid: meetingId, authorization_token: hostToken, features: features);
+      meetingDetails = MeetingDetails(meeting_uid: widget.meetingId, authorization_token: hostToken, features: features);
 
       await Navigator.push<void>(
         context,
         MaterialPageRoute(builder: (_) => RoomPage(room, listener, meetingDetails)),
       );
     } catch (error) {
-      print('Could not connect $error');
+      if (kDebugMode) {
+        print('Could not connect $error');
+      }
       await context.showErrorDialog(error);
     } finally {
       setState(() {
@@ -591,7 +580,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                         if (isLoading) {
                           return;
                         } else {
-                          if (isHost && !isHostVerified) {
+                          if (widget.isHost && !isHostVerified) {
                             _showVerificationDialog(context, stopLoading);
                           } else {
                             getFeaturesAndJoinMeeting(stopLoading);
@@ -623,7 +612,7 @@ class _PreJoinState extends State<PreJoinScreen> {
 
   void getFeaturesAndJoinMeeting(Function stopLoading) {
     isLoading = true;
-    apiClient.getFeatures(meetingId).then((response){
+    apiClient.getFeatures(widget.meetingId).then((response){
       if(response.success == 1){
         features = response.data?.features;
         joinMeeting(stopLoading);
@@ -689,7 +678,7 @@ class _PreJoinState extends State<PreJoinScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text("OK"),
+              child: const Text("OK"),
             ),
           ],
         );
@@ -709,14 +698,14 @@ class _PreJoinState extends State<PreJoinScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text("Cancel"),
+              child: const Text("Cancel"),
             ),
             TextButton(
               onPressed: () {
                 openAppSettings(); // Open the app settings
                 Navigator.of(context).pop();
               },
-              child: Text("Settings"),
+              child: const Text("Settings"),
             ),
           ],
         );

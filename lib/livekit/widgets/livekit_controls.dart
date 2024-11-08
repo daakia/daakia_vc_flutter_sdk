@@ -1,11 +1,7 @@
-import 'dart:async';
-import 'dart:convert';
-
 import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/chat_bottomsheet.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:provider/provider.dart';
 
@@ -34,12 +30,6 @@ class _LivekitControlState extends State<LivekitControls>{
 
   CameraPosition position = CameraPosition.front;
 
-  List<MediaDevice>? _audioInputs;
-  List<MediaDevice>? _audioOutputs;
-  List<MediaDevice>? _videoInputs;
-
-  StreamSubscription? _subscription;
-
   bool _speakerphoneOn = Hardware.instance.preferSpeakerOutput;
 
   LocalParticipant get participant => widget.participant;
@@ -48,31 +38,15 @@ class _LivekitControlState extends State<LivekitControls>{
   void initState() {
     super.initState();
     participant.addListener(_onChange);
-    _subscription = Hardware.instance.onDeviceChange.stream
-        .listen((List<MediaDevice> devices) {
-      _loadDevices(devices);
-    });
     Hardware.instance.enumerateDevices().then(_loadDevices);
   }
 
   void _loadDevices(List<MediaDevice> devices) async {
-    _audioInputs = devices.where((d) => d.kind == 'audioinput').toList();
-    _audioOutputs = devices.where((d) => d.kind == 'audiooutput').toList();
-    _videoInputs = devices.where((d) => d.kind == 'videoinput').toList();
     setState(() {});
   }
   void _onChange() {
     // trigger refresh
     setState(() {});
-  }
-
-  void _onTapSendData() async {
-    final result = await context.showSendDataDialog();
-    if (result == true) {
-      await widget.participant.publishData(
-        utf8.encode('{"action": "raise_hand"}'),
-      );
-    }
   }
 
   bool get isMuted => participant.isMuted;
@@ -88,7 +62,9 @@ class _LivekitControlState extends State<LivekitControls>{
         position = newPosition;
       });
     } catch (error) {
-      print('could not restart track: $error');
+      if (kDebugMode) {
+        print('could not restart track: $error');
+      }
       return;
     }
   }

@@ -105,49 +105,55 @@ class Features {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['subscription_id'] = this.subscriptionId;
-    data['is_active'] = this.isActive;
-    data['audio_video_conference'] = this.audioVideoConference;
-    data['meet_duration'] = this.meetDuration;
-    data['cloud_storage'] = this.cloudStorage;
-    data['save_cloud'] = this.saveCloud;
-    data['international_phone'] = this.internationalPhone;
-    data['host_meeting_mobile'] = this.hostMeetingMobile;
-    data['conference_chat'] = this.conferenceChat;
-    data['whiteboard'] = this.whiteboard;
-    data['noise_cancellation'] = this.noiseCancellation;
-    data['record_meeting'] = this.recordMeeting;
-    data['poll'] = this.poll;
-    data['raise_hand'] = this.raiseHand;
-    data['breakout_room'] = this.breakoutRoom;
-    data['screen_sharing'] = this.screenSharing;
-    data['voice_transcription'] = this.voiceTranscription;
-    data['voice_text_translation'] = this.voiceTextTranslation;
-    data['live_stream'] = this.liveStream;
-    data['share_youtube'] = this.shareYoutube;
-    data['track_attendance'] = this.trackAttendance;
-    data['mute_participant'] = this.muteParticipant;
-    data['disable_camera'] = this.disableCamera;
-    data['compatibility'] = this.compatibility;
-    data['mobile_support'] = this.mobileSupport;
-    data['encryption'] = this.encryption;
-    data['lobby'] = this.lobby;
-    data['protected_meeting'] = this.protectedMeeting;
-    data['spam_protection'] = this.spamProtection;
-    data['translation'] = this.translation;
-    data['video_translation'] = this.videoTranslation;
-    data['is_basic'] = this.isBasic;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['subscription_id'] = subscriptionId;
+    data['is_active'] = isActive;
+    data['audio_video_conference'] = audioVideoConference;
+    data['meet_duration'] = meetDuration;
+    data['cloud_storage'] = cloudStorage;
+    data['save_cloud'] = saveCloud;
+    data['international_phone'] = internationalPhone;
+    data['host_meeting_mobile'] = hostMeetingMobile;
+    data['conference_chat'] = conferenceChat;
+    data['whiteboard'] = whiteboard;
+    data['noise_cancellation'] = noiseCancellation;
+    data['record_meeting'] = recordMeeting;
+    data['poll'] = poll;
+    data['raise_hand'] = raiseHand;
+    data['breakout_room'] = breakoutRoom;
+    data['screen_sharing'] = screenSharing;
+    data['voice_transcription'] = voiceTranscription;
+    data['voice_text_translation'] = voiceTextTranslation;
+    data['live_stream'] = liveStream;
+    data['share_youtube'] = shareYoutube;
+    data['track_attendance'] = trackAttendance;
+    data['mute_participant'] = muteParticipant;
+    data['disable_camera'] = disableCamera;
+    data['compatibility'] = compatibility;
+    data['mobile_support'] = mobileSupport;
+    data['encryption'] = encryption;
+    data['lobby'] = lobby;
+    data['protected_meeting'] = protectedMeeting;
+    data['spam_protection'] = spamProtection;
+    data['translation'] = translation;
+    data['video_translation'] = videoTranslation;
+    data['is_basic'] = isBasic;
     return data;
   }
 
   // Getter methods to check feature flags
   bool isChatAllowed() => conferenceChat == 1;
+
   bool isRecordingAllowed() => recordMeeting == 1;
+
   bool isRaiseHandAllowed() => raiseHand == 1;
+
   bool isScreenSharingAllowed() => screenSharing == 1;
+
   bool isLiveStreamingAllowed() => liveStream == 1;
+
   bool isMuteParticipantsAllowed() => muteParticipant == 1;
+
   bool isDisableCameraAllowed() => disableCamera == 1;
 }

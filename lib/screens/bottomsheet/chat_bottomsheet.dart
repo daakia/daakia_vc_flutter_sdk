@@ -1,23 +1,20 @@
 import 'package:daakia_vc_flutter_sdk/screens/customWidget/message_bubble.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 
 import '../../viewmodel/livekit_viewmodel.dart';
 
-class ChatBottomSheet extends StatefulWidget{
+class ChatBottomSheet extends StatefulWidget {
   const ChatBottomSheet({super.key});
 
   @override
   State<StatefulWidget> createState() {
     return _ChatState();
   }
-
 }
 
-class _ChatState extends State<ChatBottomSheet>{
+class _ChatState extends State<ChatBottomSheet> {
   @override
   void initState() {
     super.initState();
@@ -32,19 +29,19 @@ class _ChatState extends State<ChatBottomSheet>{
   void dispose() {
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<LivekitViewmodel>(context);
-    final TextEditingController _messageController = TextEditingController();
-    final ScrollController _scrollController = ScrollController();
+    final TextEditingController messageController = TextEditingController();
 
     return PopScope(
       onPopInvokedWithResult: (isPoped, dynamic) async {
-        print("PopInvoked: 2");
         viewModel.isChatOpen = false;
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF000000), // Use a specific color for no_video_background
+        backgroundColor: const Color(0xFF000000),
+        // Use a specific color for no_video_background
         body: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20.0),
           child: Column(
@@ -77,28 +74,36 @@ class _ChatState extends State<ChatBottomSheet>{
                   ],
                 ),
               ),
-      
+
               // RecyclerView (use ListView in Flutter)
               Expanded(
                 child: ListView.builder(
                   reverse: true,
-                  itemCount: viewModel.getMessageList().length, // Placeholder item count
+                  itemCount: viewModel
+                      .getMessageList()
+                      .length, // Placeholder item count
                   itemBuilder: (context, index) {
-                    final reversedIndex = viewModel.getMessageList().length - 1 - index;
+                    final reversedIndex =
+                        viewModel.getMessageList().length - 1 - index;
                     var message = viewModel.getMessageList()[reversedIndex];
-                    return MessageBubble(userName: message.identity?.name ?? "Unknown", message: message.message ??"", time: Utils.formatTimestampToTime(message.timestamp), isSender: message.isSender);
+                    return MessageBubble(
+                        userName: message.identity?.name ?? "Unknown",
+                        message: message.message ?? "",
+                        time: Utils.formatTimestampToTime(message.timestamp),
+                        isSender: message.isSender);
                   },
                 ),
               ),
-      
+
               // Message Input Section
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10.0, vertical: 20.0),
                 child: Row(
                   children: [
                     Expanded(
                       child: TextField(
-                        controller: _messageController,
+                        controller: messageController,
                         decoration: const InputDecoration(
                           hintText: "Type here...",
                           hintStyle: TextStyle(color: Colors.white),
@@ -117,9 +122,9 @@ class _ChatState extends State<ChatBottomSheet>{
                       color: Colors.white,
                       onPressed: () {
                         // Add send action here
-                        if(_messageController.text.isEmpty) return;
-                        viewModel.sendData(_messageController.text);
-                        _messageController.clear();
+                        if (messageController.text.isEmpty) return;
+                        viewModel.sendData(messageController.text);
+                        messageController.clear();
                       },
                     ),
                   ],

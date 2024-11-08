@@ -9,7 +9,7 @@ class LivekitProvider extends StatefulWidget {
   final MeetingDetails meetingDetails;
   final Widget child;
 
-  const LivekitProvider({required this.room, required this.meetingDetails, required this.child, Key? key}) : super(key: key);
+  const LivekitProvider({required this.room, required this.meetingDetails, required this.child, super.key});
 
   @override
   LivekitProviderState createState() => LivekitProviderState();

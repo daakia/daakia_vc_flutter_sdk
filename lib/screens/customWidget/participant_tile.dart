@@ -9,9 +9,9 @@ import 'package:provider/provider.dart';
 import '../../viewmodel/livekit_viewmodel.dart';
 
 class ParticipantTile extends StatelessWidget {
-  ParticipantTile({@required this.participant, this.isForLobby = false, super.key});
-  Participant? participant;
-  bool isForLobby;
+  const ParticipantTile({@required this.participant, this.isForLobby = false, super.key});
+  final Participant? participant;
+  final bool isForLobby;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +59,7 @@ class ParticipantTile extends StatelessWidget {
               Visibility(
                 visible: isForLobby,
                 child: IconButton(
-                  icon: Icon(Icons.close, color: Colors.white),
+                  icon: const Icon(Icons.close, color: Colors.white),
                   iconSize: 25,
                   onPressed: () {
                     // Handle reject action
@@ -69,7 +69,7 @@ class ParticipantTile extends StatelessWidget {
               Visibility(
                 visible: isForLobby,
                 child: IconButton(
-                  icon: Icon(Icons.check, color: Colors.white),
+                  icon: const Icon(Icons.check, color: Colors.white),
                   iconSize: 25,
                   onPressed: () {
                     // Handle accept action
@@ -99,7 +99,7 @@ class ParticipantTile extends StatelessWidget {
               Visibility(
                 visible: (!isForLobby && participant?.identity != viewModel.room.localParticipant?.identity),
                 child: IconButton(
-                  icon: Icon(Icons.more_vert, color: Colors.white),
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
                   iconSize: 25,
                   onPressed: () {
                     showParticipantDialog(context, viewModel);

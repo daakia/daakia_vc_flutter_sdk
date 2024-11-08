@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class LicenseExpiredScreen extends StatelessWidget{
@@ -8,21 +7,23 @@ class LicenseExpiredScreen extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.warning_amber, color: Colors.redAccent, size: 40), // Icon size 24
-          const SizedBox(height: 10), // Space between icon and text
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.warning_amber, color: Colors.redAccent, size: 40), // Icon size 24
+            const SizedBox(height: 10), // Space between icon and text
+            Text(
+              text,
+              style: const TextStyle(
+                color: Colors.grey,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
