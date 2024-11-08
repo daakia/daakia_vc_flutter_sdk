@@ -9,6 +9,7 @@ import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/livekit_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:livekit_client/livekit_client.dart';
 
 import '../model/remote_activity_data.dart';
@@ -405,25 +406,21 @@ class _RoomPageState extends State<RoomPage> {
 
   @override
   Widget build(BuildContext context) {
-    return LivekitProvider(
-      key: _livekitProviderKey,
-      room: widget.room,
-      meetingDetails: widget.meetingDetails,
-      child: WillPopScope(
-        onWillPop: () async {
-          // Check if any dialogs or bottom sheets are open
-          bool isPopupOpen = Navigator.of(context).canPop();
-
-          if (isPopupOpen) {
-            // Close the current dialog/bottom sheet if any are open
-            Navigator.of(context).pop();
-            return false; // Prevent back navigation
-          } else {
-            // Show a confirmation dialog to exit
-            bool shouldExit = await _showExitConfirmationDialog(context);
-            return shouldExit;
-          }
-        },
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+        statusBarColor: Colors.black
+    ));
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        final shouldExit = await _showExitConfirmationDialog(context);
+        if (shouldExit) {
+          Navigator.of(context).pop(); // Exit to previous page
+        }
+      },
+      child: LivekitProvider(
+        key: _livekitProviderKey,
+        room: widget.room,
+        meetingDetails: widget.meetingDetails,
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
           home: Scaffold(
@@ -441,9 +438,9 @@ class _RoomPageState extends State<RoomPage> {
                               Expanded(
                                 child: participantTracks.isNotEmpty
                                     ? ParticipantWidget.widgetFor(
-                                        participantTracks.first,
-                                        showStatsLayer: true,
-                                      )
+                                  participantTracks.first,
+                                  showStatsLayer: true,
+                                )
                                     : Container(),
                               ),
                               // Horizontal list of participants positioned above LivekitControls
@@ -456,19 +453,19 @@ class _RoomPageState extends State<RoomPage> {
                                     itemCount: participantTracks.length - 1,
                                     itemBuilder:
                                         (BuildContext context, int index) =>
-                                            SizedBox(
-                                      width: 180,
-                                      height: 120,
-                                      child: ParticipantWidget.widgetFor(
-                                        participantTracks[index + 1],
-                                      ),
-                                    ),
+                                        SizedBox(
+                                          width: 180,
+                                          height: 120,
+                                          child: ParticipantWidget.widgetFor(
+                                            participantTracks[index + 1],
+                                          ),
+                                        ),
                                   ),
                                 ),
                             ],
                           ),
                           if (_livekitProviderKey
-                                  .currentState?.viewModel.isRecording ==
+                              .currentState?.viewModel.isRecording ==
                               true)
                             const Positioned(
                               right: 10,
