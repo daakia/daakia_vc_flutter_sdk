@@ -9,7 +9,9 @@ import 'package:provider/provider.dart';
 import '../../viewmodel/livekit_viewmodel.dart';
 
 class ParticipantTile extends StatelessWidget {
-  const ParticipantTile({@required this.participant, this.isForLobby = false, super.key});
+  const ParticipantTile(
+      {@required this.participant, this.isForLobby = false, super.key});
+
   final Participant? participant;
   final bool isForLobby;
 
@@ -32,7 +34,8 @@ class ParticipantTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  participant?.name ?? "Unknown", // Replace with the participant's name
+                  participant?.name ?? "Unknown",
+                  // Replace with the participant's name
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -43,7 +46,8 @@ class ParticipantTile extends StatelessWidget {
                 Text(
                   "${Utils.calculateMinutesSince(participant?.joinedAt)} mins ${Utils.getParticipantType(participant?.metadata)}", // Replace with details text
                   style: const TextStyle(
-                    color: Color(0xFFC4C1B8), // Equivalent to the text color used
+                    color: Color(0xFFC4C1B8),
+                    // Equivalent to the text color used
                     fontSize: 12,
                   ),
                   maxLines: 1,
@@ -79,7 +83,11 @@ class ParticipantTile extends StatelessWidget {
               Visibility(
                 visible: !isForLobby,
                 child: IconButton(
-                  icon: Icon(participant?.isCameraEnabled()==true ? Icons.videocam : Icons.videocam_off, color: Colors.white),
+                  icon: Icon(
+                      participant?.isCameraEnabled() == true
+                          ? Icons.videocam
+                          : Icons.videocam_off,
+                      color: Colors.white),
                   iconSize: 25,
                   onPressed: () {
                     // Handle video action
@@ -89,7 +97,11 @@ class ParticipantTile extends StatelessWidget {
               Visibility(
                 visible: !isForLobby,
                 child: IconButton(
-                  icon: Icon(participant?.isMicrophoneEnabled()==true ? Icons.mic: Icons.mic_off, color: Colors.white),
+                  icon: Icon(
+                      participant?.isMicrophoneEnabled() == true
+                          ? Icons.mic
+                          : Icons.mic_off,
+                      color: Colors.white),
                   iconSize: 25,
                   onPressed: () {
                     // Handle mic action
@@ -97,9 +109,15 @@ class ParticipantTile extends StatelessWidget {
                 ),
               ),
               Visibility(
-                visible: (!isForLobby && participant?.identity != viewModel.room.localParticipant?.identity),
+                visible: (!isForLobby &&
+                    participant?.identity !=
+                        viewModel.room.localParticipant?.identity),
                 child: IconButton(
-                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                  icon: Icon(Icons.more_vert,
+                      color: Colors.white.withOpacity(
+                          (viewModel.isHost() || viewModel.isCoHost())
+                              ? 1
+                              : 0.5)),
                   iconSize: 25,
                   onPressed: () {
                     showParticipantDialog(context, viewModel);
@@ -114,10 +132,14 @@ class ParticipantTile extends StatelessWidget {
   }
 
   void showParticipantDialog(BuildContext context, LivekitViewmodel viewModel) {
+    if (!viewModel.isHost() || !viewModel.isCoHost()) return;
     showDialog(
         context: context,
         builder: (BuildContext context) {
-          return ParticipantDialogControls(participant: participant as Participant, viewModel: viewModel,);
+          return ParticipantDialogControls(
+            participant: participant as Participant,
+            viewModel: viewModel,
+          );
         });
   }
 }
