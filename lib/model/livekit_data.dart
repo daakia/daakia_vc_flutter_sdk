@@ -9,14 +9,14 @@ class LiveKitData {
   bool? isRejected;
 
   LiveKitData(
-      {this.accessToken,
-        this.meetingUid,
-        this.livekitServerURL,
-        this.roleName,
-        this.isHost,
-        this.participantCanJoin,
-        this.meetingStarted,
-        this.isRejected});
+      {accessToken,
+        meetingUid,
+        livekitServerURL,
+        roleName,
+        isHost,
+        participantCanJoin,
+        meetingStarted,
+        isRejected});
 
   LiveKitData.fromJson(Map<String, dynamic> json) {
     accessToken = json['access_token'];
@@ -31,14 +31,14 @@ class LiveKitData {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['access_token'] = this.accessToken;
-    data['meeting_uid'] = this.meetingUid;
-    data['livekit_server_URL'] = this.livekitServerURL;
-    data['role_name'] = this.roleName;
-    data['is_host'] = this.isHost;
-    data['participant_can_join'] = this.participantCanJoin;
-    data['meeting_started'] = this.meetingStarted;
-    data['is_rejected'] = this.isRejected;
+    data['access_token'] = accessToken;
+    data['meeting_uid'] = meetingUid;
+    data['livekit_server_URL'] = livekitServerURL;
+    data['role_name'] = roleName;
+    data['is_host'] = isHost;
+    data['participant_can_join'] = participantCanJoin;
+    data['meeting_started'] = meetingStarted;
+    data['is_rejected'] = isRejected;
     return data;
   }
 }

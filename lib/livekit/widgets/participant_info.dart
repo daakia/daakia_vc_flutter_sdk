@@ -57,7 +57,7 @@ class ParticipantInfoWidget extends StatelessWidget {
                 child: Text(
                   title!,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
             isScreenShare

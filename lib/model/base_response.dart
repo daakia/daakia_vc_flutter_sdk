@@ -16,7 +16,7 @@ class BaseResponse<T> {
     json['success'] = success;
     json['message'] = message;
     if (data != null) {
-      json['data'] = toJsonT(data!);
+      json['data'] = toJsonT(data as T);
     }
     return json;
   }

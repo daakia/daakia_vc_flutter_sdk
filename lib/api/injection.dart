@@ -7,15 +7,6 @@ import 'api_client.dart';
 
 final apiClient = RestClient(setDioWithLog());
 
-Dio setupDioHeaders() {
-  final dio = Dio();
-  dio.options.headers = {
-    "Platform": Constant.PLATFORM,
-    "App-Id": Constant.APP_ID,
-  };
-  return dio;
-}
-
 Dio setDioWithLog() {
   final dio = Dio();
   dio.interceptors.add(PrettyDioLogger(

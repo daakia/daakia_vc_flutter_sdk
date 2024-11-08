@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:daakia_vc_flutter_sdk/api/injection.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:uuid/uuid.dart';
 import 'package:collection/collection.dart';
@@ -21,7 +21,7 @@ class LivekitViewmodel extends ChangeNotifier {
 
   String _uiMessage = "";
 
-  List<ParticipantTrack> _participantTracks = [];
+  final List<ParticipantTrack> _participantTracks = [];
 
   bool isChatOpen = false;
   int _unreadMessageCount = 0;
@@ -42,7 +42,6 @@ class LivekitViewmodel extends ChangeNotifier {
   }
 
   void increaseUnreadCount() {
-    print("ChatPage Open?: $isChatOpen");
     if (isChatOpen) return;
     _unreadMessageCount++;
     notifyListeners();
@@ -71,18 +70,12 @@ class LivekitViewmodel extends ChangeNotifier {
   }
 
   Future<void> sendData(String userMessage) async {
-    // Logging the message
-    print("Message: ${jsonEncode(userMessage)}");
-
     // Create a message
     final message = SendMessageModel(
       id: const Uuid().v4(), // Generate a unique ID
       message: userMessage,
       timestamp: DateTime.now().millisecondsSinceEpoch, // Current timestamp
     );
-
-    // Log the serialized message
-    print("Message: ${jsonEncode(message)}");
 
     // Publish the data to the LiveKit room
     await room.localParticipant?.publishData(
@@ -116,7 +109,9 @@ class LivekitViewmodel extends ChangeNotifier {
           destinationIdentities: participantList,
         );
       } catch (e) {
-        print('Error sending private action: $e');
+        if (kDebugMode) {
+          print('Error sending private action: $e');
+        }
       }
     }
   }
@@ -129,7 +124,9 @@ class LivekitViewmodel extends ChangeNotifier {
         reliable: true,
       );
     } catch (e) {
-      print('Error sending action: $e');
+      if (kDebugMode) {
+        print('Error sending action: $e');
+      }
     }
   }
 

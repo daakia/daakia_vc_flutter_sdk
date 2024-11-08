@@ -7,7 +7,7 @@ class FeatureData {
 
   FeatureData.fromJson(Map<String, dynamic> json) {
     features = json['features'] != null
-        ? new Features.fromJson(json['features'])
+        ? Features.fromJson(json['features'])
         : null;
   }
 
