@@ -13,9 +13,7 @@ class _RestClient implements RestClient {
     this._dio, {
     this.baseUrl,
     this.errorLogger,
-  }) {
-    baseUrl ??= 'https://stag-api.daakia.co.in/v2.0/';
-  }
+  });
 
   final Dio _dio;
 

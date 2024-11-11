@@ -9,7 +9,7 @@ import '../model/livekit_data.dart';
 
 part 'api_client.g.dart';
 
-@RestApi(baseUrl: 'https://stag-api.daakia.co.in/v2.0/')
+@RestApi()
 abstract class RestClient {
   factory RestClient(Dio dio, {String? baseUrl}) = _RestClient;
 
