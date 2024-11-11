@@ -22,7 +22,7 @@ class _RestClient implements RestClient {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<BaseResponse<LiveKitData>> getMeetingJoinDetail(
+  Future<BaseResponse<RtcData>> getMeetingJoinDetail(
     String token,
     Map<String, dynamic> body,
   ) async {
@@ -32,7 +32,7 @@ class _RestClient implements RestClient {
     _headers.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
     _data.addAll(body);
-    final _options = _setStreamType<BaseResponse<LiveKitData>>(Options(
+    final _options = _setStreamType<BaseResponse<RtcData>>(Options(
       method: 'POST',
       headers: _headers,
       extra: _extra,
@@ -49,11 +49,11 @@ class _RestClient implements RestClient {
           baseUrl,
         )));
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late BaseResponse<LiveKitData> _value;
+    late BaseResponse<RtcData> _value;
     try {
-      _value = BaseResponse<LiveKitData>.fromJson(
+      _value = BaseResponse<RtcData>.fromJson(
         _result.data!,
-        (json) => LiveKitData.fromJson(json as Map<String, dynamic>),
+        (json) => RtcData.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);

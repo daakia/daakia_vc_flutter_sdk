@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-extension LKExampleExt on BuildContext {
+extension RTCExampleExt on BuildContext {
   //
   Future<bool?> showPublishDialog() => showDialog<bool>(
         context: this,

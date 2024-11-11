@@ -8,12 +8,12 @@ import 'package:livekit_client/livekit_client.dart';
 import 'package:uuid/uuid.dart';
 import 'package:collection/collection.dart';
 
-import '../livekit/widgets/participant_info.dart';
+import '../rtc/widgets/participant_info.dart';
 import '../model/action_model.dart';
 import '../model/meeting_details.dart';
 import '../model/send_message_model.dart';
 
-class LivekitViewmodel extends ChangeNotifier {
+class RtcViewmodel extends ChangeNotifier {
   final List<RemoteActivityData> _messageList = [];
   final List<RemoteActivityData> _lobbyRequestList = [];
   late Room room;
@@ -52,7 +52,7 @@ class LivekitViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
-  LivekitViewmodel(this.room, this.meetingDetails);
+  RtcViewmodel(this.room, this.meetingDetails);
 
   List<RemoteActivityData> getMessageList() {
     return _messageList;
@@ -168,7 +168,7 @@ class LivekitViewmodel extends ChangeNotifier {
     return _lobbyRequestList;
   }
 
-  //===========================Livekit Controls====================
+  //===========================RTC Controls====================
 
   bool isAudioPermissionEnable = true;
   bool isVideoPermissionEnable = true;

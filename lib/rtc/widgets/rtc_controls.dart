@@ -7,27 +7,25 @@ import 'package:provider/provider.dart';
 
 import '../../resources/colors/color.dart';
 import '../../screens/bottomsheet/more_option_bottomsheet.dart';
-import '../../viewmodel/livekit_viewmodel.dart';
+import '../../viewmodel/rtc_viewmodel.dart';
 
-class LivekitControls extends StatefulWidget{
-
+class RtcControls extends StatefulWidget {
   final Room room;
   final LocalParticipant participant;
 
-  const LivekitControls(this.room,
-      this.participant, {
-        super.key,
-      });
+  const RtcControls(
+    this.room,
+    this.participant, {
+    super.key,
+  });
 
   @override
   State<StatefulWidget> createState() {
-    return _LivekitControlState();
+    return _RtcControlState();
   }
-
 }
 
-class _LivekitControlState extends State<LivekitControls>{
-
+class _RtcControlState extends State<RtcControls> {
   CameraPosition position = CameraPosition.front;
 
   bool _speakerphoneOn = Hardware.instance.preferSpeakerOutput;
@@ -44,6 +42,7 @@ class _LivekitControlState extends State<LivekitControls>{
   void _loadDevices(List<MediaDevice> devices) async {
     setState(() {});
   }
+
   void _onChange() {
     // trigger refresh
     setState(() {});
@@ -77,7 +76,7 @@ class _LivekitControlState extends State<LivekitControls>{
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<LivekitViewmodel>(context);
+    final viewModel = Provider.of<RtcViewmodel>(context);
     return Container(
       color: transparentMaskColor,
       child: Row(
@@ -88,23 +87,30 @@ class _LivekitControlState extends State<LivekitControls>{
                 ? _setSpeakerphoneOn
                 : null,
             icon: Icon(
-                _speakerphoneOn ? Icons.speaker_phone : Icons.phone_android,
-            color: Colors.white,),
-            iconSize: 30,
-          ),
-          IconButton(
-            onPressed: () {
-              participant.isCameraEnabled() ? viewModel.disableVideo() : viewModel.enableVideo();
-            },
-            icon: Icon(
-              participant.isCameraEnabled() ? Icons.videocam : Icons.videocam_off,
+              _speakerphoneOn ? Icons.speaker_phone : Icons.phone_android,
               color: Colors.white,
             ),
             iconSize: 30,
           ),
           IconButton(
             onPressed: () {
-              participant.isMicrophoneEnabled() ? viewModel.disableAudio() : viewModel.enableAudio();
+              participant.isCameraEnabled()
+                  ? viewModel.disableVideo()
+                  : viewModel.enableVideo();
+            },
+            icon: Icon(
+              participant.isCameraEnabled()
+                  ? Icons.videocam
+                  : Icons.videocam_off,
+              color: Colors.white,
+            ),
+            iconSize: 30,
+          ),
+          IconButton(
+            onPressed: () {
+              participant.isMicrophoneEnabled()
+                  ? viewModel.disableAudio()
+                  : viewModel.enableAudio();
             },
             icon: Icon(
               participant.isMicrophoneEnabled() ? Icons.mic : Icons.mic_off,
@@ -132,17 +138,25 @@ class _LivekitControlState extends State<LivekitControls>{
           //   ),
           //   iconSize: 30,
           // ),
-          IconButton(onPressed: (){showMoreOptionBottomSheet();}, icon: Badge(
-            isLabelVisible: viewModel.getUnReadCount() > 0,
-            label: Text(viewModel.getUnReadCount().toString(), style: const TextStyle(color: Colors.white),),
-            offset: const Offset(8, 8),
-            backgroundColor: Colors.red,
-            child: const Icon(
-              Icons.more_horiz,
-              color: Colors.white,
+          IconButton(
+            onPressed: () {
+              showMoreOptionBottomSheet();
+            },
+            icon: Badge(
+              isLabelVisible: viewModel.getUnReadCount() > 0,
+              label: Text(
+                viewModel.getUnReadCount().toString(),
+                style: const TextStyle(color: Colors.white),
+              ),
+              offset: const Offset(8, 8),
+              backgroundColor: Colors.red,
+              child: const Icon(
+                Icons.more_horiz,
+                color: Colors.white,
+              ),
             ),
+            iconSize: 30,
           ),
-            iconSize: 30,),
           IconButton(
             onPressed: () {
               _onTapDisconnect();
@@ -162,6 +176,7 @@ class _LivekitControlState extends State<LivekitControls>{
       ),
     );
   }
+
   void showMoreOptionBottomSheet() {
     showModalBottomSheet(
         context: context,
@@ -175,8 +190,7 @@ class _LivekitControlState extends State<LivekitControls>{
         builder: (BuildContext context) {
           return const ChatBottomSheet();
         },
-        fullscreenDialog: true
-    ));
+        fullscreenDialog: true));
   }
 
   void _onTapDisconnect() async {

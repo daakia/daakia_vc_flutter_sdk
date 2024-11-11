@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:daakia_vc_flutter_sdk/livekit/widgets/livekit_controls.dart';
-import 'package:daakia_vc_flutter_sdk/livekit/widgets/participant.dart';
-import 'package:daakia_vc_flutter_sdk/livekit/widgets/participant_info.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
+import 'package:daakia_vc_flutter_sdk/rtc/widgets/rtc_controls.dart';
+import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant.dart';
+import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant_info.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
-import 'package:daakia_vc_flutter_sdk/viewmodel/livekit_provider.dart';
+import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -86,7 +86,6 @@ class _RoomPageState extends State<RoomPage> {
     super.dispose();
   }
 
-  /// for more information, see [event types](https://docs.livekit.io/client/events/#events)
   void _setUpListeners() => _listener
     ..on<RoomDisconnectedEvent>((event) async {
       if (event.reason != null) {
@@ -147,8 +146,8 @@ class _RoomPageState extends State<RoomPage> {
     ..on<RoomAttemptReconnectEvent>((event) {
       if (kDebugMode) {
         print(
-          'Attempting to reconnect ${event.attempt}/${event.maxAttemptsRetry}, '
-          '(${event.nextRetryDelaysInMs}ms delay until next attempt)');
+            'Attempting to reconnect ${event.attempt}/${event.maxAttemptsRetry}, '
+            '(${event.nextRetryDelaysInMs}ms delay until next attempt)');
       }
     })
     ..on<LocalTrackSubscribedEvent>((event) {
@@ -164,10 +163,8 @@ class _RoomPageState extends State<RoomPage> {
     ..on<ParticipantNameUpdatedEvent>((event) {
       _sortParticipants();
     })
-    ..on<ParticipantMetadataUpdatedEvent>((event) {
-    })
-    ..on<RoomMetadataChangedEvent>((event) {
-    })
+    ..on<ParticipantMetadataUpdatedEvent>((event) {})
+    ..on<RoomMetadataChangedEvent>((event) {})
     ..on<DataReceivedEvent>((event) {
       _handleDataChannel(event);
     })
@@ -401,14 +398,13 @@ class _RoomPageState extends State<RoomPage> {
     viewmodel?.addParticipant(participantTracks);
   }
 
-  final GlobalKey<LivekitProviderState> _livekitProviderKey =
-      GlobalKey<LivekitProviderState>();
+  final GlobalKey<RtcProviderState> _livekitProviderKey =
+      GlobalKey<RtcProviderState>();
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-        statusBarColor: Colors.black
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(statusBarColor: Colors.black));
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {
@@ -417,7 +413,7 @@ class _RoomPageState extends State<RoomPage> {
           Navigator.of(context).pop(); // Exit to previous page
         }
       },
-      child: LivekitProvider(
+      child: RtcProvider(
         key: _livekitProviderKey,
         room: widget.room,
         meetingDetails: widget.meetingDetails,
@@ -438,9 +434,9 @@ class _RoomPageState extends State<RoomPage> {
                               Expanded(
                                 child: participantTracks.isNotEmpty
                                     ? ParticipantWidget.widgetFor(
-                                  participantTracks.first,
-                                  showStatsLayer: true,
-                                )
+                                        participantTracks.first,
+                                        showStatsLayer: true,
+                                      )
                                     : Container(),
                               ),
                               // Horizontal list of participants positioned above LivekitControls
@@ -453,19 +449,19 @@ class _RoomPageState extends State<RoomPage> {
                                     itemCount: participantTracks.length - 1,
                                     itemBuilder:
                                         (BuildContext context, int index) =>
-                                        SizedBox(
-                                          width: 180,
-                                          height: 120,
-                                          child: ParticipantWidget.widgetFor(
-                                            participantTracks[index + 1],
-                                          ),
-                                        ),
+                                            SizedBox(
+                                      width: 180,
+                                      height: 120,
+                                      child: ParticipantWidget.widgetFor(
+                                        participantTracks[index + 1],
+                                      ),
+                                    ),
                                   ),
                                 ),
                             ],
                           ),
                           if (_livekitProviderKey
-                              .currentState?.viewModel.isRecording ==
+                                  .currentState?.viewModel.isRecording ==
                               true)
                             const Positioned(
                               right: 10,
@@ -476,11 +472,10 @@ class _RoomPageState extends State<RoomPage> {
                         ],
                       ),
                     ),
-                    // LivekitControls positioned at the bottom
                     if (widget.room.localParticipant != null)
                       SafeArea(
                         top: false,
-                        child: LivekitControls(
+                        child: RtcControls(
                           widget.room,
                           widget.room.localParticipant!,
                         ),

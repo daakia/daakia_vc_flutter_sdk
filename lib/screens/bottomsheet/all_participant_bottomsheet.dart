@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../resources/colors/color.dart';
-import '../../viewmodel/livekit_viewmodel.dart';
+import '../../viewmodel/rtc_viewmodel.dart';
 
 class AllParticipantBottomsheet extends StatelessWidget {
   const AllParticipantBottomsheet({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<LivekitViewmodel>(context);
+    final viewModel = Provider.of<RtcViewmodel>(context);
     return Scaffold(
       backgroundColor:  emptyVideoColor, // Replace with your color
       body: Padding(
@@ -144,7 +144,7 @@ class AllParticipantBottomsheet extends StatelessWidget {
     );
   }
 
-  void showParticipantDialog(BuildContext context, LivekitViewmodel viewModel) {
+  void showParticipantDialog(BuildContext context, RtcViewmodel viewModel) {
     showDialog(
         context: context,
         builder: (BuildContext context) {

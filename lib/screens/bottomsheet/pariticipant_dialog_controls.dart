@@ -3,13 +3,13 @@ import 'package:livekit_client/livekit_client.dart';
 
 import '../../model/action_model.dart';
 import '../../utils/utils.dart';
-import '../../viewmodel/livekit_viewmodel.dart';
+import '../../viewmodel/rtc_viewmodel.dart';
 
 class ParticipantDialogControls extends StatelessWidget{
   const ParticipantDialogControls({required this.participant, required this.viewModel, this.isForIndividual = true, super.key});
   final Participant participant;
   final bool isForIndividual;
-  final LivekitViewmodel viewModel;
+  final RtcViewmodel viewModel;
 
   @override
   Widget build(BuildContext context) {

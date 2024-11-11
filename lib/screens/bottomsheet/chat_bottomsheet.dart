@@ -3,7 +3,7 @@ import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../viewmodel/livekit_viewmodel.dart';
+import '../../viewmodel/rtc_viewmodel.dart';
 
 class ChatBottomSheet extends StatefulWidget {
   const ChatBottomSheet({super.key});
@@ -19,7 +19,7 @@ class _ChatState extends State<ChatBottomSheet> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final viewModel = Provider.of<LivekitViewmodel>(context, listen: false);
+      final viewModel = Provider.of<RtcViewmodel>(context, listen: false);
       viewModel.isChatOpen = true;
       viewModel.resetUnreadCount();
     });
@@ -32,7 +32,7 @@ class _ChatState extends State<ChatBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<LivekitViewmodel>(context);
+    final viewModel = Provider.of<RtcViewmodel>(context);
     final TextEditingController messageController = TextEditingController();
 
     return PopScope(

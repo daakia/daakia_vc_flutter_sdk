@@ -5,7 +5,7 @@ import 'package:retrofit/retrofit.dart';
 
 import '../model/base_response.dart';
 import '../model/host_token_model.dart';
-import '../model/livekit_data.dart';
+import '../model/rtc_data.dart';
 
 part 'api_client.g.dart';
 
@@ -14,7 +14,7 @@ abstract class RestClient {
   factory RestClient(Dio dio, {String? baseUrl}) = _RestClient;
 
   @POST("rtc/meeting/join")
-  Future<BaseResponse<LiveKitData>> getMeetingJoinDetail(
+  Future<BaseResponse<RtcData>> getMeetingJoinDetail(
     @Header("Authorization") String token,
     @Body() Map<String, dynamic> body,
   );
