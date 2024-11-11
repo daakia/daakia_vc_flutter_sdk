@@ -47,16 +47,14 @@ class _DataEntryState extends State<DataEntryScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
-              initialValue: "0D16716AFADABE17F5A42C6642CF2711ED9F59F2C89C12B2",
               decoration: const InputDecoration(
-                labelText: 'License Key*', // Equivalent to hint="Name*"
+                labelText: 'License Key*',
                 border: OutlineInputBorder(),
               ),
               style: const TextStyle(
-                color: Colors.black, // Equivalent to textColor="@color/black"
+                color: Colors.black,
               ),
               enabled: true,
-              // Equivalent to android:enabled="false"
               onChanged: (String? value) {
                 setState(() {
                   licenseKey = value ?? "";
@@ -65,15 +63,14 @@ class _DataEntryState extends State<DataEntryScreen> {
             ),
             const SizedBox(height: 20),
             TextFormField(
-              initialValue: "13f8511dd0f043e6fe2e0091",
               decoration: const InputDecoration(
-                labelText: 'Meeting UID*', // Equivalent to hint="Name*"
+                labelText: 'Meeting UID*',
                 border: OutlineInputBorder(),
               ),
               style: const TextStyle(
-                color: Colors.black, // Equivalent to textColor="@color/black"
+                color: Colors.black,
               ),
-              enabled: true, // Equivalent to android:enabled="false"
+              enabled: true,
               onChanged: (String? value) {
                 setState(() {
                   meetingUID = value ?? "";
@@ -89,7 +86,7 @@ class _DataEntryState extends State<DataEntryScreen> {
                   value: isHost,
                   onChanged: (isSelected) {
                     setState(() {
-                      isHost = isSelected; // Directly set isHost to isSelected
+                      isHost = isSelected;
                     });
                   },
                 ),

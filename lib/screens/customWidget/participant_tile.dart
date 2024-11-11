@@ -132,14 +132,15 @@ class ParticipantTile extends StatelessWidget {
   }
 
   void showParticipantDialog(BuildContext context, LivekitViewmodel viewModel) {
-    if (!viewModel.isHost() || !viewModel.isCoHost()) return;
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return ParticipantDialogControls(
-            participant: participant as Participant,
-            viewModel: viewModel,
-          );
-        });
+    if (viewModel.isHost() || viewModel.isCoHost()) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return ParticipantDialogControls(
+              participant: participant as Participant,
+              viewModel: viewModel,
+            );
+          });
+    }
   }
 }
