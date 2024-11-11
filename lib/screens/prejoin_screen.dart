@@ -308,7 +308,7 @@ class _PreJoinState extends State<PreJoinScreen> {
   }
 
   void checkPermission() async {
-    var status = await [Permission.camera, Permission.microphone].request();
+    await [Permission.camera, Permission.microphone].request();
   }
 
   _join(BuildContext context, Function stopLoading,
