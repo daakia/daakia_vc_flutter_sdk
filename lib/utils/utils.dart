@@ -17,34 +17,6 @@ class Utils {
   }
 
 
-  // static Future<String> getAppVersion() async {
-  //   PackageInfo packageInfo = await PackageInfo.fromPlatform();
-  //   String version = packageInfo.version;  // Version name
-  //   String buildNumber = packageInfo.buildNumber;  // Build number
-  //   return "Version: $version, Build: $buildNumber";
-  // }
-  //
-  // static Future<String?> getDeviceIdentity() async {
-  //   final deviceInfo = DeviceInfoPlugin();
-  //
-  //   try {
-  //     if (Platform.isAndroid) {
-  //       // Get Android-specific device information
-  //       AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-  //       return androidInfo.id; // ANDROID_ID
-  //     } else if (Platform.isIOS) {
-  //       // Get iOS-specific device information
-  //       IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-  //       return iosInfo.identifierForVendor; // Unique device ID on iOS
-  //     } else {
-  //       return "Unsupported Platform";
-  //     }
-  //   } catch (e) {
-  //     print("Error retrieving device identity: $e");
-  //     return null;
-  //   }
-  // }
-
   static bool isMobileDevice(){
     if(kIsWeb){
       return false;

@@ -1,4 +1,4 @@
-class LiveKitData {
+class RtcData {
   String? accessToken;
   String? meetingUid;
   String? livekitServerURL;
@@ -8,7 +8,7 @@ class LiveKitData {
   bool? meetingStarted;
   bool? isRejected;
 
-  LiveKitData(
+  RtcData(
       {accessToken,
         meetingUid,
         livekitServerURL,
@@ -18,7 +18,7 @@ class LiveKitData {
         meetingStarted,
         isRejected});
 
-  LiveKitData.fromJson(Map<String, dynamic> json) {
+  RtcData.fromJson(Map<String, dynamic> json) {
     accessToken = json['access_token'];
     meetingUid = json['meeting_uid'];
     livekitServerURL = json['livekit_server_URL'];

@@ -2,7 +2,7 @@ import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/all_participant_bottom
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../resources/colors/color.dart';
-import '../../viewmodel/livekit_viewmodel.dart';
+import '../../viewmodel/rtc_viewmodel.dart';
 import 'chat_bottomsheet.dart';
 
 class MoreOptionBottomSheet extends StatefulWidget {
@@ -18,7 +18,7 @@ class MoreOptionBottomSheet extends StatefulWidget {
 class _MoreOptionState extends State<MoreOptionBottomSheet> {
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<LivekitViewmodel>(context);
+    final viewModel = Provider.of<RtcViewmodel>(context);
     return Container(
       width: double.maxFinite,
       color: emptyVideoColor,

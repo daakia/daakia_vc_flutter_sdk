@@ -10,8 +10,8 @@ import 'package:loading_btn/loading_btn.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../api/injection.dart';
-import '../livekit/room.dart';
 import '../resources/colors/color.dart';
+import '../rtc/room.dart';
 import '../utils/utils.dart';
 
 @protected
@@ -33,7 +33,6 @@ class PreJoinScreen extends StatefulWidget {
 }
 
 class _PreJoinState extends State<PreJoinScreen> {
-
   bool isHostVerified = false;
   String hostToken = "";
 
@@ -48,7 +47,7 @@ class _PreJoinState extends State<PreJoinScreen> {
   var _enableAudio = false;
   var _enableVideo = false;
 
-  //============== Livekit ===============
+  //============== RTC ===============
   StreamSubscription? _subscription;
   List<MediaDevice> _audioInputs = [];
   List<MediaDevice> _videoInputs = [];
@@ -59,13 +58,14 @@ class _PreJoinState extends State<PreJoinScreen> {
       VideoParametersPresets.h720_169;
 
   LocalAudioTrack? _audioTrack;
-  
+
   Features? features;
 
   @override
   void initState() {
     checkPermission();
-    _subscription = Hardware.instance.onDeviceChange.stream.listen(_loadDevices);
+    _subscription =
+        Hardware.instance.onDeviceChange.stream.listen(_loadDevices);
     Hardware.instance.enumerateDevices().then(_loadDevices);
     super.initState();
   }
@@ -81,7 +81,7 @@ class _PreJoinState extends State<PreJoinScreen> {
     if (_videoInputs.isNotEmpty && _selectedVideoDevice == null) {
       // Try to find a front camera, otherwise default to the first available
       _selectedVideoDevice = _videoInputs.firstWhere(
-            (device) => device.label.toLowerCase().contains('front'),
+        (device) => device.label.toLowerCase().contains('front'),
         orElse: () => _videoInputs.first,
       );
     }
@@ -132,14 +132,14 @@ class _PreJoinState extends State<PreJoinScreen> {
     }
 
     if (_enableVideo && _selectedVideoDevice != null) {
-      _videoTrack = await LocalVideoTrack.createCameraTrack(CameraCaptureOptions(
+      _videoTrack =
+          await LocalVideoTrack.createCameraTrack(CameraCaptureOptions(
         deviceId: _selectedVideoDevice!.deviceId,
         params: _selectedVideoParameters,
       ));
       await _videoTrack!.start();
     }
   }
-
 
   void joinMeeting(Function stopLoading) async {
     isLoading = true;
@@ -153,7 +153,6 @@ class _PreJoinState extends State<PreJoinScreen> {
 
     apiClient.getMeetingJoinDetail(token, body).then((response) {
       if (response.success == 1) {
-        // _join(context, stopLoading, livekitUrl: response.data?.livekitServerURL??"", livekitToken: response.data?.accessToken??"");
         if (response.data == null) {
           Utils.showSnackBar(context, message: "Something went wrong!");
           return;
@@ -378,11 +377,15 @@ class _PreJoinState extends State<PreJoinScreen> {
         ),
       );
 
-      meetingDetails = MeetingDetails(meeting_uid: widget.meetingId, authorization_token: hostToken, features: features);
+      meetingDetails = MeetingDetails(
+          meeting_uid: widget.meetingId,
+          authorization_token: hostToken,
+          features: features);
 
       await Navigator.push<void>(
         context,
-        MaterialPageRoute(builder: (_) => RoomPage(room, listener, meetingDetails)),
+        MaterialPageRoute(
+            builder: (_) => RoomPage(room, listener, meetingDetails)),
       );
     } catch (error) {
       if (kDebugMode) {
@@ -409,7 +412,8 @@ class _PreJoinState extends State<PreJoinScreen> {
         elevation: 3,
         shadowColor: Colors.grey,
         iconTheme: const IconThemeData(
-          color: Colors.white, // Set the color you want for the back button here
+          color:
+              Colors.white, // Set the color you want for the back button here
         ),
       ),
       body: Stack(
@@ -476,7 +480,10 @@ class _PreJoinState extends State<PreJoinScreen> {
                                         color: Colors.white),
                                     iconSize: 30,
                                     onPressed: () async {
-                                      bool permissionsGranted = await checkAndRequestPermissions(context, checkForAudio: false);
+                                      bool permissionsGranted =
+                                          await checkAndRequestPermissions(
+                                              context,
+                                              checkForAudio: false);
                                       if (!permissionsGranted) return;
                                       setState(() {
                                         _enableVideo = !_enableVideo;
@@ -492,7 +499,10 @@ class _PreJoinState extends State<PreJoinScreen> {
                                         color: Colors.white),
                                     iconSize: 30,
                                     onPressed: () async {
-                                      bool permissionsGranted = await checkAndRequestPermissions(context, checkForCamera: false);
+                                      bool permissionsGranted =
+                                          await checkAndRequestPermissions(
+                                              context,
+                                              checkForCamera: false);
                                       if (!permissionsGranted) return;
                                       setState(() {
                                         _enableAudio = !_enableAudio;
@@ -574,7 +584,8 @@ class _PreJoinState extends State<PreJoinScreen> {
                           return;
                         }
                         // Check and request permissions
-                        bool permissionsGranted = await checkAndRequestPermissions(context);
+                        bool permissionsGranted =
+                            await checkAndRequestPermissions(context);
                         if (!permissionsGranted) return;
                         startLoading();
                         if (isLoading) {
@@ -612,8 +623,8 @@ class _PreJoinState extends State<PreJoinScreen> {
 
   void getFeaturesAndJoinMeeting(Function stopLoading) {
     isLoading = true;
-    apiClient.getFeatures(widget.meetingId).then((response){
-      if(response.success == 1){
+    apiClient.getFeatures(widget.meetingId).then((response) {
+      if (response.success == 1) {
         features = response.data?.features;
         joinMeeting(stopLoading);
       } else {
@@ -621,7 +632,8 @@ class _PreJoinState extends State<PreJoinScreen> {
           isLoading = false;
           stopLoading.call();
         });
-        Utils.showSnackBar(context, message: response.message ?? "Something went wrong!");
+        Utils.showSnackBar(context,
+            message: response.message ?? "Something went wrong!");
       }
     }).onError((handleError, stackStress) {
       setState(() {
@@ -632,9 +644,10 @@ class _PreJoinState extends State<PreJoinScreen> {
     });
   }
 
-  Future<bool> checkAndRequestPermissions(BuildContext context, {bool checkForCamera = true, bool checkForAudio = true}) async {
+  Future<bool> checkAndRequestPermissions(BuildContext context,
+      {bool checkForCamera = true, bool checkForAudio = true}) async {
     // Check and request microphone permission
-    if(checkForAudio) {
+    if (checkForAudio) {
       if (await Permission.microphone.isDenied) {
         // Request permission
         PermissionStatus micStatus = await Permission.microphone.request();
@@ -648,7 +661,7 @@ class _PreJoinState extends State<PreJoinScreen> {
       }
     }
 
-    if(checkForCamera) {
+    if (checkForCamera) {
       // Check and request camera permission
       if (await Permission.camera.isDenied) {
         // Request permission
@@ -674,7 +687,8 @@ class _PreJoinState extends State<PreJoinScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text("$permissionType Permission Required"),
-          content: Text("Please allow $permissionType permission to join the meeting."),
+          content: Text(
+              "Please allow $permissionType permission to join the meeting."),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -712,6 +726,4 @@ class _PreJoinState extends State<PreJoinScreen> {
       },
     );
   }
-
-
 }

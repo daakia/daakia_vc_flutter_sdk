@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:provider/provider.dart';
 
-import '../../viewmodel/livekit_viewmodel.dart';
+import '../../viewmodel/rtc_viewmodel.dart';
 
 class ParticipantTile extends StatelessWidget {
   const ParticipantTile(
@@ -17,7 +17,7 @@ class ParticipantTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<LivekitViewmodel>(context);
+    final viewModel = Provider.of<RtcViewmodel>(context);
     return Container(
       color: emptyVideoColor,
       padding: const EdgeInsets.all(10),
@@ -131,7 +131,7 @@ class ParticipantTile extends StatelessWidget {
     );
   }
 
-  void showParticipantDialog(BuildContext context, LivekitViewmodel viewModel) {
+  void showParticipantDialog(BuildContext context, RtcViewmodel viewModel) {
     if (viewModel.isHost() || viewModel.isCoHost()) {
       showDialog(
           context: context,
