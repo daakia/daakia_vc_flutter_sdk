@@ -4,10 +4,11 @@ import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 import 'api_client.dart';
 
-final apiClient = RestClient(setDioWithLog());
+final apiClient = RestClient(setDio());
 
-Dio setDioWithLog() {
+Dio setDio() {
   final dio = Dio();
+  dio.options.baseUrl = 'https://api.daakia.co.in/v2.0/';
   dio.interceptors.add(PrettyDioLogger(
       requestHeader: true,
       requestBody: true,
