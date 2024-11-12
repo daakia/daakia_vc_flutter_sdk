@@ -1,6 +1,7 @@
 import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/all_participant_bottomsheet.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../model/action_model.dart';
 import '../../resources/colors/color.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import 'chat_bottomsheet.dart';
@@ -80,8 +81,14 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
               buildOption(
                 context,
                 icon: Icons.pan_tool, // Replace with your raise hand icon
-                text: 'Start Raise Hand',
-                isVisible: false, //TODO::
+                text: viewModel.isMyHandRaised ? 'Stop Raise Hand' : 'Start Raise Hand',
+                isVisible: viewModel.meetingDetails.features!.isRaiseHandAllowed(),
+                onTap: (){
+                  viewModel.setMyHandRaised(!viewModel.isMyHandRaised);
+                  var raisedHand = viewModel.isMyHandRaised ? "raise_hand" : "stop_raise_hand";
+                  viewModel.sendAction(ActionModel(action: raisedHand));
+                  Navigator.pop(context);
+                }
               ),
               // Reaction
               buildOption(

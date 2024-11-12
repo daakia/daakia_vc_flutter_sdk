@@ -84,8 +84,9 @@ class ParticipantDialogControls extends StatelessWidget{
                 onTap: () {
                   Navigator.pop(context);
                   viewModel.sendAction(ActionModel(action: "stop_raise_hand_all"));
+                  viewModel.stopHandRaisedForAll();
                 },
-                isVisible: false, //TODO::
+                isVisible: !isForIndividual || viewModel.meetingDetails.features!.isRaiseHandAllowed(),
               ),
             ],
           ),
