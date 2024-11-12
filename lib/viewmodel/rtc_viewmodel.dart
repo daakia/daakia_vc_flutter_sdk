@@ -23,6 +23,10 @@ class RtcViewmodel extends ChangeNotifier {
 
   final List<ParticipantTrack> _participantTracks = [];
 
+  final Map<String, bool> _raisedHandMap = {};
+
+  bool _isMyHandRaised = false;
+
   bool isChatOpen = false;
   int _unreadMessageCount = 0;
 
@@ -123,6 +127,7 @@ class RtcViewmodel extends ChangeNotifier {
         utf8.encode(jsonData),
         reliable: true,
       );
+      setHandRaisedForLocal(action);
     } catch (e) {
       if (kDebugMode) {
         print('Error sending action: $e');
@@ -299,5 +304,33 @@ class RtcViewmodel extends ChangeNotifier {
 
   bool isCoHost() {
     return Utils.isCoHost(room.localParticipant?.metadata);
+  }
+
+  bool isHandRaised(String identity) {
+    var isHandRaised = _raisedHandMap[identity] ?? false;
+    return isHandRaised;
+  }
+
+  void setHandRaised(RemoteActivityData remoteData) {
+    _raisedHandMap[remoteData.identity?.identity ?? ""] = (remoteData.action == "raise_hand");
+    notifyListeners();
+  }
+
+  void stopHandRaisedForAll(){
+    _raisedHandMap.clear();
+    _isMyHandRaised = false;
+    notifyListeners();
+  }
+
+  void setMyHandRaised(bool isHandRaised){
+    _isMyHandRaised = isHandRaised;
+    notifyListeners();
+  }
+
+  bool get isMyHandRaised => _isMyHandRaised;
+
+  void setHandRaisedForLocal(ActionModel action) {
+    _raisedHandMap[room.localParticipant?.identity ?? ""] = (action.action == "raise_hand");
+    notifyListeners();
   }
 }

@@ -3,8 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:livekit_client/livekit_client.dart';
+import 'package:provider/provider.dart';
 
 import '../../resources/colors/color.dart';
+import '../../viewmodel/rtc_viewmodel.dart';
 import 'no_video.dart';
 import 'participant_info.dart';
 
@@ -130,7 +132,9 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
   List<Widget> extraWidgets(bool isScreenShare) => [];
 
   @override
-  Widget build(BuildContext ctx) => Card(
+  Widget build(BuildContext ctx) {
+    final viewModel = Provider.of<RtcViewmodel>(context);
+    return Card(
         elevation: 10,
         color: emptyVideoColor,
         clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -187,10 +191,16 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
               //     child: ParticipantStatsWidget(
               //       participant: widget.participant,
               //     )),
+              if(viewModel.isHandRaised(widget.participant.identity))
+              const Positioned(
+                top: 5,
+                  left: 5,
+                  child: Icon(Icons.front_hand, color: handRaiseColor,)
+              )
             ],
           ),
         ),
-      );
+      );}
 }
 
 class _LocalParticipantWidgetState

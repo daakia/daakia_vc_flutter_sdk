@@ -189,13 +189,18 @@ class _RoomPageState extends State<RoomPage> {
   Future<void> _checkReceivedDataType(RemoteActivityData remoteData) async {
     var viewModel = _livekitProviderKey.currentState?.viewModel;
     switch (remoteData.action) {
-      // case "raise_hand":
-      //   showSnackBar("${remoteData.identity?.name ?? ''} raised hand");
-      //   break;
-      //
-      // case "stop_raise_hand":
-      // // Handle stop raise hand action if needed
-      //   break;
+      case "raise_hand":
+        viewModel?.setHandRaised(remoteData);
+        showSnackBar(message: "${remoteData.identity?.name ?? ''} raised hand");
+        break;
+
+      case "stop_raise_hand":
+        viewModel?.setHandRaised(remoteData);
+        break;
+
+      case "stop_raise_hand_all":
+        viewModel?.stopHandRaisedForAll();
+        break;
 
       // case "send_private_message":
       // // Handle send private message action if needed
