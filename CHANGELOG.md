@@ -1,3 +1,8 @@
+## 2.0.0 (2024-11)
+
+- **New Features**:
+  - Added raise hand feature.
+  
 ## 1.0.0 (2024-11)
 
 - **Initial Release**:
