@@ -72,6 +72,11 @@ class RemoteActivityData {
     int? timestamp,
     String? action,
     bool? isSender,
+    String? meetingUid,
+    String? displayName,
+    String? participantLobbyStatus,
+    String? token,
+    bool? value,
   }) {
     return RemoteActivityData(
       identity: identity ?? this.identity,
@@ -80,6 +85,11 @@ class RemoteActivityData {
       timestamp: timestamp ?? this.timestamp,
       action: action ?? this.action,
       isSender: isSender ?? this.isSender,
+      meetingUid: meetingUid ?? this.meetingUid,
+      displayName: displayName ?? this.displayName,
+      participantLobbyStatus: participantLobbyStatus ?? this.participantLobbyStatus,
+      token: token ?? token,
+      value: value ?? this.value
     );
   }
 }

@@ -94,27 +94,31 @@ class _RtcControlState extends State<RtcControls> {
           ),
           IconButton(
             onPressed: () {
-              participant.isCameraEnabled()
-                  ? viewModel.disableVideo()
-                  : viewModel.enableVideo();
+              if(viewModel.isVideoPermissionEnable) {
+                participant.isCameraEnabled()
+                    ? viewModel.disableVideo()
+                    : viewModel.enableVideo();
+              }
             },
             icon: Icon(
               participant.isCameraEnabled()
                   ? Icons.videocam
                   : Icons.videocam_off,
-              color: Colors.white,
+              color: Colors.white.withOpacity(viewModel.getCameraAlpha()),
             ),
             iconSize: 30,
           ),
           IconButton(
             onPressed: () {
-              participant.isMicrophoneEnabled()
-                  ? viewModel.disableAudio()
-                  : viewModel.enableAudio();
+              if(viewModel.isAudioPermissionEnable) {
+                participant.isMicrophoneEnabled()
+                    ? viewModel.disableAudio()
+                    : viewModel.enableAudio();
+              }
             },
             icon: Icon(
               participant.isMicrophoneEnabled() ? Icons.mic : Icons.mic_off,
-              color: Colors.white,
+              color: Colors.white.withOpacity(viewModel.getMicAlpha()),
             ),
             iconSize: 30,
           ),

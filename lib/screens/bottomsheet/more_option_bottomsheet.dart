@@ -1,4 +1,5 @@
 import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/all_participant_bottomsheet.dart';
+import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/webinar_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../model/action_model.dart';
@@ -68,7 +69,11 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                 context,
                 icon: Icons.security, // Replace with your host control icon
                 text: 'Host Control',
-                isVisible: false, //TODO::
+                isVisible: viewModel.isHost(),
+                onTap: (){
+                  Navigator.pop(context);
+                  showWebinarControls();
+                }
               ),
               // Screen Share
               buildOption(
@@ -133,6 +138,14 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
     Navigator.of(context).push(MaterialPageRoute<Null>(
         builder: (BuildContext context) {
           return const ChatBottomSheet();
+        },
+        fullscreenDialog: true));
+  }
+
+  void showWebinarControls() {
+    Navigator.of(context).push(MaterialPageRoute<Null>(
+        builder: (BuildContext context) {
+          return const WebinarControls();
         },
         fullscreenDialog: true));
   }
