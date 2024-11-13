@@ -1,17 +1,17 @@
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:daakia_vc_flutter_sdk/api/injection.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:uuid/uuid.dart';
-import 'package:collection/collection.dart';
 
-import '../rtc/widgets/participant_info.dart';
 import '../model/action_model.dart';
 import '../model/meeting_details.dart';
 import '../model/send_message_model.dart';
+import '../rtc/widgets/participant_info.dart';
 
 class RtcViewmodel extends ChangeNotifier {
   final List<RemoteActivityData> _messageList = [];
@@ -34,7 +34,7 @@ class RtcViewmodel extends ChangeNotifier {
 
   bool _isRecording = false;
 
-  void setCoHost(bool isCoHost){
+  void setCoHost(bool isCoHost) {
     _isCoHost = isCoHost;
     notifyListeners();
   }
@@ -141,7 +141,8 @@ class RtcViewmodel extends ChangeNotifier {
 
     // Try to find the local participant based on identity
     ParticipantTrack? localParticipant = participants.firstWhereOrNull(
-          (participant) => participant.participant.identity == room.localParticipant?.identity,
+      (participant) =>
+          participant.participant.identity == room.localParticipant?.identity,
     );
 
     // Add the local participant first if it exists
@@ -151,15 +152,13 @@ class RtcViewmodel extends ChangeNotifier {
 
     // Add remaining participants, excluding the local participant if it exists
     _participantTracks.addAll(
-      participants.where((participant) => participant.participant.identity != room.localParticipant?.identity),
+      participants.where((participant) =>
+          participant.participant.identity != room.localParticipant?.identity),
     );
 
     // Notify listeners of the update
     notifyListeners();
   }
-
-
-
 
   List<ParticipantTrack> getParticipantList() {
     return _participantTracks;
@@ -175,8 +174,8 @@ class RtcViewmodel extends ChangeNotifier {
 
   //===========================RTC Controls====================
 
-  bool isAudioPermissionEnable = true;
-  bool isVideoPermissionEnable = true;
+  bool _isAudioPermissionEnable = true;
+  bool _isVideoPermissionEnable = true;
   double _micAlpha = 1.0;
   double _cameraAlpha = 1.0;
 
@@ -229,8 +228,10 @@ class RtcViewmodel extends ChangeNotifier {
       "participant_id": identity,
       "meeting_uid": meetingDetails.meeting_uid
     };
-    apiClient.removeParticipant(meetingDetails.authorization_token, body).then((response){
-      if(response.success == 1){
+    apiClient
+        .removeParticipant(meetingDetails.authorization_token, body)
+        .then((response) {
+      if (response.success == 1) {
         sendMessageToUI("Participant Removed");
       } else {
         sendMessageToUI(response.message ?? "Something went wrong!");
@@ -244,16 +245,22 @@ class RtcViewmodel extends ChangeNotifier {
       "meeting_uid": meetingDetails.meeting_uid,
       "is_co_host": isCoHost
     };
-    apiClient.makeCoHost(meetingDetails.authorization_token, body).then((response){
-      if(response.success == 1){
-        sendPrivateAction(ActionModel(action: "makeCoHost", token: meetingDetails.authorization_token), identity);
+    apiClient
+        .makeCoHost(meetingDetails.authorization_token, body)
+        .then((response) {
+      if (response.success == 1) {
+        sendPrivateAction(
+            ActionModel(
+                action: "makeCoHost",
+                token: meetingDetails.authorization_token),
+            identity);
       } else {
         sendMessageToUI(response.message ?? "Something went wrong!");
       }
     });
   }
 
-  void setRecording(bool isRecording){
+  void setRecording(bool isRecording) {
     _isRecording = isRecording;
     notifyListeners();
   }
@@ -264,8 +271,10 @@ class RtcViewmodel extends ChangeNotifier {
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meeting_uid,
     };
-    apiClient.startRecording(meetingDetails.authorization_token, body).then((response){
-      if(response.success == 1){
+    apiClient
+        .startRecording(meetingDetails.authorization_token, body)
+        .then((response) {
+      if (response.success == 1) {
         setRecording(true);
         sendMessageToUI("Recording Starting");
       } else {
@@ -278,8 +287,10 @@ class RtcViewmodel extends ChangeNotifier {
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meeting_uid,
     };
-    apiClient.stopRecording(meetingDetails.authorization_token, body).then((response){
-      if(response.success == 1){
+    apiClient
+        .stopRecording(meetingDetails.authorization_token, body)
+        .then((response) {
+      if (response.success == 1) {
         setRecording(false);
         sendMessageToUI("Recording Starting");
       } else {
@@ -288,14 +299,15 @@ class RtcViewmodel extends ChangeNotifier {
     });
   }
 
-  void sendMessageToUI(String message){
-    if(_uiMessage.isNotEmpty) {
+  void sendMessageToUI(String message) {
+    if (_uiMessage.isNotEmpty) {
       _uiMessage = message;
       notifyListeners();
       _uiMessage = "";
     }
     _uiMessage = "";
   }
+
   String get uiMessage => _uiMessage;
 
   bool isHost() {
@@ -312,17 +324,18 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
   void setHandRaised(RemoteActivityData remoteData) {
-    _raisedHandMap[remoteData.identity?.identity ?? ""] = (remoteData.action == "raise_hand");
+    _raisedHandMap[remoteData.identity?.identity ?? ""] =
+        (remoteData.action == "raise_hand");
     notifyListeners();
   }
 
-  void stopHandRaisedForAll(){
+  void stopHandRaisedForAll() {
     _raisedHandMap.clear();
     _isMyHandRaised = false;
     notifyListeners();
   }
 
-  void setMyHandRaised(bool isHandRaised){
+  void setMyHandRaised(bool isHandRaised) {
     _isMyHandRaised = isHandRaised;
     notifyListeners();
   }
@@ -330,7 +343,58 @@ class RtcViewmodel extends ChangeNotifier {
   bool get isMyHandRaised => _isMyHandRaised;
 
   void setHandRaisedForLocal(ActionModel action) {
-    _raisedHandMap[room.localParticipant?.identity ?? ""] = (action.action == "raise_hand");
+    _raisedHandMap[room.localParticipant?.identity ?? ""] =
+        (action.action == "raise_hand");
+    notifyListeners();
+  }
+
+  set isAudioPermissionEnable(bool isAudioPermissionEnable) {
+    _isAudioPermissionEnable = isAudioPermissionEnable;
+    notifyListeners();
+  }
+
+  set isVideoPermissionEnable(bool isVideoPermissionEnable) {
+    _isVideoPermissionEnable = isVideoPermissionEnable;
+    notifyListeners();
+  }
+
+  bool get isAudioPermissionEnable => _isAudioPermissionEnable;
+
+  bool get isVideoPermissionEnable => _isVideoPermissionEnable;
+
+  bool _isWebinarModeEnable = false;
+  bool _isAudioModeEnable = false;
+  bool _isVideoModeEnable = false;
+
+// Getter and Setter for _isWebinarModeEnable
+  bool get isWebinarModeEnable => _isWebinarModeEnable;
+
+  set isWebinarModeEnable(bool value) {
+    _isWebinarModeEnable = value;
+    _isAudioModeEnable = value;
+    _isVideoModeEnable = value;
+    notifyListeners();
+    sendAction(ActionModel(action: "force_mute_all", value: value));
+    sendAction(ActionModel(action: "force_video_off_all", value: value));
+  }
+
+// Getter and Setter for _isAudioModeEnable
+  bool get isAudioModeEnable => _isAudioModeEnable;
+
+  set isAudioModeEnable(bool value) {
+    _isAudioModeEnable = value;
+    _isWebinarModeEnable = (_isAudioModeEnable && _isVideoModeEnable);
+    sendAction(ActionModel(action: "force_mute_all", value: value));
+    notifyListeners();
+  }
+
+// Getter and Setter for _isVideoModeEnable
+  bool get isVideoModeEnable => _isVideoModeEnable;
+
+  set isVideoModeEnable(bool value) {
+    _isVideoModeEnable = value;
+    _isWebinarModeEnable = (_isAudioModeEnable && _isVideoModeEnable);
+    sendAction(ActionModel(action: "force_video_off_all", value: value));
     notifyListeners();
   }
 }

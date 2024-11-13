@@ -1,7 +1,10 @@
+# CHANGELOG
+
 ## 2.0.0 (2024-11)
 
 - **New Features**:
   - Added raise hand feature.
+  - Webinar mode & Host controls added.
   
 ## 1.0.0 (2024-11)
 
