@@ -14,7 +14,7 @@ class AllParticipantBottomsheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = Provider.of<RtcViewmodel>(context);
     return Scaffold(
-      backgroundColor:  emptyVideoColor, // Replace with your color
+      backgroundColor: emptyVideoColor,
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 20.0),
         child: Column(
@@ -25,7 +25,7 @@ class AllParticipantBottomsheet extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back), // Replace with your custom icon if needed
+                    icon: const Icon(Icons.arrow_back),
                     color: Colors.white,
                     onPressed: () {
                       Navigator.pop(context);
@@ -37,7 +37,7 @@ class AllParticipantBottomsheet extends StatelessWidget {
                       'Participant',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 20.0, // Replace with your `dimen_20_sp`
+                        fontSize: 20.0,
                         fontWeight: FontWeight.bold,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -65,23 +65,30 @@ class AllParticipantBottomsheet extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 10.0),
-                            SizedBox(
-                              height: 200.0, // Adjust height as needed
-                              child: ListView.builder(
-                                itemCount: viewModel.getLobbyRequestList().length, // Replace with dynamic count
-                                itemBuilder: (context, index) {
-                                  var lobbyRequest = viewModel.getLobbyRequestList()[index];
-                                  return ListTile(
-                                    title: ParticipantTile(participant: lobbyRequest.identity, isForLobby: false,),
-                                  );
-                                },
-                              ),
+                            ListView.builder(
+                              shrinkWrap: true, // Let the list take only the space it needs
+                              physics: const NeverScrollableScrollPhysics(), // Disable inner scrolling
+                              itemCount: viewModel.getLobbyRequestList().length,
+                              itemBuilder: (context, index) {
+                                var lobbyRequest = viewModel.getLobbyRequestList()[index];
+                                return ListTile(
+                                  title: ParticipantTile(
+                                    participant: lobbyRequest.identity,
+                                    isForLobby: true,
+                                    lobbyRequest: lobbyRequest,
+                                  ),
+                                );
+                              },
                             ),
                             const SizedBox(height: 10.0),
                             Center(
                               child: TextButton(
                                 onPressed: () {
-                                  // Handle 'Accept All' button action
+                                  viewModel.acceptParticipant(
+                                    request: viewModel.getLobbyRequestList()[0],
+                                    accept: true,
+                                    acceptAll: true,
+                                  );
                                 },
                                 child: const Text(
                                   'Accept All',
@@ -102,7 +109,7 @@ class AllParticipantBottomsheet extends StatelessWidget {
                         ),
                       ),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween, // Places text on left and icon on right
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
                             'Participants',
@@ -111,27 +118,33 @@ class AllParticipantBottomsheet extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          if(Utils.isHost(viewModel.room.localParticipant?.metadata) || Utils.isCoHost(viewModel.room.localParticipant?.metadata))
-                          IconButton(onPressed: (){
-                            showParticipantDialog(context, viewModel);
-                          }, icon: const Icon(
-                            Icons.more_vert, // Replace with your desired icon
-                            color: Colors.white,
-                          ),)
+                          if (Utils.isHost(viewModel.room.localParticipant?.metadata) ||
+                              Utils.isCoHost(viewModel.room.localParticipant?.metadata))
+                            IconButton(
+                              onPressed: () {
+                                showParticipantDialog(context, viewModel);
+                              },
+                              icon: const Icon(
+                                Icons.more_vert,
+                                color: Colors.white,
+                              ),
+                            ),
                         ],
                       ),
                       const SizedBox(height: 10.0),
-                      SizedBox(
-                        height: 300.0, // Adjust height as needed
-                        child: ListView.builder(
-                          itemCount: viewModel.getParticipantList().length, // Replace with dynamic count
-                          itemBuilder: (context, index) {
-                            var participant = viewModel.getParticipantList()[index];
-                            return ListTile(
-                              title: ParticipantTile(participant: participant.participant, isForLobby: false,),
-                            );
-                          },
-                        ),
+                      ListView.builder(
+                        shrinkWrap: true, // Let the list take only the space it needs
+                        physics: const NeverScrollableScrollPhysics(), // Disable inner scrolling
+                        itemCount: viewModel.getParticipantList().length,
+                        itemBuilder: (context, index) {
+                          var participant = viewModel.getParticipantList()[index];
+                          return ListTile(
+                            title: ParticipantTile(
+                              participant: participant.participant,
+                              isForLobby: false,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -143,6 +156,7 @@ class AllParticipantBottomsheet extends StatelessWidget {
       ),
     );
   }
+
 
   void showParticipantDialog(BuildContext context, RtcViewmodel viewModel) {
     showDialog(

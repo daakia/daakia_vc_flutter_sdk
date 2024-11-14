@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
+import 'package:daakia_vc_flutter_sdk/rtc/lobby_request_manager.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/rtc_controls.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant_info.dart';
@@ -43,6 +44,8 @@ class _RoomPageState extends State<RoomPage> {
   @override
   void initState() {
     super.initState();
+    var viewModel = _livekitProviderKey.currentState?.viewModel;
+    lobbyManager = LobbyRequestManager(context, viewModel);
     // add callback for a `RoomEvent` as opposed to a `ParticipantEvent`
     widget.room.addListener(_onRoomDidUpdate);
     // add callbacks for finer grained events
@@ -73,6 +76,8 @@ class _RoomPageState extends State<RoomPage> {
 
   @override
   void dispose() {
+    var viewModel = _livekitProviderKey.currentState?.viewModel;
+    viewModel?.stopLobbyCheck();
     // always dispose listener
     (() async {
       if (lkPlatformIs(PlatformType.iOS)) {
@@ -186,6 +191,8 @@ class _RoomPageState extends State<RoomPage> {
     _checkReceivedDataType(eventData);
   }
 
+  late LobbyRequestManager? lobbyManager;
+
   Future<void> _checkReceivedDataType(RemoteActivityData remoteData) async {
     var viewModel = _livekitProviderKey.currentState?.viewModel;
     switch (remoteData.action) {
@@ -206,9 +213,10 @@ class _RoomPageState extends State<RoomPage> {
       // // Handle send private message action if needed
       //   break;
       //
-      // case "lobby":
-      //   showLobbyRequest(remoteData);
-      //   break;
+      case "lobby":
+        viewModel?.checkAndAddUserToLobbyList(remoteData);
+        lobbyManager?.showLobbyRequestDialog(remoteData);
+        break;
       //
       // case "heart":
       // case "blush":
@@ -408,6 +416,8 @@ class _RoomPageState extends State<RoomPage> {
 
   @override
   Widget build(BuildContext context) {
+    _livekitProviderKey
+        .currentState?.viewModel.startLobbyCheck();
     SystemChrome.setSystemUIOverlayStyle(
         const SystemUiOverlayStyle(statusBarColor: Colors.black));
     return PopScope(

@@ -56,4 +56,13 @@ abstract class RestClient {
     @Header("Authorization") String token,
     @Body() Map<String, dynamic> body,
   );
+  
+  @POST("rtc/meeting/addParticipant/toLobby")
+  Future<BaseResponse<RtcData>> addParticipantToLobby(
+      @Body() Map<String, dynamic> body,
+      );
+  @POST("rtc/meeting/update/participantLobbyStatus")
+  Future<BaseResponse<RtcData>> acceptParticipantInLobby(
+      @Body() Map<String, dynamic> body,
+      );
 }

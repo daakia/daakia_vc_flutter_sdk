@@ -1,3 +1,4 @@
+import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/resources/colors/color.dart';
 import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/pariticipant_dialog_controls.dart';
 import 'package:daakia_vc_flutter_sdk/screens/customWidget/initials_circle.dart';
@@ -10,10 +11,11 @@ import '../../viewmodel/rtc_viewmodel.dart';
 
 class ParticipantTile extends StatelessWidget {
   const ParticipantTile(
-      {@required this.participant, this.isForLobby = false, super.key});
+      {required this.participant, this.isForLobby = false, super.key, this.lobbyRequest});
 
   final Participant? participant;
   final bool isForLobby;
+  final RemoteActivityData? lobbyRequest;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +27,7 @@ class ParticipantTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Initials Circle
-          InitialsCircle(initials: Utils.getInitials(participant?.name)),
+          InitialsCircle(initials: Utils.getInitials(isForLobby ? lobbyRequest?.displayName : participant?.name)),
           const SizedBox(width: 10),
           // Name and Details
           Expanded(
@@ -34,7 +36,7 @@ class ParticipantTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  participant?.name ?? "Unknown",
+                  (isForLobby ? lobbyRequest?.displayName : participant?.name) ?? "Unknown",
                   // Replace with the participant's name
                   style: const TextStyle(
                     color: Colors.white,
@@ -43,6 +45,7 @@ class ParticipantTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+                if(!isForLobby)
                 Text(
                   "${Utils.calculateMinutesSince(participant?.joinedAt)} mins ${Utils.getParticipantType(participant?.metadata)}", // Replace with details text
                   style: const TextStyle(
@@ -66,7 +69,7 @@ class ParticipantTile extends StatelessWidget {
                   icon: const Icon(Icons.close, color: Colors.white),
                   iconSize: 25,
                   onPressed: () {
-                    // Handle reject action
+                    viewModel.acceptParticipant(request: lobbyRequest, accept: false);
                   },
                 ),
               ),
@@ -76,7 +79,7 @@ class ParticipantTile extends StatelessWidget {
                   icon: const Icon(Icons.check, color: Colors.white),
                   iconSize: 25,
                   onPressed: () {
-                    // Handle accept action
+                    viewModel.acceptParticipant(request: lobbyRequest, accept: true);
                   },
                 ),
               ),
