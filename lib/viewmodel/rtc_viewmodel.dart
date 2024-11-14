@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
@@ -396,5 +397,77 @@ class RtcViewmodel extends ChangeNotifier {
     _isWebinarModeEnable = (_isAudioModeEnable && _isVideoModeEnable);
     sendAction(ActionModel(action: "force_video_off_all", value: value));
     notifyListeners();
+  }
+
+  void acceptParticipant({required RemoteActivityData? request, required bool accept, bool acceptAll = false}) {
+    if(request == null) return;
+    Map<String, dynamic> body = {
+      "meeting_uid": meetingDetails.meeting_uid,
+    };
+    if (!acceptAll) {
+      body["request_id"] = request.requestId;
+      body["is_admit"] = accept;
+    } else {
+      body["is_admit_all"] = acceptAll;
+    }
+    apiClient.acceptParticipantInLobby(body).then((response) {
+      if (response.success == 1) {
+        if (accept) {
+          sendMessageToUI("Participant accepted");
+        } else {
+          sendMessageToUI("Participant rejected");
+        }
+      } else {
+        sendMessageToUI("Something went wrong!");
+      }
+    });
+  }
+
+  final Map<String, int> requestTimestamps = {};
+  final Set<String> _previousLobbyRequestList = {};
+  Timer? _timer;
+  List<RemoteActivityData> get lobbyRequestList => List.unmodifiable(_lobbyRequestList);
+  void checkAndAddUserToLobbyList(RemoteActivityData remoteData) {
+    final requestId = remoteData.requestId ?? "";
+
+    if (!_previousLobbyRequestList.contains(requestId)) {
+      _lobbyRequestList.add(remoteData);
+      _previousLobbyRequestList.add(requestId);
+      requestTimestamps[requestId] = DateTime.now().millisecondsSinceEpoch;
+      notifyListeners();
+    } else {
+      // Update the timestamp for the existing request
+      requestTimestamps[requestId] = DateTime.now().millisecondsSinceEpoch;
+    }
+  }
+
+  void startLobbyCheck() {
+    _timer?.cancel();
+    print("Lobby check");
+    _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      final currentTime = DateTime.now().millisecondsSinceEpoch;
+
+      // Remove entries older than 12 seconds without `removeWhere`
+      List<String> toRemove = [];
+      requestTimestamps.forEach((requestId, timestamp) {
+        if (currentTime - timestamp > 12000) {
+          toRemove.add(requestId);
+        }
+      });
+
+      for (final requestId in toRemove) {
+        requestTimestamps.remove(requestId);
+        _previousLobbyRequestList.remove(requestId);
+        _lobbyRequestList.removeWhere((data) => data.requestId == requestId);
+      }
+      print("Lobby check: ${toRemove.length}");
+      if (toRemove.isNotEmpty) {
+        notifyListeners();
+      }
+    });
+  }
+
+  void stopLobbyCheck() {
+    _timer?.cancel();
   }
 }
