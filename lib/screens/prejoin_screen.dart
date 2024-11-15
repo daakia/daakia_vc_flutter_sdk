@@ -141,7 +141,10 @@ class _PreJoinState extends State<PreJoinScreen> {
     }
   }
 
-  void joinMeeting(Function stopLoading) async {
+  String lobbyRequestId = "";
+  bool isUserCanJoin = false;
+
+  void joinMeeting(Function stopLoading, {bool isParticipant = false}) async {
     isLoading = true;
 
     var token = hostToken;
@@ -150,6 +153,9 @@ class _PreJoinState extends State<PreJoinScreen> {
       "preferred_video_server_id": "ap1",
       "display_name": name
     };
+    if(isParticipant){
+      body["lobby_request_id"] = lobbyRequestId;
+    }
 
     apiClient.getMeetingJoinDetail(token, body).then((response) {
       if (response.success == 1) {
@@ -180,7 +186,7 @@ class _PreJoinState extends State<PreJoinScreen> {
             return;
           }
           if (it.participantCanJoin == true) {
-            // isUserCanJoin = true TODO:: Need to work on lobby
+            isUserCanJoin = true;
             _join(context, stopLoading,
                 livekitUrl: response.data?.livekitServerURL ?? "",
                 livekitToken: response.data?.accessToken ?? "");
@@ -243,6 +249,47 @@ class _PreJoinState extends State<PreJoinScreen> {
         stopLoading.call();
       });
       Utils.showSnackBar(context, message: "Something went wrong!");
+    });
+  }
+
+  void addParticipantToLobby(Function stopLoading){
+    Map<String, dynamic> body = {
+      "meeting_uid": widget.meetingId,
+      "display_name": name,
+    };
+
+    apiClient.addParticipantToLobby(body).then((response){
+      if(response.success == 1){
+        lobbyRequestId = response.data?.requestId ?? "";
+        Future.delayed(const Duration(seconds: 8), () {
+          joinMeeting(stopLoading, isParticipant: true);
+        });
+      } else {
+        Utils.showSnackBar(context, message: response.message ?? "Something went wrong!");
+        stopLoading();
+      }
+    });
+  }
+
+  Timer? _participantTimer;
+  void startAddingParticipantsPool(Function stopLoading) {
+    int iterations = 0;
+
+    _participantTimer?.cancel(); // Cancel any previous timer if exists
+
+    // Set up a timer to repeat every 10 seconds
+    _participantTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      if (isUserCanJoin || isRejected || iterations >= 12) {
+        // Stop the timer if the user can join, has been rejected, or after 2 minutes
+        stopLoading();
+        timer.cancel();
+        return;
+      }
+
+      // Call the function to add a participant to the lobby
+      addParticipantToLobby(stopLoading);
+
+      iterations++; // Track the number of iterations
     });
   }
 
