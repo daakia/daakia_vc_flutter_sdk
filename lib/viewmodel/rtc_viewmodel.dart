@@ -443,7 +443,6 @@ class RtcViewmodel extends ChangeNotifier {
 
   void startLobbyCheck() {
     _timer?.cancel();
-    print("Lobby check");
     _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
       final currentTime = DateTime.now().millisecondsSinceEpoch;
 
@@ -460,7 +459,7 @@ class RtcViewmodel extends ChangeNotifier {
         _previousLobbyRequestList.remove(requestId);
         _lobbyRequestList.removeWhere((data) => data.requestId == requestId);
       }
-      print("Lobby check: ${toRemove.length}");
+
       if (toRemove.isNotEmpty) {
         notifyListeners();
       }
