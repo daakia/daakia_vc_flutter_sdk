@@ -385,7 +385,7 @@ class _RestClient implements RestClient {
     final _data = <String, dynamic>{};
     _data.addAll(body);
     final _options = _setStreamType<BaseResponse<RtcData>>(Options(
-      method: 'POST',
+      method: 'PUT',
       headers: _headers,
       extra: _extra,
     )

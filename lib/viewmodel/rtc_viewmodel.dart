@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:collection/collection.dart';
 import 'package:daakia_vc_flutter_sdk/api/injection.dart';
+import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/foundation.dart';
@@ -19,8 +19,6 @@ class RtcViewmodel extends ChangeNotifier {
   final List<RemoteActivityData> _lobbyRequestList = [];
   late Room room;
   late MeetingDetails meetingDetails;
-
-  String _uiMessage = "";
 
   final List<ParticipantTrack> _participantTracks = [];
 
@@ -300,17 +298,6 @@ class RtcViewmodel extends ChangeNotifier {
     });
   }
 
-  void sendMessageToUI(String message) {
-    if (_uiMessage.isNotEmpty) {
-      _uiMessage = message;
-      notifyListeners();
-      _uiMessage = "";
-    }
-    _uiMessage = "";
-  }
-
-  String get uiMessage => _uiMessage;
-
   bool isHost() {
     return Utils.isHost(room.localParticipant?.metadata);
   }
@@ -399,8 +386,11 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void acceptParticipant({required RemoteActivityData? request, required bool accept, bool acceptAll = false}) {
-    if(request == null) return;
+  void acceptParticipant(
+      {required RemoteActivityData? request,
+      required bool accept,
+      bool acceptAll = false}) {
+    if (request == null) return;
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meeting_uid,
     };
@@ -426,7 +416,10 @@ class RtcViewmodel extends ChangeNotifier {
   final Map<String, int> requestTimestamps = {};
   final Set<String> _previousLobbyRequestList = {};
   Timer? _timer;
-  List<RemoteActivityData> get lobbyRequestList => List.unmodifiable(_lobbyRequestList);
+
+  List<RemoteActivityData> get lobbyRequestList =>
+      List.unmodifiable(_lobbyRequestList);
+
   void checkAndAddUserToLobbyList(RemoteActivityData remoteData) {
     final requestId = remoteData.requestId ?? "";
 
@@ -469,4 +462,24 @@ class RtcViewmodel extends ChangeNotifier {
   void stopLobbyCheck() {
     _timer?.cancel();
   }
+
+  final _roomEventController = StreamController<RTCEvents>();
+
+  // Stream to expose the events
+  Stream<RTCEvents> get roomEvents => _roomEventController.stream;
+
+  void cancelRoomEvents() {
+    _roomEventController.close();
+  }
+
+  // Function to emit events
+  void sendEvent(RTCEvents event) {
+    _roomEventController.sink.add(event);
+  }
+
+  // Function to show a snackbar message
+  void sendMessageToUI(String? message) {
+    sendEvent(ShowSnackBar(message ?? ""));
+  }
+
 }

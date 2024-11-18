@@ -40,12 +40,15 @@ class _RtcControlState extends State<RtcControls> {
   }
 
   void _loadDevices(List<MediaDevice> devices) async {
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _onChange() {
-    // trigger refresh
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   bool get isMuted => participant.isMuted;
@@ -198,7 +201,14 @@ class _RtcControlState extends State<RtcControls> {
   }
 
   void _onTapDisconnect() async {
+    if (!mounted) return;
     final result = await context.showDisconnectDialog();
     if (result == true) await widget.room.disconnect();
+  }
+
+  @override
+  void dispose() {
+    participant.removeListener(_onChange);
+    super.dispose();
   }
 }

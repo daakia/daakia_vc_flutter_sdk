@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:daakia_vc_flutter_sdk/model/features.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
