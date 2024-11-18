@@ -127,6 +127,7 @@ class _EmojiDialogState extends State<EmojiDialog>
             child: AnimatedEmoji(
               emojiAsset,
               size: 30,
+              animate: _isVisible[index],
               repeat: true,
             ),
           ),

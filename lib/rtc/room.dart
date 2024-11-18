@@ -242,12 +242,6 @@ class _RoomPageState extends State<RoomPage> {
         break;
       //
       case "ask_to_unmute_mic":
-        showSnackBar(
-            message: "Host is asking you to turn on your mic",
-            actionText: "Accept",
-            actionCallBack: () {
-              viewModel?.enableAudio();
-            });
         final result = await context
             .showPermissionAskDialog("Host is asking you to turn on your mic");
         if (result == true) viewModel?.enableAudio();

@@ -291,7 +291,7 @@ class RtcViewmodel extends ChangeNotifier {
         .then((response) {
       if (response.success == 1) {
         setRecording(false);
-        sendMessageToUI("Recording Starting");
+        sendMessageToUI("Recording Stop");
       } else {
         sendMessageToUI(response.message ?? "Something went wrong!");
       }
