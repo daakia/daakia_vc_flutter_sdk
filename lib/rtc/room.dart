@@ -1,13 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:animated_emoji/emoji.dart';
+import 'package:animated_emoji/emoji_data.dart';
+import 'package:animated_emoji/emojis.g.dart';
+import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/lobby_request_manager.dart';
-import 'package:daakia_vc_flutter_sdk/rtc/widgets/rtc_controls.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant_info.dart';
+import 'package:daakia_vc_flutter_sdk/rtc/widgets/rtc_controls.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_provider.dart';
+import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -78,6 +83,7 @@ class _RoomPageState extends State<RoomPage> {
   void dispose() {
     var viewModel = _livekitProviderKey.currentState?.viewModel;
     viewModel?.stopLobbyCheck();
+    viewModel?.cancelRoomEvents();
     // always dispose listener
     (() async {
       if (lkPlatformIs(PlatformType.iOS)) {
@@ -186,8 +192,8 @@ class _RoomPageState extends State<RoomPage> {
     });
 
   void _handleDataChannel(DataReceivedEvent event) {
-    var _eventData = parseJsonData(event.data);
-    var eventData = _eventData.copyWith(identity: event.participant);
+    var eventData0 = parseJsonData(event.data);
+    var eventData = eventData0.copyWith(identity: event.participant);
     _checkReceivedDataType(eventData);
   }
 
@@ -218,14 +224,14 @@ class _RoomPageState extends State<RoomPage> {
         lobbyManager?.showLobbyRequestDialog(remoteData);
         break;
       //
-      // case "heart":
-      // case "blush":
-      // case "clap":
-      // case "smile":
-      // case "thumbsUp":
-      //   showSnackBar("${remoteData.identity?.name ?? ''} sent a reaction");
-      //   showReaction(remoteData.action);
-      //   break;
+      case "heart":
+      case "blush":
+      case "clap":
+      case "smile":
+      case "thumbsUp":
+        showSnackBar(message: "${remoteData.identity?.name ?? ''} sent a reaction");
+        showReaction(remoteData.action, viewModel);
+        break;
       //
       case "mute_camera":
         viewModel?.disableVideo();
@@ -414,10 +420,22 @@ class _RoomPageState extends State<RoomPage> {
   final GlobalKey<RtcProviderState> _livekitProviderKey =
       GlobalKey<RtcProviderState>();
 
+  final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
+
   @override
   Widget build(BuildContext context) {
-    _livekitProviderKey
-        .currentState?.viewModel.startLobbyCheck();
+    // Ensure the viewModel is accessed after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Check if the viewModel is ready
+      final viewModel = _livekitProviderKey.currentState?.viewModel;
+      if (viewModel != null) {
+        // Start the lobby check
+        viewModel.startLobbyCheck();
+        // Collect lobby events
+        collectLobbyEvents(viewModel, context);
+      }
+    });
     SystemChrome.setSystemUIOverlayStyle(
         const SystemUiOverlayStyle(statusBarColor: Colors.black));
     return PopScope(
@@ -433,70 +451,95 @@ class _RoomPageState extends State<RoomPage> {
         room: widget.room,
         meetingDetails: widget.meetingDetails,
         child: MaterialApp(
+          scaffoldMessengerKey: scaffoldMessengerKey,
           debugShowCheckedModeBanner: false,
           home: Scaffold(
             body: SafeArea(
-              child: Container(
-                color: Colors.black,
-                child: Column(
-                  children: [
-                    // Main content area for participants
-                    Expanded(
-                      child: Stack(
-                        children: [
-                          Column(
-                            children: [
-                              Expanded(
-                                child: participantTracks.isNotEmpty
-                                    ? ParticipantWidget.widgetFor(
-                                        participantTracks.first,
-                                        showStatsLayer: true,
-                                      )
-                                    : Container(),
-                              ),
-                              // Horizontal list of participants positioned above LivekitControls
-                              if (participantTracks.length > 1)
-                                SizedBox(
-                                  height: 120,
-                                  // Fixed height for the participant list
-                                  child: ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: participantTracks.length - 1,
-                                    itemBuilder:
-                                        (BuildContext context, int index) =>
-                                            SizedBox(
-                                      width: 180,
-                                      height: 120,
-                                      child: ParticipantWidget.widgetFor(
-                                        participantTracks[index + 1],
+              child: Stack(
+                children: [
+                  Container(
+                  color: Colors.black,
+                  child: Column(
+                    children: [
+                      // Main content area for participants
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            Column(
+                              children: [
+                                Expanded(
+                                  child: participantTracks.isNotEmpty
+                                      ? ParticipantWidget.widgetFor(
+                                          participantTracks.first,
+                                          showStatsLayer: true,
+                                        )
+                                      : Container(),
+                                ),
+                                // Horizontal list of participants positioned above LivekitControls
+                                if (participantTracks.length > 1)
+                                  SizedBox(
+                                    height: 120,
+                                    // Fixed height for the participant list
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: participantTracks.length - 1,
+                                      itemBuilder:
+                                          (BuildContext context, int index) =>
+                                              SizedBox(
+                                        width: 180,
+                                        height: 120,
+                                        child: ParticipantWidget.widgetFor(
+                                          participantTracks[index + 1],
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                            ],
-                          ),
-                          if (_livekitProviderKey
-                                  .currentState?.viewModel.isRecording ==
-                              true)
-                            const Positioned(
-                              right: 10,
-                              top: 10,
-                              child: Icon(Icons.radio_button_checked,
-                                  color: Colors.red),
+                              ],
                             ),
-                        ],
-                      ),
-                    ),
-                    if (widget.room.localParticipant != null)
-                      SafeArea(
-                        top: false,
-                        child: RtcControls(
-                          widget.room,
-                          widget.room.localParticipant!,
+                            if (_livekitProviderKey
+                                    .currentState?.viewModel.isRecording ==
+                                true)
+                              const Positioned(
+                                right: 10,
+                                top: 10,
+                                child: Icon(Icons.radio_button_checked,
+                                    color: Colors.red),
+                              ),
+                          ],
                         ),
                       ),
-                  ],
+                      if (widget.room.localParticipant != null)
+                        SafeArea(
+                          top: false,
+                          child: RtcControls(
+                            widget.room,
+                            widget.room.localParticipant!,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
+                  if(emojiAsset != null)
+                  Align(
+                    alignment: Alignment.center, // Center the widget
+                    child: Visibility(
+                      visible: isNeedToShowEmoji, // Toggle visibility
+                      child: AnimatedEmoji(
+                          emojiAsset!,
+                        size: 100,
+                        animate: isNeedToShowEmoji == true,
+                        repeat: true,
+                          onLoaded: (duration) async {
+                            await Future.delayed(const Duration(seconds: 3));
+                            setState(() {
+                              isNeedToShowEmoji = false;
+                              emojiAsset = null;
+                            });
+                          }
+                      ),
+                    ),
+                  ),
+                ]
               ),
             ),
           ),
@@ -534,7 +577,7 @@ class _RoomPageState extends State<RoomPage> {
 
   void showSnackBar(
       {required String message, String? actionText, Function? actionCallBack}) {
-    final snackBar = SnackBar(
+    scaffoldMessengerKey.currentState?.showSnackBar(SnackBar(
       content: Text(message),
       action: actionText != null
           ? SnackBarAction(
@@ -544,9 +587,37 @@ class _RoomPageState extends State<RoomPage> {
               },
             )
           : null,
-    );
-    // Find the ScaffoldMessenger in the widget tree
-    // and use it to show a SnackBar.
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    ));
+  }
+
+  bool isEventAdded = false;
+
+  void collectLobbyEvents(RtcViewmodel? viewModel, BuildContext context) {
+    if (isEventAdded) return;
+    isEventAdded = true;
+    viewModel?.roomEvents.listen((event) {
+      if (event is ShowSnackBar) {
+        showSnackBar(message: event.message);
+      } else if (event is ShowReaction) {
+        print("Event trigger");
+        showReaction(event.emoji, viewModel);
+      }
+    });
+  }
+
+  AnimatedEmojiData? emojiAsset;
+  bool isNeedToShowEmoji = false;
+  void showReaction(String? emoji, RtcViewmodel? viewModel) {
+    switch(emoji){
+      case "heart": emojiAsset = AnimatedEmojis.redHeart; break;
+      case "blush": emojiAsset = AnimatedEmojis.blush; break;
+      case "clap": emojiAsset = AnimatedEmojis.clap; break;
+      case "smile": emojiAsset = AnimatedEmojis.smile; break;
+      case "thumbsUp": emojiAsset = AnimatedEmojis.thumbsUp; break;
+    }
+    setState(() {
+      isNeedToShowEmoji = true;
+    });
+    isNeedToShowEmoji = true;
   }
 }

@@ -6,6 +6,7 @@ import '../../model/action_model.dart';
 import '../../resources/colors/color.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import 'chat_bottomsheet.dart';
+import 'emoji_dialog.dart';
 
 class MoreOptionBottomSheet extends StatefulWidget {
   const MoreOptionBottomSheet({super.key});
@@ -100,7 +101,11 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                 context,
                 icon: Icons.emoji_emotions, // Replace with your reaction icon
                 text: 'Reaction',
-                isVisible: false, //TODO::
+                isVisible: true,
+                onTap: (){
+                  Navigator.pop(context);
+                  showEmojiDialog(viewModel);
+                }
               ),
               // Participants
               buildOption(
@@ -132,6 +137,19 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
           return const AllParticipantBottomsheet();
         },
         fullscreenDialog: true));
+  }
+
+  void showEmojiDialog(RtcViewmodel viewModel){
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(); // This will dismiss the BottomSheet
+    }
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return EmojiDialog(
+            viewModel,
+          );
+        });
   }
 
   void showChatBottomSheet() {

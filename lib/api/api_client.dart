@@ -61,7 +61,7 @@ abstract class RestClient {
   Future<BaseResponse<RtcData>> addParticipantToLobby(
       @Body() Map<String, dynamic> body,
       );
-  @POST("rtc/meeting/update/participantLobbyStatus")
+  @PUT("rtc/meeting/update/participantLobbyStatus")
   Future<BaseResponse<RtcData>> acceptParticipantInLobby(
       @Body() Map<String, dynamic> body,
       );
