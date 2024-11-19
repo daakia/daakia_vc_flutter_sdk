@@ -10,6 +10,7 @@ import 'package:livekit_client/livekit_client.dart';
 import 'package:uuid/uuid.dart';
 
 import '../model/action_model.dart';
+import '../model/emoji_message.dart';
 import '../model/meeting_details.dart';
 import '../model/send_message_model.dart';
 import '../rtc/widgets/participant_info.dart';
@@ -453,6 +454,8 @@ class RtcViewmodel extends ChangeNotifier {
         _lobbyRequestList.removeWhere((data) => data.requestId == requestId);
       }
 
+      startReactionCheck();
+
       if (toRemove.isNotEmpty) {
         notifyListeners();
       }
@@ -482,4 +485,30 @@ class RtcViewmodel extends ChangeNotifier {
     sendEvent(ShowSnackBar(message ?? ""));
   }
 
+  final List<EmojiMessage> _emojiQueue = [];
+
+  void addEmoji(EmojiMessage emoji) {
+    _emojiQueue.add(emoji);
+    if (emojiQueue.length > 6) {
+      emojiQueue.removeAt(0);
+    }
+    notifyListeners(); // Notify listeners to update the UI
+  }
+
+  void removeEmojiAt(int position){
+    _emojiQueue.removeAt(position);
+    notifyListeners();
+  }
+
+  List<EmojiMessage> get emojiQueue => _emojiQueue;
+
+  void startReactionCheck(){
+    final currentTime = DateTime.now().millisecondsSinceEpoch;
+    // Remove emojis older than 3 seconds
+    _emojiQueue.removeWhere(
+          (emoji) => currentTime - int.parse(emoji.timestamp) > 3000,
+    );
+    notifyListeners();
+    sendEvent(UpdateView());
+  }
 }

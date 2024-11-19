@@ -10,6 +10,7 @@ import 'package:daakia_vc_flutter_sdk/rtc/lobby_request_manager.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant_info.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/rtc_controls.dart';
+import 'package:daakia_vc_flutter_sdk/screens/customWidget/emoji_reaction_widget.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_provider.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
@@ -18,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:livekit_client/livekit_client.dart';
 
+import '../model/emoji_message.dart';
 import '../model/remote_activity_data.dart';
 import '../utils/utils.dart';
 import 'method_channels/replay_kit_channel.dart';
@@ -229,8 +231,7 @@ class _RoomPageState extends State<RoomPage> {
       case "clap":
       case "smile":
       case "thumbsUp":
-        showSnackBar(message: "${remoteData.identity?.name ?? ''} sent a reaction");
-        showReaction(remoteData.action, viewModel);
+        showReaction(remoteData.action, viewModel, name: remoteData.identity?.name ?? '');
         break;
       //
       case "mute_camera":
@@ -513,24 +514,11 @@ class _RoomPageState extends State<RoomPage> {
                     ],
                   ),
                 ),
-                  if(emojiAsset != null)
-                  Align(
-                    alignment: Alignment.center, // Center the widget
-                    child: Visibility(
-                      visible: isNeedToShowEmoji, // Toggle visibility
-                      child: AnimatedEmoji(
-                          emojiAsset!,
-                        size: 100,
-                        animate: isNeedToShowEmoji == true,
-                        repeat: true,
-                          onLoaded: (duration) async {
-                            await Future.delayed(const Duration(seconds: 3));
-                            setState(() {
-                              isNeedToShowEmoji = false;
-                              emojiAsset = null;
-                            });
-                          }
-                      ),
+                  Positioned(
+                    right: 0,
+                    top: 50,
+                    child: EmojiReactionWidget(
+                      viewModel: _livekitProviderKey.currentState?.viewModel,
                     ),
                   ),
                 ]
@@ -593,15 +581,16 @@ class _RoomPageState extends State<RoomPage> {
       if (event is ShowSnackBar) {
         showSnackBar(message: event.message);
       } else if (event is ShowReaction) {
-        print("Event trigger");
         showReaction(event.emoji, viewModel);
+      } else if (event is UpdateView){
+        setState(() {
+        });
       }
     });
   }
 
   AnimatedEmojiData? emojiAsset;
-  bool isNeedToShowEmoji = false;
-  void showReaction(String? emoji, RtcViewmodel? viewModel) {
+  void showReaction(String? emoji, RtcViewmodel? viewModel, {String name = "You"}) {
     switch(emoji){
       case "heart": emojiAsset = AnimatedEmojis.redHeart; break;
       case "blush": emojiAsset = AnimatedEmojis.blush; break;
@@ -610,8 +599,14 @@ class _RoomPageState extends State<RoomPage> {
       case "thumbsUp": emojiAsset = AnimatedEmojis.thumbsUp; break;
     }
     setState(() {
-      isNeedToShowEmoji = true;
+      addEmojiToQueue(emojiAsset, name, viewModel);
     });
-    isNeedToShowEmoji = true;
   }
+
+  void addEmojiToQueue(AnimatedEmojiData? emoji, String senderName, RtcViewmodel? viewModel) {
+    if (viewModel == null) return;
+    final newMessage = EmojiMessage(emoji: emoji, senderName: senderName, timestamp: DateTime.now().millisecondsSinceEpoch.toString());
+    viewModel.addEmoji(newMessage);
+  }
+
 }
