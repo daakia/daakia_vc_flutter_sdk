@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:safe_device/safe_device.dart';
 
 FutureOr<void> Function()? onWindowShouldClose;
 
@@ -123,6 +124,9 @@ class Utils {
     return role == 'cohost';
   }
 
-
+  static Future<bool> isIosSimulator() async {
+    var isRealDevice = await SafeDevice.isRealDevice;
+    return isRealDevice;
+  }
 
 }
