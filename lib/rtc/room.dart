@@ -420,6 +420,8 @@ class _RoomPageState extends State<RoomPage> {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(statusBarColor: Colors.black));
     // Ensure the viewModel is accessed after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Check if the viewModel is ready
@@ -431,8 +433,6 @@ class _RoomPageState extends State<RoomPage> {
         collectLobbyEvents(viewModel, context);
       }
     });
-    SystemChrome.setSystemUIOverlayStyle(
-        const SystemUiOverlayStyle(statusBarColor: Colors.black));
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {

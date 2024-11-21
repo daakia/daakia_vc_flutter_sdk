@@ -4,6 +4,7 @@ PODS:
     - FlutterMacOS
   - device_info_plus (0.0.1):
     - Flutter
+  - DTTJailbreakDetection (0.4.0)
   - Flutter (1.0.0)
   - flutter_webrtc (0.11.8):
     - Flutter
@@ -11,13 +12,16 @@ PODS:
   - fluttertoast (0.0.2):
     - Flutter
     - Toast
-  - livekit_client (2.2.8):
+  - livekit_client (2.3.0):
     - Flutter
     - WebRTC-SDK (= 125.6422.05)
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
   - permission_handler_apple (9.3.0):
+    - Flutter
+  - safe_device (1.0.0):
+    - DTTJailbreakDetection
     - Flutter
   - Toast (4.1.1)
   - WebRTC-SDK (125.6422.05)
@@ -31,9 +35,11 @@ DEPENDENCIES:
   - livekit_client (from `.symlinks/plugins/livekit_client/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
+  - safe_device (from `.symlinks/plugins/safe_device/ios`)
 
 SPEC REPOS:
   trunk:
+    - DTTJailbreakDetection
     - Toast
     - WebRTC-SDK
 
@@ -54,19 +60,23 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   permission_handler_apple:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
+  safe_device:
+    :path: ".symlinks/plugins/safe_device/ios"
 
 SPEC CHECKSUMS:
   connectivity_plus: 4c41c08fc6d7c91f63bc7aec70ffe3730b04f563
   device_info_plus: bf2e3232933866d73fe290f2942f2156cdd10342
+  DTTJailbreakDetection: 5e356c5badc17995f65a83ed9483f787a0057b71
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_webrtc: 4f730f3d58a28b0afdea039c8bf4a0f616a6b20c
   fluttertoast: 723e187574b149e68e63ca4d39b837586b903cfa
-  livekit_client: 9fa4e9b4a449db90905d24f46f7d247471dc4e94
+  livekit_client: 5c31e13cd17dd0d545a074290c937dbdff1d809d
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
   permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
+  safe_device: 4539eb6bdbeb4b61a763a51c4e73e6b37dea4e3d
   Toast: 1f5ea13423a1e6674c4abdac5be53587ae481c4e
   WebRTC-SDK: 1990a1a595bd0b59c17485ce13ff17f575732c12
 
-PODFILE CHECKSUM: 1eed8b0225884d4f5381f401c350d2dd53ec25ae
+PODFILE CHECKSUM: efc0db60b5c2ddc3e2e8b1d8af9f8b1c98ddefbd
 
 COCOAPODS: 1.12.1
