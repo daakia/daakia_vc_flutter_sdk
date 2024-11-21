@@ -139,6 +139,126 @@ class _RestClient implements RestClient {
   }
 
   @override
+  Future<BaseResponse<MeetingDetailsModel>> getMeetingDetails(
+    String meetingUid,
+    String secret,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'meeting_uid': meetingUid};
+    final _headers = <String, dynamic>{r'secret': secret};
+    _headers.removeWhere((k, v) => v == null);
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<BaseResponse<MeetingDetailsModel>>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'saas/sdk/meeting/basic/detail',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late BaseResponse<MeetingDetailsModel> _value;
+    try {
+      _value = BaseResponse<MeetingDetailsModel>.fromJson(
+        _result.data!,
+        (json) => MeetingDetailsModel.fromJson(json as Map<String, dynamic>),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<BaseResponse<EventPasswordProtectedData>> verifyCommonMeetingPassword(
+      Map<String, dynamic> body) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(body);
+    final _options =
+        _setStreamType<BaseResponse<EventPasswordProtectedData>>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              'rtc/meeting/verify/commonPassword',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late BaseResponse<EventPasswordProtectedData> _value;
+    try {
+      _value = BaseResponse<EventPasswordProtectedData>.fromJson(
+        _result.data!,
+        (json) =>
+            EventPasswordProtectedData.fromJson(json as Map<String, dynamic>),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<BaseResponse<EventPasswordProtectedData>> verifyMeetingPassword(
+      Map<String, dynamic> body) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(body);
+    final _options =
+        _setStreamType<BaseResponse<EventPasswordProtectedData>>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+            .compose(
+              _dio.options,
+              'meeting/verify/password',
+              queryParameters: queryParameters,
+              data: _data,
+            )
+            .copyWith(
+                baseUrl: _combineBaseUrls(
+              _dio.options.baseUrl,
+              baseUrl,
+            )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late BaseResponse<EventPasswordProtectedData> _value;
+    try {
+      _value = BaseResponse<EventPasswordProtectedData>.fromJson(
+        _result.data!,
+        (json) =>
+            EventPasswordProtectedData.fromJson(json as Map<String, dynamic>),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<BaseResponse<FeatureData>> getFeatures(String meetingUid) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'meeting_uid': meetingUid};

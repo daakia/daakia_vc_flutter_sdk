@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:daakia_vc_flutter_sdk/model/features.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
+import 'package:daakia_vc_flutter_sdk/model/meeting_details_model.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -19,11 +20,13 @@ class PreJoinScreen extends StatefulWidget {
       {required this.meetingId,
       required this.secretKey,
       this.isHost = false,
+        required this.basicMeetingDetails,
       super.key});
 
   final String meetingId;
   final String secretKey;
   final bool isHost;
+  final MeetingDetailsModel? basicMeetingDetails;
 
   @override
   State<StatefulWidget> createState() {
@@ -38,6 +41,10 @@ class _PreJoinState extends State<PreJoinScreen> {
   late MeetingDetails meetingDetails;
 
   var name = "";
+  var email = "";
+  var password = "";
+
+  var _obscurePassword = true;
 
   var alertMessage = 'Please check your audio/video settings';
   var isRejected = false;
@@ -603,6 +610,64 @@ class _PreJoinState extends State<PreJoinScreen> {
                       },
                     ),
                   ),
+                  Visibility(
+                    visible: !widget.isHost && (widget.basicMeetingDetails?.isStandardPassword == true),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
+                      // Equivalent to marginHorizontal="20dp" and marginTop="10dp"
+                      child: TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: 'Email*', // Equivalent to hint="Name*"
+                          border: OutlineInputBorder(),
+                        ),
+                        style: const TextStyle(
+                          color: Colors
+                              .black, // Equivalent to textColor="@color/black"
+                        ),
+                        enabled: true, // Equivalent to android:enabled="false"
+                        onChanged: (String? value) {
+                          setState(() {
+                            email = value ?? "";
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  Visibility(
+                    visible: !widget.isHost && (widget.basicMeetingDetails?.isCommonPassword == true || widget.basicMeetingDetails?.isStandardPassword == true),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'Password*',
+                          border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
+                        ),
+                        style: const TextStyle(
+                          color: Colors
+                              .black,
+                        ),
+                        enabled: true,
+                        obscureText: _obscurePassword,
+                        onChanged: (String? value) {
+                          setState(() {
+                            password = value ?? "";
+                          });
+                        },
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   LoadingBtn(
                     height: 50,
@@ -629,6 +694,20 @@ class _PreJoinState extends State<PreJoinScreen> {
                               message: "Please enter your name");
                           return;
                         }
+                        if(!widget.isHost) {
+                          var event = widget.basicMeetingDetails;
+                          if(event?.isStandardPassword == true){
+                            if(!checkValidity()){
+                              return;
+                            }
+                          }
+                          if(event?.isCommonPassword == true){
+                            if(password.isEmpty) {
+                              Utils.showSnackBar(context, message: "Please enter your password");
+                              return;
+                            }
+                          }
+                        }
                         // Check and request permissions
                         bool permissionsGranted =
                             await checkAndRequestPermissions(context);
@@ -641,7 +720,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                           if (widget.isHost && !isHostVerified) {
                             _showVerificationDialog(context, stopLoading);
                           } else {
-                            getFeaturesAndJoinMeeting(stopLoading);
+                            checkMeetingType(stopLoading);
                           }
                         }
                       }
@@ -772,5 +851,107 @@ class _PreJoinState extends State<PreJoinScreen> {
         );
       },
     );
+  }
+
+  void checkMeetingType(Function stopLoading) {
+    var event = widget.basicMeetingDetails;
+    if(widget.isHost){
+      getFeaturesAndJoinMeeting(stopLoading);
+    } else if(event?.isStandardPassword ==  true){
+      if(checkValidity()){
+        verifyPasswordProtectedMeeting(stopLoading);
+      } else{
+        stopLoading();
+      }
+    } else if(event?.isCommonPassword == true){
+      if (password.isEmpty) {
+        Utils.showSnackBar(context, message: "Please enter your password");
+        stopLoading();
+        return;
+      }
+      verifyCommonPasswordProtectedMeeting(stopLoading);
+    } else {
+      if(event?.isLobbyMode == true){
+        startAddingParticipantsPool(stopLoading);
+      } else {
+        getFeaturesAndJoinMeeting(stopLoading);
+      }
+    }
+  }
+
+  bool checkValidity(){
+    var isValid = false;
+    if(email.isNotEmpty) {
+      if (Utils.isValidEmail(email)){
+        isValid = true;
+      } else {
+        Utils.showSnackBar(context, message: "Invalid email");
+        return false;
+      }
+    } else {
+      Utils.showSnackBar(context, message: "Please enter your email");
+      return false;
+    }
+    if (password.isEmpty) {
+      Utils.showSnackBar(context, message: "Please enter your password");
+      return false;
+    } else {
+      isValid = true;
+    }
+    return isValid;
+  }
+
+  void verifyCommonPasswordProtectedMeeting(Function stopLoading) {
+    Map<String, dynamic> body = {
+      "password": password,
+      "meeting_uid": widget.meetingId
+    };
+    apiClient.verifyCommonMeetingPassword(body).then((response){
+      if(response.success == 1){
+        if(response.data?.passwordVerified == true){
+          passwordVerified(stopLoading);
+        } else {
+          passwordNotVerified(stopLoading, message: "Not verified");
+        }
+      } else {
+        passwordNotVerified(stopLoading, message: response.message ?? "Something went wrong!");
+      }
+    }).onError((_,__){
+      passwordNotVerified(stopLoading);
+    });
+  }
+
+  void verifyPasswordProtectedMeeting(Function stopLoading) {
+    Map<String, dynamic> body = {
+      "email": email,
+      "password": password,
+      "meeting_uid": widget.meetingId
+    };
+    apiClient.verifyMeetingPassword(body).then((response){
+      if(response.success == 1){
+        if(response.data?.passwordVerified == true){
+          passwordVerified(stopLoading);
+        } else {
+          passwordNotVerified(stopLoading, message: "Not verified");
+        }
+      } else {
+        passwordNotVerified(stopLoading, message: response.message ?? "Something went wrong!");
+      }
+    }).onError((_,__){
+      passwordNotVerified(stopLoading);
+    });
+  }
+
+  void passwordNotVerified(Function stopLoading, {String message = "Something went wrong!"}){
+    stopLoading();
+    Utils.showSnackBar(context, message: message);
+  }
+
+  void passwordVerified(Function stopLoading) {
+    if(widget.basicMeetingDetails?.isLobbyMode == true){
+      startAddingParticipantsPool(stopLoading);
+    } else {
+      getFeaturesAndJoinMeeting(stopLoading);
+    }
   }
 }

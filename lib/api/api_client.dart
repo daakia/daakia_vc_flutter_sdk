@@ -4,7 +4,9 @@ import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
 import '../model/base_response.dart';
+import '../model/event_password_protected_data.dart';
 import '../model/host_token_model.dart';
+import '../model/meeting_details_model.dart';
 import '../model/rtc_data.dart';
 
 part 'api_client.g.dart';
@@ -28,6 +30,21 @@ abstract class RestClient {
   Future<BaseResponse<LicenceVerifyModel>> licenceVerify(
     @Body() Map<String, dynamic> body,
   );
+
+  @GET("saas/sdk/meeting/basic/detail")
+  Future<BaseResponse<MeetingDetailsModel>> getMeetingDetails(
+      @Query("meeting_uid") String meetingUid,
+      @Header("secret") String secret
+      );
+
+  @POST("rtc/meeting/verify/commonPassword")
+  Future<BaseResponse<EventPasswordProtectedData>> verifyCommonMeetingPassword(
+      @Body() Map<String, dynamic> body,
+      );
+  @POST("meeting/verify/password")
+  Future<BaseResponse<EventPasswordProtectedData>> verifyMeetingPassword(
+      @Body() Map<String, dynamic> body,
+      );
 
   @GET("saas/meeting/features")
   Future<BaseResponse<FeatureData>> getFeatures(
