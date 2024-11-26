@@ -1,11 +1,12 @@
 import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/all_participant_bottomsheet.dart';
+import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/chat_controller.dart';
 import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/webinar_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../model/action_model.dart';
 import '../../resources/colors/color.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
-import 'chat_bottomsheet.dart';
 import 'emoji_dialog.dart';
 
 class MoreOptionBottomSheet extends StatefulWidget {
@@ -47,7 +48,7 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                   isVisible: viewModel.meetingDetails.features!.isChatAllowed(),
                   setBadge: BadgeData(viewModel.getUnReadCount()), onTap: () {
                 Navigator.pop(context);
-                showChatBottomSheet();
+                showChatBottomSheet(viewModel);
               }),
               // Recording Section
               buildOption(context,
@@ -66,16 +67,13 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                 Navigator.pop(context);
               }),
               // Host Controls
-              buildOption(
-                context,
-                icon: Icons.security, // Replace with your host control icon
-                text: 'Host Control',
-                isVisible: viewModel.isHost(),
-                onTap: (){
-                  Navigator.pop(context);
-                  showWebinarControls();
-                }
-              ),
+              buildOption(context,
+                  icon: Icons.security, // Replace with your host control icon
+                  text: 'Host Control',
+                  isVisible: viewModel.isHost(), onTap: () {
+                Navigator.pop(context);
+                showWebinarControls();
+              }),
               // Screen Share
               buildOption(
                 context,
@@ -84,29 +82,27 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                 isVisible: false, //TODO::
               ),
               // Raise Hand
-              buildOption(
-                context,
-                icon: Icons.pan_tool, // Replace with your raise hand icon
-                text: viewModel.isMyHandRaised ? 'Stop Raise Hand' : 'Start Raise Hand',
-                isVisible: viewModel.meetingDetails.features!.isRaiseHandAllowed(),
-                onTap: (){
-                  viewModel.setMyHandRaised(!viewModel.isMyHandRaised);
-                  var raisedHand = viewModel.isMyHandRaised ? "raise_hand" : "stop_raise_hand";
-                  viewModel.sendAction(ActionModel(action: raisedHand));
-                  Navigator.pop(context);
-                }
-              ),
+              buildOption(context,
+                  icon: Icons.pan_tool, // Replace with your raise hand icon
+                  text: viewModel.isMyHandRaised
+                      ? 'Stop Raise Hand'
+                      : 'Start Raise Hand',
+                  isVisible: viewModel.meetingDetails.features!
+                      .isRaiseHandAllowed(), onTap: () {
+                viewModel.setMyHandRaised(!viewModel.isMyHandRaised);
+                var raisedHand =
+                    viewModel.isMyHandRaised ? "raise_hand" : "stop_raise_hand";
+                viewModel.sendAction(ActionModel(action: raisedHand));
+                Navigator.pop(context);
+              }),
               // Reaction
-              buildOption(
-                context,
-                icon: Icons.emoji_emotions, // Replace with your reaction icon
-                text: 'Reaction',
-                isVisible: true,
-                onTap: (){
-                  Navigator.pop(context);
-                  showEmojiDialog(viewModel);
-                }
-              ),
+              buildOption(context,
+                  icon: Icons.emoji_emotions, // Replace with your reaction icon
+                  text: 'Reaction',
+                  isVisible: true, onTap: () {
+                Navigator.pop(context);
+                showEmojiDialog(viewModel);
+              }),
               // Participants
               buildOption(
                 context,
@@ -131,7 +127,9 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
   }
 
   void showParticipantBottomSheet() {
-    Navigator.pop(context);
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(); // This will dismiss the BottomSheet
+    }
     Navigator.of(context).push(MaterialPageRoute<Null>(
         builder: (BuildContext context) {
           return const AllParticipantBottomsheet();
@@ -139,7 +137,7 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
         fullscreenDialog: true));
   }
 
-  void showEmojiDialog(RtcViewmodel viewModel){
+  void showEmojiDialog(RtcViewmodel viewModel) {
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop(); // This will dismiss the BottomSheet
     }
@@ -152,10 +150,12 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
         });
   }
 
-  void showChatBottomSheet() {
+  void showChatBottomSheet(RtcViewmodel viewModel) {
     Navigator.of(context).push(MaterialPageRoute<Null>(
         builder: (BuildContext context) {
-          return const ChatBottomSheet();
+          return ChatController(
+            viewModel: viewModel,
+          );
         },
         fullscreenDialog: true));
   }

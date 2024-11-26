@@ -5,6 +5,7 @@ class InitialsCircle extends StatelessWidget {
   final Color backgroundColor;
   final double size;
   final TextStyle textStyle;
+  final bool isSelected;
 
   const InitialsCircle({
     super.key,
@@ -16,23 +17,36 @@ class InitialsCircle extends StatelessWidget {
       fontWeight: FontWeight.bold,
       fontSize: 15.0,
     ),
+    this.isSelected = false, // Add a parameter to indicate selection
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: size,
-      height: size,
+      width: size + 4, // Add extra space for the border
+      height: size + 4,
+      padding: const EdgeInsets.all(2.0), // Add padding for the border effect
       decoration: BoxDecoration(
-        color: backgroundColor,
         shape: BoxShape.circle,
+        border: isSelected
+            ? Border.all(color: Colors.deepPurpleAccent, width: 2.0)
+            : null, // Add border only if selected
       ),
-      alignment: Alignment.center,
-      child: Text(
-        initials,
-        style: textStyle,
-        maxLines: 1,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          initials,
+          style: textStyle,
+          maxLines: 1,
+        ),
       ),
     );
   }
 }
+

@@ -1,3 +1,5 @@
+import 'package:livekit_client/livekit_client.dart';
+
 abstract class RTCEvents{}
 
 class ShowSnackBar extends RTCEvents {
@@ -7,6 +9,11 @@ class ShowSnackBar extends RTCEvents {
 class ShowReaction extends RTCEvents{
   final String emoji;
   ShowReaction(this.emoji);
+}
+
+class OpenPrivateChat extends RTCEvents{
+  final Participant? participant;
+  OpenPrivateChat(this.participant);
 }
 
 class UpdateView extends RTCEvents{}

@@ -47,7 +47,7 @@ class _DaakiaVideoConferenceState extends State<DaakiaVideoConferenceWidget>{
         return;
       } else {
         _verified = false;
-        _licenseMessage = "License key not verified";
+        _licenseMessage = response.message ?? "License key not verified";
       }
       setState(() {_isLoading = false;});
     }).onError((handleError, stackStress) {

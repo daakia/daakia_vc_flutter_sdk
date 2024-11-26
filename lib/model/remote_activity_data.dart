@@ -13,6 +13,8 @@ class RemoteActivityData {
   final String? participantLobbyStatus;
   final String? token;
   final bool value;
+  final String? userIdentity;
+  final String? userName;
 
   RemoteActivityData({
     this.identity,
@@ -27,6 +29,8 @@ class RemoteActivityData {
     this.participantLobbyStatus = "",
     this.token = "",
     this.value = false,
+    this.userIdentity = "",
+    this.userName = ""
   });
 
   // Factory constructor to create an instance from JSON
@@ -44,6 +48,8 @@ class RemoteActivityData {
       participantLobbyStatus: json['participant_lobby_status'] as String? ?? "",
       token: json['token'] as String? ?? "",
       value: json['value'] as bool? ?? false,
+      userIdentity: json['user_identity'] as String? ?? "",
+      userName: json['user_name'] as String? ?? "",
     );
   }
 
@@ -62,6 +68,8 @@ class RemoteActivityData {
       'participant_lobby_status': participantLobbyStatus,
       'token': token,
       'value': value,
+      'user_identity': userIdentity,
+      'user_name': userName,
     };
   }
 
@@ -78,6 +86,8 @@ class RemoteActivityData {
     String? participantLobbyStatus,
     String? token,
     bool? value,
+    String? userIdentity,
+    String? userName
   }) {
     return RemoteActivityData(
       identity: identity ?? this.identity,
@@ -91,7 +101,9 @@ class RemoteActivityData {
       displayName: displayName ?? this.displayName,
       participantLobbyStatus: participantLobbyStatus ?? this.participantLobbyStatus,
       token: token ?? token,
-      value: value ?? this.value
+      value: value ?? this.value,
+        userIdentity: userIdentity ?? this.userIdentity,
+      userName: userName ?? this.userName,
     );
   }
 }

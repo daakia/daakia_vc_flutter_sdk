@@ -11,11 +11,16 @@ import '../../viewmodel/rtc_viewmodel.dart';
 
 class ParticipantTile extends StatelessWidget {
   const ParticipantTile(
-      {required this.participant, this.isForLobby = false, super.key, this.lobbyRequest});
+      {required this.participant,
+      this.isForLobby = false,
+      super.key,
+      this.lobbyRequest,
+      this.onDismissBottomSheet});
 
   final Participant? participant;
   final bool isForLobby;
   final RemoteActivityData? lobbyRequest;
+  final VoidCallback? onDismissBottomSheet;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +32,9 @@ class ParticipantTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Initials Circle
-          InitialsCircle(initials: Utils.getInitials(isForLobby ? lobbyRequest?.displayName : participant?.name)),
+          InitialsCircle(
+              initials: Utils.getInitials(
+                  isForLobby ? lobbyRequest?.displayName : participant?.name)),
           const SizedBox(width: 10),
           // Name and Details
           Expanded(
@@ -36,7 +43,10 @@ class ParticipantTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  (isForLobby ? lobbyRequest?.displayName : participant?.name) ?? "Unknown",
+                  (isForLobby
+                          ? lobbyRequest?.displayName
+                          : participant?.name) ??
+                      "Unknown",
                   // Replace with the participant's name
                   style: const TextStyle(
                     color: Colors.white,
@@ -45,17 +55,17 @@ class ParticipantTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if(!isForLobby)
-                Text(
-                  "${Utils.calculateMinutesSince(participant?.joinedAt)} mins ${Utils.getParticipantType(participant?.metadata)}", // Replace with details text
-                  style: const TextStyle(
-                    color: Color(0xFFC4C1B8),
-                    // Equivalent to the text color used
-                    fontSize: 12,
+                if (!isForLobby)
+                  Text(
+                    "${Utils.calculateMinutesSince(participant?.joinedAt)} mins ${Utils.getParticipantType(participant?.metadata)}", // Replace with details text
+                    style: const TextStyle(
+                      color: Color(0xFFC4C1B8),
+                      // Equivalent to the text color used
+                      fontSize: 12,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
               ],
             ),
           ),
@@ -69,7 +79,8 @@ class ParticipantTile extends StatelessWidget {
                   icon: const Icon(Icons.close, color: Colors.white),
                   iconSize: 25,
                   onPressed: () {
-                    viewModel.acceptParticipant(request: lobbyRequest, accept: false);
+                    viewModel.acceptParticipant(
+                        request: lobbyRequest, accept: false);
                   },
                 ),
               ),
@@ -79,7 +90,8 @@ class ParticipantTile extends StatelessWidget {
                   icon: const Icon(Icons.check, color: Colors.white),
                   iconSize: 25,
                   onPressed: () {
-                    viewModel.acceptParticipant(request: lobbyRequest, accept: true);
+                    viewModel.acceptParticipant(
+                        request: lobbyRequest, accept: true);
                   },
                 ),
               ),
@@ -116,11 +128,7 @@ class ParticipantTile extends StatelessWidget {
                     participant?.identity !=
                         viewModel.room.localParticipant?.identity),
                 child: IconButton(
-                  icon: Icon(Icons.more_vert,
-                      color: Colors.white.withOpacity(
-                          (viewModel.isHost() || viewModel.isCoHost())
-                              ? 1
-                              : 0.5)),
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
                   iconSize: 25,
                   onPressed: () {
                     showParticipantDialog(context, viewModel);
@@ -135,15 +143,18 @@ class ParticipantTile extends StatelessWidget {
   }
 
   void showParticipantDialog(BuildContext context, RtcViewmodel viewModel) {
-    if (viewModel.isHost() || viewModel.isCoHost()) {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return ParticipantDialogControls(
-              participant: participant as Participant,
-              viewModel: viewModel,
-            );
-          });
-    }
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return ParticipantDialogControls(
+            participant: participant as Participant,
+            viewModel: viewModel,
+            onDismissBottomSheet: () {
+              if (onDismissBottomSheet != null) {
+                onDismissBottomSheet!();
+              }
+            },
+          );
+        });
   }
 }
