@@ -4,17 +4,32 @@ import 'package:livekit_client/livekit_client.dart';
 import '../../model/action_model.dart';
 import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
+import 'chat_controller.dart';
 
-class ParticipantDialogControls extends StatelessWidget{
-  const ParticipantDialogControls({required this.participant, required this.viewModel, this.isForIndividual = true, super.key});
+class ParticipantDialogControls extends StatefulWidget {
+  const ParticipantDialogControls(
+      {required this.participant,
+      required this.viewModel,
+      this.isForIndividual = true,
+      this.onDismissBottomSheet,
+      super.key});
+
   final Participant participant;
   final bool isForIndividual;
   final RtcViewmodel viewModel;
+  final VoidCallback? onDismissBottomSheet;
 
   @override
+  State<StatefulWidget> createState() {
+    return ParticipantDialogState();
+  }
+}
+
+class ParticipantDialogState extends State<ParticipantDialogControls> {
+  @override
   Widget build(BuildContext context) {
-    String? myRoleMataData = viewModel.room.localParticipant?.metadata;
-    String? targetRoleMataData = participant.metadata;
+    String? myRoleMataData = widget.viewModel.room.localParticipant?.metadata;
+    String? targetRoleMataData = widget.participant.metadata;
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
@@ -32,61 +47,105 @@ class ParticipantDialogControls extends StatelessWidget{
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CustomTextItem(
-                text: participant.isMicrophoneEnabled() ? "Mute Mic" : "Ask To Unmute Mic",
+                text: widget.participant.isMicrophoneEnabled()
+                    ? "Mute Mic"
+                    : "Ask To Unmute Mic",
                 onTap: () {
                   Navigator.pop(context);
-                  viewModel.sendPrivateAction(ActionModel(action: participant.isMicrophoneEnabled() ? "mute_mic" : "ask_to_unmute_mic"), participant.identity);
+                  widget.viewModel.sendPrivateAction(
+                      ActionModel(
+                          action: widget.participant.isMicrophoneEnabled()
+                              ? "mute_mic"
+                              : "ask_to_unmute_mic"),
+                      widget.participant.identity);
                 },
-                isVisible: (isForIndividual && (Utils.isHost(myRoleMataData) || Utils.isCoHost(myRoleMataData) )),
+                isVisible: (widget.isForIndividual &&
+                    (Utils.isHost(myRoleMataData) ||
+                        Utils.isCoHost(myRoleMataData))),
               ),
               CustomTextItem(
-                text: participant.isCameraEnabled() ? "Turn Off Camera" : "Ask To Turn ON Camera",
+                text: widget.participant.isCameraEnabled()
+                    ? "Turn Off Camera"
+                    : "Ask To Turn ON Camera",
                 onTap: () {
                   Navigator.pop(context);
-                  viewModel.sendPrivateAction(ActionModel(action: participant.isCameraEnabled() ? "mute_camera" : "ask_to_unmute_camera"), participant.identity);
+                  widget.viewModel.sendPrivateAction(
+                      ActionModel(
+                          action: widget.participant.isCameraEnabled()
+                              ? "mute_camera"
+                              : "ask_to_unmute_camera"),
+                      widget.participant.identity);
                 },
-                isVisible: (isForIndividual && (Utils.isHost(myRoleMataData) || Utils.isCoHost(myRoleMataData) )),
+                isVisible: (widget.isForIndividual &&
+                    (Utils.isHost(myRoleMataData) ||
+                        Utils.isCoHost(myRoleMataData))),
               ),
               CustomTextItem(
-                text: Utils.isCoHost(participant.metadata) ? "Remove Co-Host" : "Make Co-Host",
-                onTap: () {
-                  Navigator.pop(context);
-                  viewModel.makeCoHost(participant.identity, !Utils.isCoHost(participant.metadata));
-                },
-                isVisible:  (isForIndividual && Utils.isHost(myRoleMataData) && !Utils.isHost(targetRoleMataData))
-              ),
+                  text: Utils.isCoHost(widget.participant.metadata)
+                      ? "Remove Co-Host"
+                      : "Make Co-Host",
+                  onTap: () {
+                    Navigator.pop(context);
+                    widget.viewModel.makeCoHost(widget.participant.identity,
+                        !Utils.isCoHost(widget.participant.metadata));
+                  },
+                  isVisible: (widget.isForIndividual &&
+                      Utils.isHost(myRoleMataData) &&
+                      !Utils.isHost(targetRoleMataData))),
               CustomTextItem(
                 text: "Remove From Call",
                 onTap: () {
                   Navigator.pop(context);
-                  viewModel.removeFromCall(participant.identity);
+                  widget.viewModel.removeFromCall(widget.participant.identity);
                 },
-                isVisible: (isForIndividual && (Utils.isHost(myRoleMataData) || (Utils.isCoHost(myRoleMataData) && !Utils.isHost(targetRoleMataData)))),
+                isVisible: (widget.isForIndividual &&
+                    (Utils.isHost(myRoleMataData) ||
+                        (Utils.isCoHost(myRoleMataData) &&
+                            !Utils.isHost(targetRoleMataData)))),
+              ),
+              CustomTextItem(
+                text: "Send private message",
+                onTap: () {
+                  // Dismiss the ParticipantDialogControls
+                  Navigator.of(context, rootNavigator: false).pop();
+                  if (widget.onDismissBottomSheet != null) {
+                    widget.onDismissBottomSheet!();
+                  }
+                  widget.viewModel.checkAndCreatePrivateChat(
+                      widget.participant.identity, widget.participant.name);
+                  showChatBottomSheet(widget.viewModel,
+                      widget.participant.identity, widget.participant.name);
+                },
+                isVisible: widget.isForIndividual,
               ),
               CustomTextItem(
                 text: "Mute All",
                 onTap: () {
                   Navigator.pop(context);
-                  viewModel.sendAction(ActionModel(action: "mute_mic"));
+                  widget.viewModel.sendAction(ActionModel(action: "mute_mic"));
                 },
-                isVisible: !isForIndividual,
+                isVisible: !widget.isForIndividual,
               ),
               CustomTextItem(
                 text: "Video Off All",
                 onTap: () {
                   Navigator.pop(context);
-                  viewModel.sendAction(ActionModel(action: "mute_camera"));
+                  widget.viewModel
+                      .sendAction(ActionModel(action: "mute_camera"));
                 },
-                isVisible: !isForIndividual,
+                isVisible: !widget.isForIndividual,
               ),
               CustomTextItem(
                 text: "Lower Hands All",
                 onTap: () {
                   Navigator.pop(context);
-                  viewModel.sendAction(ActionModel(action: "stop_raise_hand_all"));
-                  viewModel.stopHandRaisedForAll();
+                  widget.viewModel
+                      .sendAction(ActionModel(action: "stop_raise_hand_all"));
+                  widget.viewModel.stopHandRaisedForAll();
                 },
-                isVisible: !isForIndividual || viewModel.meetingDetails.features!.isRaiseHandAllowed(),
+                isVisible: !widget.isForIndividual &&
+                    widget.viewModel.meetingDetails.features!
+                        .isRaiseHandAllowed(),
               ),
             ],
           ),
@@ -95,6 +154,18 @@ class ParticipantDialogControls extends StatelessWidget{
     );
   }
 
+  void showChatBottomSheet(
+      RtcViewmodel viewmodel, String identity, String name) {
+    Navigator.of(context).push(MaterialPageRoute<Null>(
+        builder: (BuildContext context) {
+          return ChatController(
+            identity: identity,
+            name: name,
+            viewModel: viewmodel,
+          );
+        },
+        fullscreenDialog: true));
+  }
 }
 
 class CustomTextItem extends StatelessWidget {

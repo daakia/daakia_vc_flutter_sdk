@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:animated_emoji/emoji.dart';
 import 'package:animated_emoji/emoji_data.dart';
 import 'package:animated_emoji/emojis.g.dart';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
@@ -51,6 +50,8 @@ class _RoomPageState extends State<RoomPage> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(statusBarColor: Colors.black));
     var viewModel = _livekitProviderKey.currentState?.viewModel;
     lobbyManager = LobbyRequestManager(context, viewModel);
     // add callback for a `RoomEvent` as opposed to a `ParticipantEvent`
@@ -59,6 +60,7 @@ class _RoomPageState extends State<RoomPage> {
     _setUpListeners();
     _sortParticipants();
     WidgetsBindingCompatible.instance?.addPostFrameCallback((_) {
+      viewModel?.context = context;
       if (!fastConnection) {
         _askPublish();
       }
@@ -217,10 +219,20 @@ class _RoomPageState extends State<RoomPage> {
         viewModel?.stopHandRaisedForAll();
         break;
 
-      // case "send_private_message":
-      // // Handle send private message action if needed
-      //   break;
-      //
+      case "send_private_message":
+        if (remoteData.message != null &&
+            remoteData.message?.isNotEmpty == true) {
+          viewModel?.addPrivateMessage(remoteData);
+        }
+        break;
+
+      case "send_public_message":
+        if (remoteData.message != null &&
+            remoteData.message?.isNotEmpty == true) {
+          viewModel?.addMessage(remoteData);
+        }
+        break;
+
       case "lobby":
         viewModel?.checkAndAddUserToLobbyList(remoteData);
         lobbyManager?.showLobbyRequestDialog(remoteData);
@@ -231,7 +243,8 @@ class _RoomPageState extends State<RoomPage> {
       case "clap":
       case "smile":
       case "thumbsUp":
-        showReaction(remoteData.action, viewModel, name: remoteData.identity?.name ?? '');
+        showReaction(remoteData.action, viewModel,
+            name: remoteData.identity?.name ?? '');
         break;
       //
       case "mute_camera":
@@ -289,11 +302,7 @@ class _RoomPageState extends State<RoomPage> {
         break;
 
       default:
-        // Handle null or unknown action
-        if (remoteData.message != null &&
-            remoteData.message?.isNotEmpty == true) {
-          viewModel?.addMessage(remoteData);
-        }
+      // Handle null or unknown action
     }
   }
 
@@ -315,7 +324,9 @@ class _RoomPageState extends State<RoomPage> {
       if (kDebugMode) {
         print('could not publish video: $error');
       }
+      if(mounted) {
       await context.showErrorDialog(error);
+      }
     }
     try {
       await widget.room.localParticipant?.setMicrophoneEnabled(true);
@@ -323,7 +334,9 @@ class _RoomPageState extends State<RoomPage> {
       if (kDebugMode) {
         print('could not publish audio: $error');
       }
-      await context.showErrorDialog(error);
+      if(mounted) {
+        await context.showErrorDialog(error);
+      }
     }
   }
 
@@ -450,9 +463,8 @@ class _RoomPageState extends State<RoomPage> {
           debugShowCheckedModeBanner: false,
           home: Scaffold(
             body: SafeArea(
-              child: Stack(
-                children: [
-                  Container(
+              child: Stack(children: [
+                Container(
                   color: Colors.black,
                   child: Column(
                     children: [
@@ -514,15 +526,14 @@ class _RoomPageState extends State<RoomPage> {
                     ],
                   ),
                 ),
-                  Positioned(
-                    right: 0,
-                    top: 50,
-                    child: EmojiReactionWidget(
-                      viewModel: _livekitProviderKey.currentState?.viewModel,
-                    ),
+                Positioned(
+                  right: 0,
+                  top: 50,
+                  child: EmojiReactionWidget(
+                    viewModel: _livekitProviderKey.currentState?.viewModel,
                   ),
-                ]
-              ),
+                ),
+              ]),
             ),
           ),
         ),
@@ -582,31 +593,47 @@ class _RoomPageState extends State<RoomPage> {
         showSnackBar(message: event.message);
       } else if (event is ShowReaction) {
         showReaction(event.emoji, viewModel);
-      } else if (event is UpdateView){
-        setState(() {
-        });
+      } else if (event is UpdateView) {
+        if (mounted) {
+          setState(() {});
+        }
       }
     });
   }
 
   AnimatedEmojiData? emojiAsset;
-  void showReaction(String? emoji, RtcViewmodel? viewModel, {String name = "You"}) {
-    switch(emoji){
-      case "heart": emojiAsset = AnimatedEmojis.redHeart; break;
-      case "blush": emojiAsset = AnimatedEmojis.blush; break;
-      case "clap": emojiAsset = AnimatedEmojis.clap; break;
-      case "smile": emojiAsset = AnimatedEmojis.smile; break;
-      case "thumbsUp": emojiAsset = AnimatedEmojis.thumbsUp; break;
+
+  void showReaction(String? emoji, RtcViewmodel? viewModel,
+      {String name = "You"}) {
+    switch (emoji) {
+      case "heart":
+        emojiAsset = AnimatedEmojis.redHeart;
+        break;
+      case "blush":
+        emojiAsset = AnimatedEmojis.blush;
+        break;
+      case "clap":
+        emojiAsset = AnimatedEmojis.clap;
+        break;
+      case "smile":
+        emojiAsset = AnimatedEmojis.smile;
+        break;
+      case "thumbsUp":
+        emojiAsset = AnimatedEmojis.thumbsUp;
+        break;
     }
     setState(() {
       addEmojiToQueue(emojiAsset, name, viewModel);
     });
   }
 
-  void addEmojiToQueue(AnimatedEmojiData? emoji, String senderName, RtcViewmodel? viewModel) {
+  void addEmojiToQueue(
+      AnimatedEmojiData? emoji, String senderName, RtcViewmodel? viewModel) {
     if (viewModel == null) return;
-    final newMessage = EmojiMessage(emoji: emoji, senderName: senderName, timestamp: DateTime.now().millisecondsSinceEpoch.toString());
+    final newMessage = EmojiMessage(
+        emoji: emoji,
+        senderName: senderName,
+        timestamp: DateTime.now().millisecondsSinceEpoch.toString());
     viewModel.addEmoji(newMessage);
   }
-
 }

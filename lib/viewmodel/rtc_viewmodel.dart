@@ -1,23 +1,27 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:collection/collection.dart';
 import 'package:daakia_vc_flutter_sdk/api/injection.dart';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:uuid/uuid.dart';
 
 import '../model/action_model.dart';
 import '../model/emoji_message.dart';
 import '../model/meeting_details.dart';
+import '../model/private_chat_model.dart';
 import '../model/send_message_model.dart';
 import '../rtc/widgets/participant_info.dart';
 
 class RtcViewmodel extends ChangeNotifier {
   final List<RemoteActivityData> _messageList = [];
   final List<RemoteActivityData> _lobbyRequestList = [];
+  final Map<String, PrivateChatModel> _privateChat = {};
   late Room room;
   late MeetingDetails meetingDetails;
 
@@ -73,9 +77,48 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> sendData(String userMessage) async {
+  void addPrivateMessage(RemoteActivityData message) {
+    // Check if the key exists; if not, initialize it with an empty list
+    if (message.identity != null) {
+      checkAndCreatePrivateChat(
+          message.identity?.identity, message.identity?.name);
+      _privateChat[message.identity?.identity ?? ""]?.chats.add(message);
+    } else {
+      _privateChat.putIfAbsent(
+          message.userIdentity ?? "",
+          () => PrivateChatModel(
+              identity: message.userIdentity ?? "Unknown",
+              name: message.userName ?? "Unknown",
+              chats: []));
+      _privateChat[message.userIdentity ?? ""]?.chats.add(message);
+    }
+    notifyListeners();
+    sendEvent(UpdateView());
+  }
+
+  void checkAndCreatePrivateChat(String? identity, String? name) {
+    _privateChat.putIfAbsent(
+        identity ?? "Unknown",
+        () => PrivateChatModel(
+            identity: identity ?? "Unknown",
+            name: name ?? "Unknown",
+            chats: []));
+    notifyListeners();
+    sendEvent(UpdateView());
+  }
+
+  Map<String, PrivateChatModel> getPrivateMessage() {
+    return _privateChat;
+  }
+
+  List<RemoteActivityData> getPrivateChatForParticipant(String identity) {
+    return _privateChat[identity]?.chats ?? [];
+  }
+
+  Future<void> sendPublicMessage(String userMessage) async {
     // Create a message
     final message = SendMessageModel(
+      action: "send_public_message",
       id: const Uuid().v4(), // Generate a unique ID
       message: userMessage,
       timestamp: DateTime.now().millisecondsSinceEpoch, // Current timestamp
@@ -85,7 +128,6 @@ class RtcViewmodel extends ChangeNotifier {
     await room.localParticipant?.publishData(
       utf8.encode(jsonEncode(message)), // Convert to bytes,
       reliable: true,
-      topic: "lk-chat-topic",
     );
 
     // Update the message list
@@ -95,11 +137,53 @@ class RtcViewmodel extends ChangeNotifier {
         id: message.id,
         message: message.message,
         timestamp: message.timestamp,
-        action: "",
+        action: "send_public_message",
         // Assuming no action is provided
         isSender: true, // isSender
       ),
     );
+  }
+
+  Future<void> sendPrivateMessage(
+      String? identity, String? name, String userMessage) async {
+    // Create a message
+    final message = SendMessageModel(
+      action: "send_private_message",
+      id: const Uuid().v4(), // Generate a unique ID
+      message: userMessage,
+      timestamp: DateTime.now().millisecondsSinceEpoch, // Current timestamp
+    );
+
+    if (identity != null) {
+      List<String> participantList = [identity];
+      try {
+        // Publish the data to the LiveKit room
+        await room.localParticipant?.publishData(
+          utf8.encode(jsonEncode(message)), // Convert to bytes,
+          reliable: true,
+          destinationIdentities: participantList,
+        );
+
+        // Update the message list
+        addPrivateMessage(
+          RemoteActivityData(
+              identity: null,
+              id: message.id,
+              message: message.message,
+              timestamp: message.timestamp,
+              action: "send_private_message",
+              // Assuming no action is provided
+              isSender: true,
+              // isSender
+              userIdentity: identity,
+              userName: name),
+        );
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error sending private action: $e');
+        }
+      }
+    }
   }
 
   Future<void> sendPrivateAction(ActionModel action, String? identity) async {
@@ -495,20 +579,46 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners(); // Notify listeners to update the UI
   }
 
-  void removeEmojiAt(int position){
+  void removeEmojiAt(int position) {
     _emojiQueue.removeAt(position);
     notifyListeners();
   }
 
   List<EmojiMessage> get emojiQueue => _emojiQueue;
 
-  void startReactionCheck(){
+  void startReactionCheck() {
     final currentTime = DateTime.now().millisecondsSinceEpoch;
     // Remove emojis older than 3 seconds
     _emojiQueue.removeWhere(
-          (emoji) => currentTime - int.parse(emoji.timestamp) > 3000,
+      (emoji) => currentTime - int.parse(emoji.timestamp) > 3000,
     );
     notifyListeners();
     sendEvent(UpdateView());
   }
+
+  var _privateChatIdentity = "";
+
+  void setPrivateChatIdentity(String identity) {
+    _privateChatIdentity = identity;
+    notifyListeners();
+    sendEvent(UpdateView());
+  }
+
+  String getPrivateChatIdentity() {
+    return _privateChatIdentity;
+  }
+
+  var _privateChatUserName = "";
+
+  void setPrivateChatUserName(String name) {
+    _privateChatUserName = name;
+    notifyListeners();
+    sendEvent(UpdateView());
+  }
+
+  String getPrivateChatUserName() {
+    return _privateChatUserName;
+  }
+
+  BuildContext? context;
 }

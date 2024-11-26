@@ -1,4 +1,3 @@
-import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/chat_bottomsheet.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -97,7 +96,7 @@ class _RtcControlState extends State<RtcControls> {
           ),
           IconButton(
             onPressed: () {
-              if(viewModel.isVideoPermissionEnable) {
+              if (viewModel.isVideoPermissionEnable) {
                 participant.isCameraEnabled()
                     ? viewModel.disableVideo()
                     : viewModel.enableVideo();
@@ -113,7 +112,7 @@ class _RtcControlState extends State<RtcControls> {
           ),
           IconButton(
             onPressed: () {
-              if(viewModel.isAudioPermissionEnable) {
+              if (viewModel.isAudioPermissionEnable) {
                 participant.isMicrophoneEnabled()
                     ? viewModel.disableAudio()
                     : viewModel.enableAudio();
@@ -135,16 +134,6 @@ class _RtcControlState extends State<RtcControls> {
             ),
             iconSize: 30,
           ),
-          // IconButton(
-          //   onPressed: () {
-          //     showMoreOptionBottomSheet();
-          //   },
-          //   icon: const Icon(
-          //     Icons.more_horiz,
-          //     color: Colors.white,
-          //   ),
-          //   iconSize: 30,
-          // ),
           IconButton(
             onPressed: () {
               showMoreOptionBottomSheet();
@@ -167,11 +156,6 @@ class _RtcControlState extends State<RtcControls> {
           IconButton(
             onPressed: () {
               _onTapDisconnect();
-              // if (Navigator.canPop(context)) {
-              //   Navigator.pop(context);
-              // } else {
-              //   SystemNavigator.pop();
-              // }
             },
             icon: const Icon(
               Icons.call_end,
@@ -190,14 +174,6 @@ class _RtcControlState extends State<RtcControls> {
         builder: (BuildContext context) {
           return const MoreOptionBottomSheet();
         });
-  }
-
-  void showChatBottomSheet() {
-    Navigator.of(context).push(MaterialPageRoute<Null>(
-        builder: (BuildContext context) {
-          return const ChatBottomSheet();
-        },
-        fullscreenDialog: true));
   }
 
   void _onTapDisconnect() async {
