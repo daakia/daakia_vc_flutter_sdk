@@ -139,9 +139,9 @@ class _RtcControlState extends State<RtcControls> {
               showMoreOptionBottomSheet();
             },
             icon: Badge(
-              isLabelVisible: viewModel.getUnReadCount() > 0,
+              isLabelVisible: (viewModel.getUnReadCount() + viewModel.getUnreadCountPrivateChat()) > 0,
               label: Text(
-                viewModel.getUnReadCount().toString(),
+                (viewModel.getUnReadCount() + viewModel.getUnreadCountPrivateChat()).toString(),
                 style: const TextStyle(color: Colors.white),
               ),
               offset: const Offset(8, 8),

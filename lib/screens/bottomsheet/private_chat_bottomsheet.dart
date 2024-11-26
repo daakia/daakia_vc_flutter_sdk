@@ -1,6 +1,7 @@
 import 'package:daakia_vc_flutter_sdk/screens/customWidget/initials_circle.dart';
 import 'package:flutter/material.dart';
 
+import '../../events/rtc_events.dart';
 import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import '../customWidget/message_bubble.dart';
@@ -31,6 +32,8 @@ class PrivateChantState extends State<PrivateChatBottomSheet> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.viewModel.isPrivateChatOpen = true;
+      widget.viewModel.resetUnreadPrivateChatCount();
       setState(() {
         if (widget.identity.isEmpty &&
             widget.viewModel.getPrivateMessage().isNotEmpty) {
@@ -51,7 +54,11 @@ class PrivateChantState extends State<PrivateChatBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    collectLobbyEvents(widget.viewModel, context);
     return PopScope(
+      onPopInvokedWithResult: (isPoped, dynamic) async {
+        widget.viewModel.isPrivateChatOpen = false;
+      },
       child: Scaffold(
         backgroundColor: const Color(0xFF000000),
         // Use a specific color for no_video_background
@@ -213,5 +220,19 @@ class PrivateChantState extends State<PrivateChatBottomSheet> {
         ),
       ),
     );
+  }
+
+  bool isEventAdded = false;
+
+  void collectLobbyEvents(RtcViewmodel? viewModel, BuildContext context) {
+    if (isEventAdded) return;
+    isEventAdded = true;
+    viewModel?.privateChatEvents.listen((event) {
+      if (event is UpdateView) {
+        if (mounted) {
+          setState(() {});
+        }
+      }
+    });
   }
 }

@@ -2,6 +2,7 @@ import 'package:daakia_vc_flutter_sdk/screens/customWidget/message_bubble.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/material.dart';
 
+import '../../events/rtc_events.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 
 class ChatBottomSheet extends StatefulWidget {
@@ -34,6 +35,7 @@ class _ChatState extends State<ChatBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    collectLobbyEvents(widget.viewModel, context);
     return PopScope(
       onPopInvokedWithResult: (isPoped, dynamic) async {
         widget.viewModel.isChatOpen = false;
@@ -106,5 +108,19 @@ class _ChatState extends State<ChatBottomSheet> {
         ),
       ),
     );
+  }
+
+  bool isEventAdded = false;
+
+  void collectLobbyEvents(RtcViewmodel? viewModel, BuildContext context) {
+    if (isEventAdded) return;
+    isEventAdded = true;
+    viewModel?.publicChatEvents.listen((event) {
+      if (event is UpdateView) {
+        if (mounted) {
+          setState(() {});
+        }
+      }
+    });
   }
 }
