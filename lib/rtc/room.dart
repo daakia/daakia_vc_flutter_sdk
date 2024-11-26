@@ -17,6 +17,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:livekit_client/livekit_client.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../model/emoji_message.dart';
 import '../model/remote_activity_data.dart';
@@ -52,6 +53,7 @@ class _RoomPageState extends State<RoomPage> {
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(
         const SystemUiOverlayStyle(statusBarColor: Colors.black));
+    WakelockPlus.enable();
     var viewModel = _livekitProviderKey.currentState?.viewModel;
     lobbyManager = LobbyRequestManager(context, viewModel);
     // add callback for a `RoomEvent` as opposed to a `ParticipantEvent`
@@ -98,6 +100,7 @@ class _RoomPageState extends State<RoomPage> {
       await widget.room.dispose();
     })();
     onWindowShouldClose = null;
+    WakelockPlus.disable();
     super.dispose();
   }
 

@@ -46,7 +46,7 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                   icon: Icons.message,
                   text: 'Chats',
                   isVisible: viewModel.meetingDetails.features!.isChatAllowed(),
-                  setBadge: BadgeData(viewModel.getUnReadCount()), onTap: () {
+                  setBadge: BadgeData(viewModel.getUnReadCount() + viewModel.getUnreadCountPrivateChat()), onTap: () {
                 Navigator.pop(context);
                 showChatBottomSheet(viewModel);
               }),

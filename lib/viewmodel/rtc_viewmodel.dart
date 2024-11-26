@@ -34,6 +34,9 @@ class RtcViewmodel extends ChangeNotifier {
   bool isChatOpen = false;
   int _unreadMessageCount = 0;
 
+  bool isPrivateChatOpen = false;
+  int _unreadMessageCountPrivateChat = 0;
+
   bool _isCoHost = false;
 
   bool _isRecording = false;
@@ -60,6 +63,21 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
+  int getUnreadCountPrivateChat(){
+    return _unreadMessageCountPrivateChat;
+  }
+
+  void increaseUnreadPrivateChatCount(){
+    if(isPrivateChatOpen) return;
+    _unreadMessageCountPrivateChat++;
+    notifyListeners();
+  }
+
+
+  void resetUnreadPrivateChatCount(){
+    _unreadMessageCountPrivateChat = 0;
+    notifyListeners();
+  }
   RtcViewmodel(this.room, this.meetingDetails);
 
   List<RemoteActivityData> getMessageList() {
@@ -70,11 +88,13 @@ class RtcViewmodel extends ChangeNotifier {
     _messageList.add(message);
     increaseUnreadCount();
     notifyListeners();
+    sendPublicChatEvent(UpdateView());
   }
 
   void addAllMessage(List<RemoteActivityData> message) {
     _messageList.addAll(message);
     notifyListeners();
+    sendPublicChatEvent(UpdateView());
   }
 
   void addPrivateMessage(RemoteActivityData message) {
@@ -93,7 +113,8 @@ class RtcViewmodel extends ChangeNotifier {
       _privateChat[message.userIdentity ?? ""]?.chats.add(message);
     }
     notifyListeners();
-    sendEvent(UpdateView());
+    increaseUnreadPrivateChatCount();
+    sendPrivateChatEvent(UpdateView());
   }
 
   void checkAndCreatePrivateChat(String? identity, String? name) {
@@ -104,7 +125,7 @@ class RtcViewmodel extends ChangeNotifier {
             name: name ?? "Unknown",
             chats: []));
     notifyListeners();
-    sendEvent(UpdateView());
+    sendPrivateChatEvent(UpdateView());
   }
 
   Map<String, PrivateChatModel> getPrivateMessage() {
@@ -555,6 +576,33 @@ class RtcViewmodel extends ChangeNotifier {
   // Stream to expose the events
   Stream<RTCEvents> get roomEvents => _roomEventController.stream;
 
+  final _publicChatEventController = StreamController<RTCEvents>.broadcast();
+  final _privateChatEventController = StreamController<RTCEvents>.broadcast();
+
+  // Expose streams
+  Stream<RTCEvents> get publicChatEvents => _publicChatEventController.stream;
+  Stream<RTCEvents> get privateChatEvents => _privateChatEventController.stream;
+
+  // Send events
+  void sendPublicChatEvent(RTCEvents event) {
+    if(_publicChatEventController.isClosed) return;
+    _publicChatEventController.sink.add(event);
+  }
+
+  void sendPrivateChatEvent(RTCEvents event) {
+    if(_privateChatEventController.isClosed) return;
+    _privateChatEventController.sink.add(event);
+  }
+
+  // Cancel chat event streams
+  void cancelPublicChatEvents() {
+    _publicChatEventController.close();
+  }
+
+  void cancelPrivateChatEvents() {
+    _privateChatEventController.close();
+  }
+
   void cancelRoomEvents() {
     _roomEventController.close();
   }
@@ -601,7 +649,7 @@ class RtcViewmodel extends ChangeNotifier {
   void setPrivateChatIdentity(String identity) {
     _privateChatIdentity = identity;
     notifyListeners();
-    sendEvent(UpdateView());
+    sendPrivateChatEvent(UpdateView());
   }
 
   String getPrivateChatIdentity() {
@@ -613,7 +661,7 @@ class RtcViewmodel extends ChangeNotifier {
   void setPrivateChatUserName(String name) {
     _privateChatUserName = name;
     notifyListeners();
-    sendEvent(UpdateView());
+    sendPrivateChatEvent(UpdateView());
   }
 
   String getPrivateChatUserName() {
