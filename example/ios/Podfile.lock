@@ -15,6 +15,8 @@ PODS:
   - livekit_client (2.3.0):
     - Flutter
     - WebRTC-SDK (= 125.6422.05)
+  - package_info_plus (0.4.5):
+    - Flutter
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -24,6 +26,8 @@ PODS:
     - DTTJailbreakDetection
     - Flutter
   - Toast (4.1.1)
+  - wakelock_plus (0.0.1):
+    - Flutter
   - WebRTC-SDK (125.6422.05)
 
 DEPENDENCIES:
@@ -33,9 +37,11 @@ DEPENDENCIES:
   - flutter_webrtc (from `.symlinks/plugins/flutter_webrtc/ios`)
   - fluttertoast (from `.symlinks/plugins/fluttertoast/ios`)
   - livekit_client (from `.symlinks/plugins/livekit_client/ios`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - safe_device (from `.symlinks/plugins/safe_device/ios`)
+  - wakelock_plus (from `.symlinks/plugins/wakelock_plus/ios`)
 
 SPEC REPOS:
   trunk:
@@ -56,12 +62,16 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/fluttertoast/ios"
   livekit_client:
     :path: ".symlinks/plugins/livekit_client/ios"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
   path_provider_foundation:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   permission_handler_apple:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
   safe_device:
     :path: ".symlinks/plugins/safe_device/ios"
+  wakelock_plus:
+    :path: ".symlinks/plugins/wakelock_plus/ios"
 
 SPEC CHECKSUMS:
   connectivity_plus: 4c41c08fc6d7c91f63bc7aec70ffe3730b04f563
@@ -71,10 +81,12 @@ SPEC CHECKSUMS:
   flutter_webrtc: 4f730f3d58a28b0afdea039c8bf4a0f616a6b20c
   fluttertoast: 723e187574b149e68e63ca4d39b837586b903cfa
   livekit_client: 5c31e13cd17dd0d545a074290c937dbdff1d809d
+  package_info_plus: c0502532a26c7662a62a356cebe2692ec5fe4ec4
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
   permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
   safe_device: 4539eb6bdbeb4b61a763a51c4e73e6b37dea4e3d
   Toast: 1f5ea13423a1e6674c4abdac5be53587ae481c4e
+  wakelock_plus: 78ec7c5b202cab7761af8e2b2b3d0671be6c4ae1
   WebRTC-SDK: 1990a1a595bd0b59c17485ce13ff17f575732c12
 
 PODFILE CHECKSUM: efc0db60b5c2ddc3e2e8b1d8af9f8b1c98ddefbd
