@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:safe_device/safe_device.dart';
 
 FutureOr<void> Function()? onWindowShouldClose;
@@ -136,4 +137,9 @@ class Utils {
     return regex.hasMatch(email);
   }
 
+
+  static Future<String> getAppName() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    return packageInfo.appName;
+  }
 }
