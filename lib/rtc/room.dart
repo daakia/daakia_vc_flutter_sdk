@@ -22,7 +22,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../model/emoji_message.dart';
 import '../model/remote_activity_data.dart';
 import '../utils/utils.dart';
-import 'method_channels/replay_kit_channel.dart';
+import 'method_channels/reply_kit.dart';
 
 class RoomPage extends StatefulWidget {
   final Room room;
