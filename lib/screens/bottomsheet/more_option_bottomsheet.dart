@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 
 import '../../model/action_model.dart';
 import '../../resources/colors/color.dart';
+import '../../rtc/method_channels/reply_kit.dart';
 import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import 'emoji_dialog.dart';
@@ -184,6 +185,7 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
 
   void _enableScreenShare(RtcViewmodel viewModel) async {
     final participant = viewModel.room.localParticipant;
+
     if (lkPlatformIsDesktop()) {
       try {
         final source = await showDialog<DesktopCapturerSource>(
@@ -213,6 +215,7 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
       }
       return;
     }
+
     if (lkPlatformIs(PlatformType.android)) {
       // Android specific
       bool hasCapturePermission = await Helper.requestCapturePermission();
@@ -254,27 +257,38 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
 
       await requestBackgroundPermission();
     }
+
     if (lkPlatformIs(PlatformType.iOS)) {
-      var track = await LocalVideoTrack.createScreenShareTrack(
-        const ScreenShareCaptureOptions(
-          useiOSBroadcastExtension: true,
-          maxFrameRate: 15.0,
-        ),
-      );
-      await participant?.publishVideoTrack(track);
+      try {
+        ReplayKitChannel.startReplayKit();
+        mediaDevices.getDisplayMedia({
+          'video': {'deviceId': 'broadcast'},
+          'audio': false
+        });
+
+      await participant?.setCameraEnabled(false);
+      await participant?.setScreenShareEnabled(true,
+          captureScreenAudio: false,
+          screenShareCaptureOptions:
+          const ScreenShareCaptureOptions(useiOSBroadcastExtension: true));
+      } catch (e) {
+        if (kDebugMode) {
+          print('could not publish screen share on iOS: $e');
+        }
+      }
       return;
     }
 
     if (lkPlatformIsWebMobile()) {
-      if(mounted) {
-        await context
-            .showErrorDialog('Screen share is not supported on mobile web');
+      if (mounted) {
+        await context.showErrorDialog('Screen share is not supported on mobile web');
       }
       return;
     }
 
     await participant?.setScreenShareEnabled(true, captureScreenAudio: true);
   }
+
 
   void _disableScreenShare(RtcViewmodel viewModel) async {
     final participant = viewModel.room.localParticipant;
