@@ -225,7 +225,6 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
         try {
           bool hasPermissions = await FlutterBackground.hasPermissions;
           var appName = await Utils.getAppName();
-          print("AppName: $appName");
           if (!isRetry) {
             var androidConfig = FlutterBackgroundAndroidConfig(
               notificationTitle: 'Screen Sharing',
@@ -282,7 +281,7 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
     if (lkPlatformIs(PlatformType.android)) {
       // Android specific
       try {
-        //   await FlutterBackground.disableBackgroundExecution();
+          await FlutterBackground.disableBackgroundExecution();
       } catch (error) {
         if (kDebugMode) {
           print('error disabling screen share: $error');
