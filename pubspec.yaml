@@ -31,6 +31,7 @@ dependencies:
   safe_device: ^1.1.9
   wakelock_plus: ^1.2.8
   package_info_plus: ^8.1.1
+  simple_pip_mode: ^1.0.0
 
 dev_dependencies:
   flutter_test:

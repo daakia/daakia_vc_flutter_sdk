@@ -17,3 +17,5 @@ class OpenPrivateChat extends RTCEvents{
 }
 
 class UpdateView extends RTCEvents{}
+
+class EnterPIP extends RTCEvents{}

@@ -291,7 +291,7 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
     if (lkPlatformIs(PlatformType.android)) {
       // Android specific
       try {
-        //   await FlutterBackground.disableBackgroundExecution();
+          await FlutterBackground.disableBackgroundExecution();
       } catch (error) {
         if (kDebugMode) {
           print('error disabling screen share: $error');
