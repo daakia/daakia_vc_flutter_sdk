@@ -11,7 +11,6 @@ import 'package:provider/provider.dart';
 
 import '../../model/action_model.dart';
 import '../../resources/colors/color.dart';
-import '../../rtc/method_channels/reply_kit.dart';
 import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import 'emoji_dialog.dart';
@@ -53,7 +52,8 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                   icon: Icons.message,
                   text: 'Chats',
                   isVisible: viewModel.meetingDetails.features!.isChatAllowed(),
-                  setBadge: BadgeData(viewModel.getUnReadCount() + viewModel.getUnreadCountPrivateChat()), onTap: () {
+                  setBadge: BadgeData(viewModel.getUnReadCount() +
+                      viewModel.getUnreadCountPrivateChat()), onTap: () {
                 Navigator.pop(context);
                 showChatBottomSheet(viewModel);
               }),
@@ -82,20 +82,22 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                 showWebinarControls();
               }),
               // Screen Share
-              buildOption(
-                context,
-                icon: Icons.screen_share, // Replace with your screen share icon
-                text: '${(viewModel.room.localParticipant?.isScreenShareEnabled() == true) ? "Stop" : "Start"} Screen Sharing',
-                isVisible: true, //TODO::
-                onTap: (){
-                  Navigator.pop(context);
-                  if(viewModel.room.localParticipant?.isScreenShareEnabled() == true){
-                    _disableScreenShare(viewModel);
-                  } else {
-                    _enableScreenShare(viewModel);
-                  }
+              buildOption(context,
+                  icon: Icons.screen_share,
+                  // Replace with your screen share icon
+                  text:
+                      '${(viewModel.room.localParticipant?.isScreenShareEnabled() == true) ? "Stop" : "Start"} Screen Sharing',
+                  isVisible: true,
+                  //TODO::
+                  onTap: () {
+                Navigator.pop(context);
+                if (viewModel.room.localParticipant?.isScreenShareEnabled() ==
+                    true) {
+                  _disableScreenShare(viewModel);
+                } else {
+                  _enableScreenShare(viewModel);
                 }
-              ),
+              }),
               // Raise Hand
               buildOption(context,
                   icon: Icons.pan_tool, // Replace with your raise hand icon
@@ -228,7 +230,6 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
         try {
           bool hasPermissions = await FlutterBackground.hasPermissions;
           var appName = await Utils.getAppName();
-          print("AppName: $appName");
           if (!isRetry) {
             var androidConfig = FlutterBackgroundAndroidConfig(
               notificationTitle: 'Screen Sharing',
@@ -247,7 +248,7 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
         } catch (e) {
           if (!isRetry) {
             return await Future<void>.delayed(const Duration(seconds: 1),
-                    () => requestBackgroundPermission(true));
+                () => requestBackgroundPermission(true));
           }
           if (kDebugMode) {
             print('could not publish video: $e');
@@ -260,11 +261,11 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
 
     if (lkPlatformIs(PlatformType.iOS)) {
       try {
-      await participant?.setScreenShareEnabled(true,
-          captureScreenAudio: false,
-          screenShareCaptureOptions:
-          const ScreenShareCaptureOptions(useiOSBroadcastExtension: true));
-      return;
+        await participant?.setScreenShareEnabled(true,
+            captureScreenAudio: false,
+            screenShareCaptureOptions: const ScreenShareCaptureOptions(
+                useiOSBroadcastExtension: true));
+        return;
       } catch (e) {
         if (kDebugMode) {
           print('could not publish screen share on iOS: $e');
@@ -275,14 +276,14 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
 
     if (lkPlatformIsWebMobile()) {
       if (mounted) {
-        await context.showErrorDialog('Screen share is not supported on mobile web');
+        await context
+            .showErrorDialog('Screen share is not supported on mobile web');
       }
       return;
     }
 
     await participant?.setScreenShareEnabled(true, captureScreenAudio: true);
   }
-
 
   void _disableScreenShare(RtcViewmodel viewModel) async {
     final participant = viewModel.room.localParticipant;
