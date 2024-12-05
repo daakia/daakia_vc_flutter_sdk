@@ -709,10 +709,6 @@ class _PreJoinState extends State<PreJoinScreen> {
                           }
                         }
                         // Check and request permissions
-                        bool permissionsGranted =
-                            await checkAndRequestPermissions(context);
-                        bool isRealDevice = await Utils.isIosSimulator();
-                        if (!permissionsGranted && isRealDevice) return;
                         startLoading();
                         if (isLoading) {
                           return;

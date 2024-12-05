@@ -389,7 +389,6 @@ class _RoomPageState extends State<RoomPage> {
         if (t.isScreenShare) {
           if (lkPlatformIs(PlatformType.iOS) && !_flagStartedReplayKit) {
             _flagStartedReplayKit = true;
-            ReplayKitChannel.startReplayKit();
           }
           screenTracks.add(ParticipantTrack(
             participant: localParticipant,
