@@ -25,7 +25,7 @@ import UIKit
         
         
         // Creating the method channel for ReplayKit communication
-        replayKitChannel = FlutterMethodChannel(name: "expertyscreensharing/replaykit-channel",
+        replayKitChannel = FlutterMethodChannel(name: "daakia_vc/replaykit-channel",
                                                 binaryMessenger: controller.binaryMessenger)
         
         // Setting method call handler for handling Flutter calls

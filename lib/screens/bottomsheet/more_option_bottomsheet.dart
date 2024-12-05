@@ -260,17 +260,11 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
 
     if (lkPlatformIs(PlatformType.iOS)) {
       try {
-        ReplayKitChannel.startReplayKit();
-        mediaDevices.getDisplayMedia({
-          'video': {'deviceId': 'broadcast'},
-          'audio': false
-        });
-
-      await participant?.setCameraEnabled(false);
       await participant?.setScreenShareEnabled(true,
           captureScreenAudio: false,
           screenShareCaptureOptions:
           const ScreenShareCaptureOptions(useiOSBroadcastExtension: true));
+      return;
       } catch (e) {
         if (kDebugMode) {
           print('could not publish screen share on iOS: $e');

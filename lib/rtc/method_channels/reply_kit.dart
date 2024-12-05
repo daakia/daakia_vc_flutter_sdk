@@ -5,7 +5,7 @@ import 'package:livekit_client/livekit_client.dart';
 
 class ReplayKitChannel {
   static const String kReplayKitChannel =
-      'expertyscreensharing/replaykit-channel';
+      'daakia_vc/replaykit-channel';
 
   static const MethodChannel _replayKitChannel =
   MethodChannel(kReplayKitChannel);
