@@ -7,7 +7,7 @@
 
 
 
-### Installation
+## Installation
 
 add ``daakia_vc_flutter_sdk:`` to your ``pubspec.yaml`` dependencies then run ``flutter pub get``
 
@@ -16,6 +16,59 @@ add ``daakia_vc_flutter_sdk:`` to your ``pubspec.yaml`` dependencies then run ``
     daakia_vc_flutter_sdk:
 ```
 
+
+
+## Android
+We require a set of permissions that need to be declared in your AppManifest.xml. These are required permissions
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.your.package">
+  <uses-feature android:name="android.hardware.camera" />
+  <uses-feature android:name="android.hardware.camera.autofocus" />
+  <uses-permission android:name="android.permission.CAMERA" />
+  <uses-permission android:name="android.permission.RECORD_AUDIO" />
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+  <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+  <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+  <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+  <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+  <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+  ...
+</manifest>
+```
+## iOs
+
+Camera and microphone usage need to be declared in your `Info.plist` file.
+
+```
+<dict>
+  ...
+  <key>NSCameraUsageDescription</key>
+  <string>$(PRODUCT_NAME) uses your camera</string>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>$(PRODUCT_NAME) uses your microphone</string>
+```
+
+Your application can still run the voice call when it is switched to the background if the background mode is enabled. Select the app target in Xcode, click the Capabilities tab, enable __Background Modes__, and check __Audio, AirPlay, and Picture in Picture__.
+
+Your `Info.plist` should have the following entries.
+
+```
+<dict>
+  ...
+  <key>UIBackgroundModes</key>
+  <array>
+    <string>audio</string>
+  </array>
+```
+
+For iOS, the minimum supported deployment target is 12.1. You will need to add the following to your Podfile.
+
+```
+platform :ios, '12.1'
+```
+
+You may need to delete Podfile.lock and re-run pod install after updating deployment target.
 ## Usage/Examples
 
 ```flutter
@@ -50,6 +103,35 @@ To run the `DaakiaVideoConferenceWidget`, you will need to pass the following pa
 
 
 
+## Screen Share
+
+### Android
+
+On Android, you will have to use a
+[media projection foreground service](https://developer.android.com/develop/background-work/services/fg-service-types#media-projection).
+
+In the app's AndroidManifest.xml file, declare the service with the appropriate types and permissions as following:
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Required permissions for screen share -->
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  <application>
+    ...
+    <service
+        android:name="de.julianassmann.flutter_background.IsolateHolderService"
+        android:enabled="true"
+        android:exported="false"
+        android:foregroundServiceType="mediaProjection|microphone|camera" />
+  </application>
+</manifest>
+```
+### iOs
+On iOS, a broadcast extension is needed in order to capture screen content from other apps. See [setup guide](https://github.com/flutter-webrtc/flutter-webrtc/wiki/iOS-Screen-Sharing#broadcast-extension-quick-setup) for instructions.
 ## Support
 
 For support, email contact@daakia.co.in.
