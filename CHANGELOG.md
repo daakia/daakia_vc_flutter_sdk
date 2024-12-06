@@ -6,7 +6,6 @@
   - Added raise hand feature.
   - Webinar mode & Host controls added.
   - Reaction added.
-  - Raise Hand added.
   - Screen Share Added for Android & iOs.
   - PIP Mode added in Android (iOs don't support right now)
 - **Bug Fixes**:
