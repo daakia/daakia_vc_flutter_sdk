@@ -71,7 +71,7 @@ platform :ios, '12.1'
 You may need to delete Podfile.lock and re-run pod install after updating deployment target.
 ## Usage/Examples
 
-```flutter
+```dart
 import 'package:daakia_vc_flutter_sdk/daakia_vc_flutter_sdk.dart';
 
 await Navigator.push<void>(
@@ -131,7 +131,7 @@ In the app's AndroidManifest.xml file, declare the service with the appropriate 
 </manifest>
 ```
 ### iOs
-On iOS, a broadcast extension is needed in order to capture screen content from other apps. See [setup guide](https://github.com/flutter-webrtc/flutter-webrtc/wiki/iOS-Screen-Sharing#broadcast-extension-quick-setup) for instructions.
+On iOS, a broadcast extension is needed in order to capture screen content from other apps. See For iOS-specific setup, refer to the [setup guide](example/ios/README.md) for instructions.
 ## Support
 
 For support, email contact@daakia.co.in.
