@@ -5,7 +5,10 @@
 - **New Features**:
   - Added raise hand feature.
   - Webinar mode & Host controls added.
+  - Private & Public chat added.
   - Reaction added.
+  - Password Protected event added.
+  - Lobby Mode added.
   - Screen Share Added for Android & iOs.
   - PIP Mode added in Android (iOs don't support right now)
 - **Bug Fixes**:
