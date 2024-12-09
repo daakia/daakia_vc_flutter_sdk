@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:provider/provider.dart';
-
 import '../../resources/colors/color.dart';
 import '../../screens/bottomsheet/more_option_bottomsheet.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
@@ -90,7 +89,8 @@ class _RtcControlState extends State<RtcControls> {
                 : null,
             icon: Icon(
               _speakerphoneOn ? Icons.speaker_phone : Icons.phone_android,
-              color: Colors.white,
+              color: Colors.white.withOpacity(
+                  Hardware.instance.canSwitchSpeakerphone ? 1.0 : 0.5),
             ),
             iconSize: 30,
           ),
@@ -126,11 +126,14 @@ class _RtcControlState extends State<RtcControls> {
           ),
           IconButton(
             onPressed: () {
-              _toggleCamera();
+              if(participant.isCameraEnabled()) {
+                _toggleCamera();
+              }
             },
-            icon: const Icon(
+            icon: Icon(
               Icons.flip_camera_android,
-              color: Colors.white,
+              color: Colors.white.withOpacity(participant.isCameraEnabled()
+                  ? 1 : 0.5),
             ),
             iconSize: 30,
           ),

@@ -61,9 +61,9 @@ class LobbyRequestManager {
           child: LobbyRequestDialog(
             remoteData: request,
             onAccept: (accepted) {
+              viewModel?.acceptParticipant(request: request, accept: accepted);
               timer.cancel(); // Cancel timer when button is clicked
               _dismissDialog();
-              viewModel?.acceptParticipant(request: request, accept: accepted);
             },
           ),
         );
