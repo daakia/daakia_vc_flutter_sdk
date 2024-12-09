@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:animated_emoji/emoji_data.dart';
 import 'package:animated_emoji/emojis.g.dart';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
@@ -19,6 +20,7 @@ import 'package:flutter/services.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:simple_pip_mode/simple_pip.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+
 import '../model/emoji_message.dart';
 import '../model/remote_activity_data.dart';
 import '../utils/utils.dart';
@@ -29,11 +31,12 @@ class RoomPage extends StatefulWidget {
   final EventsListener<RoomEvent> listener;
   final MeetingDetails meetingDetails;
 
-  const RoomPage(this.room,
-      this.listener,
-      this.meetingDetails, {
-        super.key,
-      });
+  const RoomPage(
+    this.room,
+    this.listener,
+    this.meetingDetails, {
+    super.key,
+  });
 
   @override
   State<StatefulWidget> createState() => _RoomPageState();
@@ -67,35 +70,37 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     SystemChrome.setSystemUIOverlayStyle(
         const SystemUiOverlayStyle(statusBarColor: Colors.black));
     WakelockPlus.enable();
-    pip = SimplePip()..setAutoPipMode(aspectRatio: (1,1), seamlessResize: true, autoEnter: true);
-    var viewModel = _livekitProviderKey.currentState?.viewModel;
-    lobbyManager = LobbyRequestManager(context, viewModel);
+    pip = SimplePip()
+      ..setAutoPipMode(
+          aspectRatio: (1, 1), seamlessResize: true, autoEnter: true);
     // add callback for a `RoomEvent` as opposed to a `ParticipantEvent`
     widget.room.addListener(_onRoomDidUpdate);
     // add callbacks for finer grained events
     _setUpListeners();
     _sortParticipants();
     WidgetsBindingCompatible.instance?.addPostFrameCallback((_) {
-    viewModel?.context = context;
-    if (!fastConnection) {
-    _askPublish();
-    }
+      var viewModel = _livekitProviderKey.currentState?.viewModel;
+      lobbyManager = LobbyRequestManager(context, viewModel);
+      viewModel?.context = context;
+      if (!fastConnection) {
+        _askPublish();
+      }
     });
 
     if (lkPlatformIs(PlatformType.android)) {
-    Hardware.instance.setSpeakerphoneOn(true);
+      Hardware.instance.setSpeakerphoneOn(true);
     }
 
     if (lkPlatformIs(PlatformType.iOS)) {
-    ReplayKitChannel.listenMethodChannel(widget.room);
+      ReplayKitChannel.listenMethodChannel(widget.room);
     }
 
     if (lkPlatformIsDesktop()) {
-    onWindowShouldClose = () async {
-    unawaited(widget.room.disconnect());
-    await _listener.waitFor<RoomDisconnectedEvent>(
-    duration: const Duration(seconds: 5));
-    };
+      onWindowShouldClose = () async {
+        unawaited(widget.room.disconnect());
+        await _listener.waitFor<RoomDisconnectedEvent>(
+            duration: const Duration(seconds: 5));
+      };
     }
   }
 
@@ -119,92 +124,99 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  void _setUpListeners() =>
-      _listener..on<RoomDisconnectedEvent>((event) async {
-        if (event.reason != null) {
-          switch (event.reason) {
-            case DisconnectReason.participantRemoved:
-              {
-                showSnackBar(message: "Host has removed you from the meeting!");
-                Timer(const Duration(seconds: 3), () {
-                  WidgetsBindingCompatible.instance?.addPostFrameCallback(
-                          (timeStamp) =>
-                          Navigator.popUntil(
-                              context, (route) => route.isFirst));
-                });
-                break;
-              }
-            case DisconnectReason.duplicateIdentity:
-              {
-                showSnackBar(message: "You have joined with another device");
-                Timer(const Duration(seconds: 3), () {
-                  WidgetsBindingCompatible.instance?.addPostFrameCallback(
-                          (timeStamp) =>
-                          Navigator.popUntil(
-                              context, (route) => route.isFirst));
-                });
-                break;
-              }
-            default:
-              {
-                Timer(const Duration(seconds: 3), () {
-                  WidgetsBindingCompatible.instance?.addPostFrameCallback(
-                          (timeStamp) =>
-                          Navigator.popUntil(
-                              context, (route) => route.isFirst));
-                });
-              }
-          }
+  void _setUpListeners() => _listener
+    ..on<RoomDisconnectedEvent>((event) async {
+      if (event.reason != null) {
+        switch (event.reason) {
+          case DisconnectReason.participantRemoved:
+            {
+              showSnackBar(message: "Host has removed you from the meeting!");
+              Timer(const Duration(seconds: 3), () {
+                WidgetsBindingCompatible.instance?.addPostFrameCallback(
+                    (timeStamp) =>
+                        Navigator.popUntil(context, (route) => route.isFirst));
+              });
+              break;
+            }
+          case DisconnectReason.duplicateIdentity:
+            {
+              showSnackBar(message: "You have joined with another device");
+              Timer(const Duration(seconds: 3), () {
+                WidgetsBindingCompatible.instance?.addPostFrameCallback(
+                    (timeStamp) =>
+                        Navigator.popUntil(context, (route) => route.isFirst));
+              });
+              break;
+            }
+          default:
+            {
+              Timer(const Duration(seconds: 3), () {
+                WidgetsBindingCompatible.instance?.addPostFrameCallback(
+                    (timeStamp) =>
+                        Navigator.popUntil(context, (route) => route.isFirst));
+              });
+            }
         }
-      })..on<ParticipantConnectedEvent>((event) {
-        var viewModel = _livekitProviderKey.currentState?.viewModel;
-        viewModel?.setRecording(widget.room.isRecording);
-        _sortParticipants();
-      })..on<ParticipantEvent>((event) {
-        var viewModel = _livekitProviderKey.currentState?.viewModel;
-        viewModel?.setRecording(widget.room.isRecording);
-        // sort participants on many track events as noted in documentation linked above
-        _sortParticipants();
-      })..on<ParticipantConnectedEvent>((event) {
-        _sortParticipants();
-      })..on<ParticipantDisconnectedEvent>((event) {
-        _sortParticipants();
-      })..on<RoomRecordingStatusChanged>((event) {
-        var viewModel = _livekitProviderKey.currentState?.viewModel;
-        viewModel?.setRecording(event.activeRecording);
-        // context.showRecordingStatusChangedDialog(event.activeRecording);
-      })..on<RoomAttemptReconnectEvent>((event) {
+      }
+    })
+    ..on<ParticipantConnectedEvent>((event) {
+      var viewModel = _livekitProviderKey.currentState?.viewModel;
+      viewModel?.setRecording(widget.room.isRecording);
+      _sortParticipants();
+    })
+    ..on<ParticipantEvent>((event) {
+      var viewModel = _livekitProviderKey.currentState?.viewModel;
+      viewModel?.setRecording(widget.room.isRecording);
+      // sort participants on many track events as noted in documentation linked above
+      _sortParticipants();
+    })
+    ..on<ParticipantConnectedEvent>((event) {
+      _sortParticipants();
+    })
+    ..on<ParticipantDisconnectedEvent>((event) {
+      _sortParticipants();
+    })
+    ..on<RoomRecordingStatusChanged>((event) {
+      var viewModel = _livekitProviderKey.currentState?.viewModel;
+      viewModel?.setRecording(event.activeRecording);
+      // context.showRecordingStatusChangedDialog(event.activeRecording);
+    })
+    ..on<RoomAttemptReconnectEvent>((event) {
+      if (kDebugMode) {
+        print(
+            'Attempting to reconnect ${event.attempt}/${event.maxAttemptsRetry}, '
+            '(${event.nextRetryDelaysInMs}ms delay until next attempt)');
+      }
+    })
+    ..on<LocalTrackSubscribedEvent>((event) {
+      if (kDebugMode) {
+        print('Local track subscribed: ${event.trackSid}');
+      }
+    })
+    ..on<LocalTrackPublishedEvent>((_) => _sortParticipants())
+    ..on<LocalTrackUnpublishedEvent>((_) => _sortParticipants())
+    ..on<TrackSubscribedEvent>((_) => _sortParticipants())
+    ..on<TrackUnsubscribedEvent>((_) => _sortParticipants())
+    ..on<TrackE2EEStateEvent>(_onE2EEStateEvent)
+    ..on<ParticipantNameUpdatedEvent>((event) {
+      _sortParticipants();
+    })
+    ..on<ParticipantMetadataUpdatedEvent>((event) {})
+    ..on<RoomMetadataChangedEvent>((event) {})
+    ..on<DataReceivedEvent>((event) {
+      _handleDataChannel(event);
+    })
+    ..on<AudioPlaybackStatusChanged>((event) async {
+      if (!widget.room.canPlaybackAudio) {
         if (kDebugMode) {
-          print(
-              'Attempting to reconnect ${event.attempt}/${event
-                  .maxAttemptsRetry}, '
-                  '(${event.nextRetryDelaysInMs}ms delay until next attempt)');
+          print('Audio playback failed for iOS Safari ..........');
         }
-      })..on<LocalTrackSubscribedEvent>((event) {
-        if (kDebugMode) {
-          print('Local track subscribed: ${event.trackSid}');
+        bool? yesno = await context.showPlayAudioManuallyDialog();
+        if (yesno == true) {
+          await widget.room.startAudio();
         }
-      })..on<LocalTrackPublishedEvent>((_) => _sortParticipants())..on<
-          LocalTrackUnpublishedEvent>((_) => _sortParticipants())..on<
-          TrackSubscribedEvent>((_) => _sortParticipants())..on<
-          TrackUnsubscribedEvent>((_) => _sortParticipants())..on<
-          TrackE2EEStateEvent>(_onE2EEStateEvent)..on<
-          ParticipantNameUpdatedEvent>((event) {
-        _sortParticipants();
-      })..on<ParticipantMetadataUpdatedEvent>((event) {})..on<
-          RoomMetadataChangedEvent>((event) {})..on<DataReceivedEvent>((event) {
-        _handleDataChannel(event);
-      })..on<AudioPlaybackStatusChanged>((event) async {
-        if (!widget.room.canPlaybackAudio) {
-          if (kDebugMode) {
-            print('Audio playback failed for iOS Safari ..........');
-          }
-          bool? yesno = await context.showPlayAudioManuallyDialog();
-          if (yesno == true) {
-            await widget.room.startAudio();
-          }
-        }
-      });
+      }
+    });
 
   void _handleDataChannel(DataReceivedEvent event) {
     var eventData0 = parseJsonData(event.data);
@@ -248,7 +260,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         viewModel?.checkAndAddUserToLobbyList(remoteData);
         lobbyManager?.showLobbyRequestDialog(remoteData);
         break;
-    //
+      //
       case "heart":
       case "blush":
       case "clap":
@@ -257,7 +269,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         showReaction(remoteData.action, viewModel,
             name: remoteData.identity?.name ?? '');
         break;
-    //
+      //
       case "mute_camera":
         viewModel?.disableVideo();
         break;
@@ -265,7 +277,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       case "mute_mic":
         viewModel?.disableAudio();
         break;
-    //
+      //
       case "ask_to_unmute_mic":
         final result = await context
             .showPermissionAskDialog("Host is asking you to turn on your mic");
@@ -309,7 +321,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         break;
 
       case "":
-      // Handle empty action case if needed
+        // Handle empty action case if needed
         break;
 
       default:
@@ -320,7 +332,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   RemoteActivityData parseJsonData(List<int> jsonData) {
     final jsonString = utf8.decode(jsonData); // Convert Uint8List to String
     final Map<String, dynamic> jsonMap =
-    json.decode(jsonString); // Decode the JSON string
+        json.decode(jsonString); // Decode the JSON string
     return RemoteActivityData.fromJson(
         jsonMap); // Convert to RemoteActivityData
   }
@@ -436,10 +448,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   }
 
   final GlobalKey<RtcProviderState> _livekitProviderKey =
-  GlobalKey<RtcProviderState>();
+      GlobalKey<RtcProviderState>();
 
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
-  GlobalKey<ScaffoldMessengerState>();
+      GlobalKey<ScaffoldMessengerState>();
 
   @override
   Widget build(BuildContext context) {
@@ -471,82 +483,88 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         child: MaterialApp(
           scaffoldMessengerKey: scaffoldMessengerKey,
           debugShowCheckedModeBanner: false,
-          home: (!_isInForeground) ? PipScreen(
-            name: widget.room.localParticipant?.name,) : Scaffold(
-            body: SafeArea(
-              child: Stack(children: [
-                Container(
-                  color: Colors.black,
-                  child: Column(
-                    children: [
-                      // Main content area for participants
-                      Expanded(
-                        child: Stack(
+          home: (!_isInForeground)
+              ? PipScreen(
+                  name: widget.room.localParticipant?.name,
+                )
+              : Scaffold(
+                  body: SafeArea(
+                    child: Stack(children: [
+                      Container(
+                        color: Colors.black,
+                        child: Column(
                           children: [
-                            Column(
-                              children: [
-                                Expanded(
-                                  child: participantTracks.isNotEmpty
-                                      ? ParticipantWidget.widgetFor(
-                                    participantTracks.first,
-                                    showStatsLayer: true,
-                                  )
-                                      : Container(),
-                                ),
-                                // Horizontal list of participants positioned above LivekitControls
-                                if (participantTracks.length > 1)
-                                  SizedBox(
-                                    height: 120,
-                                    // Fixed height for the participant list
-                                    child: ListView.builder(
-                                      scrollDirection: Axis.horizontal,
-                                      itemCount: participantTracks.length - 1,
-                                      itemBuilder:
-                                          (BuildContext context, int index) =>
-                                          SizedBox(
-                                            width: 180,
-                                            height: 120,
-                                            child: ParticipantWidget.widgetFor(
-                                              participantTracks[index + 1],
+                            // Main content area for participants
+                            Expanded(
+                              child: Stack(
+                                children: [
+                                  Column(
+                                    children: [
+                                      Expanded(
+                                        child: participantTracks.isNotEmpty
+                                            ? ParticipantWidget.widgetFor(
+                                                participantTracks.first,
+                                                showStatsLayer: true,
+                                              )
+                                            : Container(),
+                                      ),
+                                      // Horizontal list of participants positioned above LivekitControls
+                                      if (participantTracks.length > 1)
+                                        SizedBox(
+                                          height: 120,
+                                          // Fixed height for the participant list
+                                          child: ListView.builder(
+                                            scrollDirection: Axis.horizontal,
+                                            itemCount:
+                                                participantTracks.length - 1,
+                                            itemBuilder: (BuildContext context,
+                                                    int index) =>
+                                                SizedBox(
+                                              width: 180,
+                                              height: 120,
+                                              child:
+                                                  ParticipantWidget.widgetFor(
+                                                participantTracks[index + 1],
+                                              ),
                                             ),
                                           ),
-                                    ),
+                                        ),
+                                    ],
                                   ),
-                              ],
+                                  if (_livekitProviderKey.currentState
+                                          ?.viewModel.isRecording ==
+                                      true)
+                                    const Positioned(
+                                      right: 10,
+                                      top: 10,
+                                      child: Icon(Icons.radio_button_checked,
+                                          color: Colors.red),
+                                    ),
+                                ],
+                              ),
                             ),
-                            if (_livekitProviderKey
-                                .currentState?.viewModel.isRecording ==
-                                true)
-                              const Positioned(
-                                right: 10,
-                                top: 10,
-                                child: Icon(Icons.radio_button_checked,
-                                    color: Colors.red),
+                            if (widget.room.localParticipant != null)
+                              SafeArea(
+                                top: false,
+                                child: RtcControls(
+                                  widget.room,
+                                  widget.room.localParticipant!,
+                                ),
                               ),
                           ],
                         ),
                       ),
-                      if (widget.room.localParticipant != null)
-                        SafeArea(
-                          top: false,
-                          child: RtcControls(
-                            widget.room,
-                            widget.room.localParticipant!,
-                          ),
+                      Positioned(
+                        right: 0,
+                        top: 50,
+                        child: EmojiReactionWidget(
+                          viewModel:
+                              _livekitProviderKey.currentState?.viewModel,
                         ),
-                    ],
+                      ),
+                    ]),
                   ),
                 ),
-                Positioned(
-                  right: 0,
-                  top: 50,
-                  child: EmojiReactionWidget(
-                    viewModel: _livekitProviderKey.currentState?.viewModel,
-                  ),
-                ),
-              ]),
-            ),
-          ),
         ),
       ),
     );
@@ -554,28 +572,28 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
   Future<bool> _showExitConfirmationDialog(BuildContext context) async {
     return await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Exit Meeting'),
-          content: const Text('Are you sure you want to exit the meeting?'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false); // Don't exit
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(true); // Exit
-              },
-              child: const Text('Exit'),
-            ),
-          ],
-        );
-      },
-    ) ??
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Exit Meeting'),
+              content: const Text('Are you sure you want to exit the meeting?'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false); // Don't exit
+                  },
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true); // Exit
+                  },
+                  child: const Text('Exit'),
+                ),
+              ],
+            );
+          },
+        ) ??
         false;
   }
 
@@ -585,11 +603,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       content: Text(message),
       action: actionText != null
           ? SnackBarAction(
-        label: actionText,
-        onPressed: () {
-          actionCallBack?.call();
-        },
-      )
+              label: actionText,
+              onPressed: () {
+                actionCallBack?.call();
+              },
+            )
           : null,
     ));
   }
@@ -641,16 +659,13 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     });
   }
 
-  void addEmojiToQueue(AnimatedEmojiData? emoji, String senderName,
-      RtcViewmodel? viewModel) {
+  void addEmojiToQueue(
+      AnimatedEmojiData? emoji, String senderName, RtcViewmodel? viewModel) {
     if (viewModel == null) return;
     final newMessage = EmojiMessage(
         emoji: emoji,
         senderName: senderName,
-        timestamp: DateTime
-            .now()
-            .millisecondsSinceEpoch
-            .toString());
+        timestamp: DateTime.now().millisecondsSinceEpoch.toString());
     viewModel.addEmoji(newMessage);
   }
 }

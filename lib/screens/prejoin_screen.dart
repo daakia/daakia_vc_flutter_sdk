@@ -267,7 +267,7 @@ class _PreJoinState extends State<PreJoinScreen> {
     apiClient.addParticipantToLobby(body).then((response){
       if(response.success == 1){
         lobbyRequestId = response.data?.requestId ?? "";
-        Future.delayed(const Duration(seconds: 8), () {
+        Future.delayed(const Duration(seconds: 10), () {
           joinMeeting(stopLoading, isParticipant: true);
         });
       } else {
@@ -284,8 +284,8 @@ class _PreJoinState extends State<PreJoinScreen> {
     _participantTimer?.cancel(); // Cancel any previous timer if exists
 
     // Set up a timer to repeat every 10 seconds
-    _participantTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      if (isUserCanJoin || isRejected || iterations >= 12) {
+    _participantTimer = Timer.periodic(const Duration(seconds: 12), (timer) {
+      if (isUserCanJoin || isRejected || iterations >= 50) {
         // Stop the timer if the user can join, has been rejected, or after 2 minutes
         stopLoading();
         timer.cancel();
