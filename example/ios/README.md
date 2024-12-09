@@ -128,3 +128,6 @@ Follow these steps to set up the Broadcast Extension for screen sharing on iOS.
 
 3. Replace all instances of group.com.daakia.example with your actual App Group identifier.
 4. Do not modify the channel names.
+
+### Special Note:
+> ⚠️ **This screen will not work on the iOS Simulator. To test its functionality, you must use a real device.**
