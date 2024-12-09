@@ -52,7 +52,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
   bool _isInForeground = true;
 
-  late final SimplePip pip;
+  SimplePip? pip;
   bool isInPipMode = false;
 
   @override
@@ -70,9 +70,9 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     SystemChrome.setSystemUIOverlayStyle(
         const SystemUiOverlayStyle(statusBarColor: Colors.black));
     WakelockPlus.enable();
-    pip = SimplePip()
-      ..setAutoPipMode(
-          aspectRatio: (1, 1), seamlessResize: true, autoEnter: true);
+    if(lkPlatformIs(PlatformType.android)){
+      pip = SimplePip()..setAutoPipMode(aspectRatio: (1,1), seamlessResize: true, autoEnter: true);
+    }
     // add callback for a `RoomEvent` as opposed to a `ParticipantEvent`
     widget.room.addListener(_onRoomDidUpdate);
     // add callbacks for finer grained events
@@ -121,6 +121,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     })();
     onWindowShouldClose = null;
     WakelockPlus.disable();
+    pip = null;
     super.dispose();
   }
 
@@ -626,9 +627,6 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         if (mounted) {
           setState(() {});
         }
-      } else if (event is EnterPIP) {
-        // pip.setAutoPipMode(aspectRatio: (1,1), seamlessResize: true, autoEnter: true);
-        pip.enterPipMode(aspectRatio: (1, 1), seamlessResize: true);
       }
     });
   }
