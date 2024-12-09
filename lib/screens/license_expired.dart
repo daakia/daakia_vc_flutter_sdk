@@ -12,14 +12,18 @@ class LicenseExpiredScreen extends StatelessWidget{
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.warning_amber, color: Colors.redAccent, size: 40), // Icon size 24
+            const Icon(Icons.warning_amber, color: Colors.redAccent, size: 40), // Icon
             const SizedBox(height: 10), // Space between icon and text
-            Text(
-              text,
-              style: const TextStyle(
-                color: Colors.grey,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20), // Add horizontal padding
+              child: Text(
+                text,
+                textAlign: TextAlign.center, // Center-align the text
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -27,5 +31,6 @@ class LicenseExpiredScreen extends StatelessWidget{
       ),
     );
   }
+
 
 }

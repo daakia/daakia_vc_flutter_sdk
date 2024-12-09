@@ -8,7 +8,6 @@ import 'package:flutter_background/flutter_background.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:provider/provider.dart';
-
 import '../../model/action_model.dart';
 import '../../resources/colors/color.dart';
 import '../../utils/utils.dart';
@@ -77,7 +76,8 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
               buildOption(context,
                   icon: Icons.security, // Replace with your host control icon
                   text: 'Host Control',
-                  isVisible: viewModel.isHost(), onTap: () {
+                  isVisible: viewModel.isHost(),
+                  onTap: () {
                 Navigator.pop(context);
                 showWebinarControls();
               }),
@@ -87,8 +87,8 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                   // Replace with your screen share icon
                   text:
                       '${(viewModel.room.localParticipant?.isScreenShareEnabled() == true) ? "Stop" : "Start"} Screen Sharing',
-                  isVisible: true,
-                  //TODO::
+                  isVisible: viewModel.meetingDetails.features!
+                      .isScreenSharingAllowed(),
                   onTap: () {
                 Navigator.pop(context);
                 if (viewModel.room.localParticipant?.isScreenShareEnabled() ==
