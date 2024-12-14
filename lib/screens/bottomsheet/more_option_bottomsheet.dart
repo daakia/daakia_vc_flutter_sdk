@@ -349,6 +349,5 @@ Widget buildOption(BuildContext context,
 
 class BadgeData {
   int unreadCount;
-
   BadgeData(this.unreadCount);
 }

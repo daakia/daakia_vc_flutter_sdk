@@ -1,6 +1,7 @@
 import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/chat_bottomsheet.dart';
 import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/private_chat_bottomsheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../viewmodel/rtc_viewmodel.dart';
 
@@ -11,6 +12,8 @@ class ChatController extends StatelessWidget {
   final RtcViewmodel viewModel;
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(statusBarColor: Colors.black));
     return DefaultTabController(
       initialIndex: identity.isEmpty ? 0 : 1,
       length: 2,

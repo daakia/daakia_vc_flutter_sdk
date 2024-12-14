@@ -31,6 +31,7 @@ class Utils {
   }
 
   static void showSnackBar(BuildContext context, {required String message, String? actionText, Function? actionCallBack}){
+    if(!context.mounted) return;
     final snackBar = SnackBar(
       content: Text(message),
       action: actionText != null? SnackBarAction(

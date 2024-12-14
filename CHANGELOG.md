@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.0.1 (2024-12)
+
+- **Bug Fixes**:
+  - Null-Safety for participant.
+  - Lobby mode bug fixes.
+  - Navigation bug fixes.
 ## 2.0.0 (2024-12)
 
 - **New Features**:

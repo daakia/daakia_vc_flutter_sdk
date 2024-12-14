@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: Scaffold(
+      home: const Scaffold(
         body: DataEntryScreen(),
       ),
     );
@@ -27,6 +27,8 @@ class MyApp extends StatelessWidget {
 }
 
 class DataEntryScreen extends StatefulWidget {
+  const DataEntryScreen({super.key});
+
   @override
   State<StatefulWidget> createState() {
     return _DataEntryState();
