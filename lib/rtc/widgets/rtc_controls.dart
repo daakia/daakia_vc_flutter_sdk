@@ -162,7 +162,7 @@ class _RtcControlState extends State<RtcControls> {
           ),
           IconButton(
             onPressed: () {
-              _onTapDisconnect();
+              _onTapDisconnect(viewModel);
             },
             icon: const Icon(
               Icons.call_end,
@@ -183,10 +183,13 @@ class _RtcControlState extends State<RtcControls> {
         });
   }
 
-  void _onTapDisconnect() async {
+  void _onTapDisconnect(RtcViewmodel viewModel) async {
     if (!mounted) return;
     final result = await context.showDisconnectDialog();
-    if (result == true) await widget.room.disconnect();
+    if (result == true) {
+      viewModel.isMeetingEnded = true;
+      await widget.room.disconnect();
+    }
   }
 
   @override

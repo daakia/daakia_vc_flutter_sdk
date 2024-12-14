@@ -128,14 +128,17 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   void _setUpListeners() => _listener
     ..on<RoomDisconnectedEvent>((event) async {
       if (event.reason != null) {
+        _livekitProviderKey.currentState?.viewModel.isMeetingEnded = true;
         switch (event.reason) {
           case DisconnectReason.participantRemoved:
             {
               showSnackBar(message: "Host has removed you from the meeting!");
               Timer(const Duration(seconds: 3), () {
-                WidgetsBindingCompatible.instance?.addPostFrameCallback(
-                    (timeStamp) =>
-                        Navigator.popUntil(context, (route) => route.isFirst));
+                if (mounted) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Navigator.popUntil(context, (route) => route.isFirst);
+                  });
+                }
               });
               break;
             }
@@ -143,18 +146,22 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
             {
               showSnackBar(message: "You have joined with another device");
               Timer(const Duration(seconds: 3), () {
-                WidgetsBindingCompatible.instance?.addPostFrameCallback(
-                    (timeStamp) =>
-                        Navigator.popUntil(context, (route) => route.isFirst));
+                if (mounted) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Navigator.popUntil(context, (route) => route.isFirst);
+                  });
+                }
               });
               break;
             }
           default:
             {
               Timer(const Duration(seconds: 3), () {
-                WidgetsBindingCompatible.instance?.addPostFrameCallback(
-                    (timeStamp) =>
-                        Navigator.popUntil(context, (route) => route.isFirst));
+                if (mounted) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Navigator.popUntil(context, (route) => route.isFirst);
+                  });
+                }
               });
             }
         }
@@ -258,8 +265,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         break;
 
       case "lobby":
-        viewModel?.checkAndAddUserToLobbyList(remoteData);
-        lobbyManager?.showLobbyRequestDialog(remoteData);
+        if(viewModel?.isHost() == true || viewModel?.isCoHost() == true) {
+          viewModel?.checkAndAddUserToLobbyList(remoteData);
+          lobbyManager?.showLobbyRequestDialog(remoteData);
+        }
         break;
       //
       case "heart":
@@ -472,8 +481,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {
+        if(!context.mounted) return;
         final shouldExit = await _showExitConfirmationDialog(context);
         if (shouldExit) {
+          if(!context.mounted) return;
           Navigator.of(context).pop(); // Exit to previous page
         }
       },

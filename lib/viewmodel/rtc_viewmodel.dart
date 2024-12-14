@@ -41,6 +41,17 @@ class RtcViewmodel extends ChangeNotifier {
 
   bool _isRecording = false;
 
+  bool _isMeetingEnded = false;
+
+  // Getter
+  bool get isMeetingEnded => _isMeetingEnded;
+
+// Setter
+  set isMeetingEnded(bool value) {
+    _isMeetingEnded = value;
+    notifyListeners();
+  }
+
   void setCoHost(bool isCoHost) {
     _isCoHost = isCoHost;
     notifyListeners();
@@ -244,21 +255,41 @@ class RtcViewmodel extends ChangeNotifier {
     // Clear the existing list
     _participantTracks.clear();
 
-    // Try to find the local participant based on identity
-    ParticipantTrack? localParticipant = participants.firstWhereOrNull(
-      (participant) =>
-          participant.participant.identity == room.localParticipant?.identity,
+    // Create a map to store unique participants by identity
+    final Map<String, ParticipantTrack> uniqueParticipants = {};
+
+    for (var participantTrack in participants) {
+      final identity = participantTrack.participant.identity;
+
+      if (participantTrack.type == ParticipantTrackType.kScreenShare) {
+        // If it's a screen share, update or add the entry
+        uniqueParticipants[identity] = ParticipantTrack(
+          participant: participantTrack.participant,
+          type: ParticipantTrackType.kScreenShare,
+        );
+      } else {
+        // If it's a user media track, add it only if no screen share exists for the participant
+        uniqueParticipants.putIfAbsent(identity, () => participantTrack);
+      }
+    }
+
+    // Sort participants to ensure local participant comes first
+    ParticipantTrack? localParticipant = uniqueParticipants.values.firstWhereOrNull(
+          (participantTrack) =>
+      participantTrack.participant.identity == room.localParticipant?.identity,
     );
 
-    // Add the local participant first if it exists
+    // Add local participant first if it exists
     if (localParticipant != null) {
       _participantTracks.add(localParticipant);
     }
 
-    // Add remaining participants, excluding the local participant if it exists
+    // Add the remaining participants excluding the local participant
     _participantTracks.addAll(
-      participants.where((participant) =>
-          participant.participant.identity != room.localParticipant?.identity),
+      uniqueParticipants.values.where(
+            (participantTrack) =>
+        participantTrack.participant.identity != room.localParticipant?.identity,
+      ),
     );
 
     // Notify listeners of the update

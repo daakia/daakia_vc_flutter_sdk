@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:daakia_vc_flutter_sdk/model/features.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details_model.dart';
@@ -20,7 +21,7 @@ class PreJoinScreen extends StatefulWidget {
       {required this.meetingId,
       required this.secretKey,
       this.isHost = false,
-        required this.basicMeetingDetails,
+      required this.basicMeetingDetails,
       super.key});
 
   final String meetingId;
@@ -50,6 +51,7 @@ class _PreJoinState extends State<PreJoinScreen> {
   var isRejected = false;
 
   var isLoading = false;
+  var isNeedToCancelApiCall = false;
   var _enableAudio = false;
   var _enableVideo = false;
 
@@ -151,6 +153,8 @@ class _PreJoinState extends State<PreJoinScreen> {
   bool isUserCanJoin = false;
 
   void joinMeeting(Function stopLoading, {bool isParticipant = false}) async {
+    if (isNeedToCancelApiCall) return;
+
     isLoading = true;
 
     var token = hostToken;
@@ -159,18 +163,35 @@ class _PreJoinState extends State<PreJoinScreen> {
       "preferred_video_server_id": "ap1",
       "display_name": name
     };
-    if(isParticipant){
+    if (isParticipant) {
       body["lobby_request_id"] = lobbyRequestId;
     }
 
     apiClient.getMeetingJoinDetail(token, body).then((response) {
       if (response.success == 1) {
         if (response.data == null) {
-          Utils.showSnackBar(context, message: "Something went wrong!");
+          if (mounted) {
+            Utils.showSnackBar(context, message: "Something went wrong!");
+          }
           return;
         }
         var it = response.data!;
         if (!widget.isHost) {
+          if (it.isRejected == true) {
+            isRejected = true;
+            stopLoading.call();
+            setState(() {
+              alertMessage = response.message ?? "";
+              Utils.showSnackBar(context, message: alertMessage);
+            });
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                Navigator.of(context).pop();
+              }
+            });
+            return;
+          }
+
           if (it.accessToken == null ||
               it.livekitServerURL == null ||
               it.accessToken?.isEmpty == true ||
@@ -178,19 +199,11 @@ class _PreJoinState extends State<PreJoinScreen> {
             setState(() {
               alertMessage = response.message ?? "";
             });
+            if (it.meetingStarted == true || widget.basicMeetingDetails?.isLobbyMode == true) return;
             meetingNotStarted(stopLoading);
             return;
           }
 
-          if (it.isRejected == true) {
-            isRejected = true;
-            setState(() {
-              alertMessage = response.message ?? "";
-              Utils.showSnackBar(context, message: alertMessage);
-              Navigator.of(context).pop();
-            });
-            return;
-          }
           if (it.participantCanJoin == true) {
             isUserCanJoin = true;
             _join(context, stopLoading,
@@ -212,13 +225,26 @@ class _PreJoinState extends State<PreJoinScreen> {
               livekitUrl: response.data?.livekitServerURL ?? "",
               livekitToken: response.data?.accessToken ?? "");
         }
+      } else {
+        setState(() {
+          isLoading = false;
+          isNeedToCancelApiCall = true;
+          stopLoading.call();
+        });
+        if (mounted) {
+          Utils.showSnackBar(context,
+              message: response.message ?? "Something went wrong!");
+        }
       }
     }).onError((handleError, stackStress) {
       setState(() {
         isLoading = false;
+        isNeedToCancelApiCall = true;
         stopLoading.call();
       });
-      Utils.showSnackBar(context, message: "Something went wrong!");
+      if (mounted) {
+        Utils.showSnackBar(context, message: "Something went wrong!");
+      }
     });
   }
 
@@ -238,13 +264,22 @@ class _PreJoinState extends State<PreJoinScreen> {
 
     apiClient.verifyHostToken(body).then((response) {
       if (response.success == 1) {
-        Utils.showSnackBar(context, message: response.message ?? "");
+        if (mounted) {
+          Utils.showSnackBar(context, message: response.message ?? "");
+        }
         isHostVerified = true;
         hostToken = response.data?.token ?? "";
         getFeaturesAndJoinMeeting(stopLoading);
-        Navigator.of(context).pop();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
+        });
       } else {
-        Utils.showSnackBar(context, message: response.message ?? "Invalid Pin");
+        if (mounted) {
+          Utils.showSnackBar(context,
+              message: response.message ?? "Invalid Pin");
+        }
       }
       setState(() {
         isLoading = false;
@@ -252,48 +287,59 @@ class _PreJoinState extends State<PreJoinScreen> {
     }).onError((handleError, stackStress) {
       setState(() {
         isLoading = false;
+        isNeedToCancelApiCall = true;
         stopLoading.call();
       });
-      Utils.showSnackBar(context, message: "Something went wrong!");
+      if (mounted) {
+        Utils.showSnackBar(context, message: "Something went wrong!");
+      }
     });
   }
 
-  void addParticipantToLobby(Function stopLoading){
+  void addParticipantToLobby(Function stopLoading) {
+    if (isNeedToCancelApiCall) return;
     Map<String, dynamic> body = {
       "meeting_uid": widget.meetingId,
       "display_name": name,
     };
 
-    apiClient.addParticipantToLobby(body).then((response){
-      if(response.success == 1){
+    apiClient.addParticipantToLobby(body).then((response) {
+      if (response.success == 1) {
         lobbyRequestId = response.data?.requestId ?? "";
-        Future.delayed(const Duration(seconds: 10), () {
-          joinMeeting(stopLoading, isParticipant: true);
-        });
+        startAddingParticipantsPool(stopLoading);
       } else {
-        Utils.showSnackBar(context, message: response.message ?? "Something went wrong!");
+        if (mounted) {
+          Utils.showSnackBar(context,
+              message: response.message ?? "Something went wrong!");
+        }
         stopLoading();
       }
     });
   }
 
   Timer? _participantTimer;
+
   void startAddingParticipantsPool(Function stopLoading) {
     int iterations = 0;
 
     _participantTimer?.cancel(); // Cancel any previous timer if exists
 
     // Set up a timer to repeat every 10 seconds
-    _participantTimer = Timer.periodic(const Duration(seconds: 12), (timer) {
+    _participantTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      if (isNeedToCancelApiCall) {
+        timer.cancel();
+        return;
+      }
       if (isUserCanJoin || isRejected || iterations >= 50) {
         // Stop the timer if the user can join, has been rejected, or after 2 minutes
-        stopLoading();
+        // stopLoading();
         timer.cancel();
         return;
       }
 
       // Call the function to add a participant to the lobby
-      addParticipantToLobby(stopLoading);
+      getFeaturesAndJoinMeeting(stopLoading,
+          isLobby: true, isParticipant: true);
 
       iterations++; // Track the number of iterations
     });
@@ -336,8 +382,13 @@ class _PreJoinState extends State<PreJoinScreen> {
             TextButton(
               onPressed: () {
                 // Close the dialog
+                isNeedToCancelApiCall = true;
                 stopLoading.call();
-                Navigator.of(context).pop();
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                  }
+                });
               },
               child: const Text('Cancel'),
             ),
@@ -360,7 +411,8 @@ class _PreJoinState extends State<PreJoinScreen> {
   }
 
   void checkPermission() async {
-    await [Permission.camera, Permission.microphone, Permission.notification].request();
+    await [Permission.camera, Permission.microphone, Permission.notification]
+        .request();
   }
 
   _join(BuildContext context, Function stopLoading,
@@ -434,17 +486,20 @@ class _PreJoinState extends State<PreJoinScreen> {
           meeting_uid: widget.meetingId,
           authorization_token: hostToken,
           features: features);
-
-      await Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-            builder: (_) => RoomPage(room, listener, meetingDetails)),
-      );
+      if (context.mounted) {
+        await Navigator.push<void>(
+          context,
+          MaterialPageRoute(
+              builder: (_) => RoomPage(room, listener, meetingDetails)),
+        );
+      }
     } catch (error) {
       if (kDebugMode) {
         print('Could not connect $error');
       }
-      await context.showErrorDialog(error);
+      if (context.mounted) {
+        await context.showErrorDialog(error);
+      }
     } finally {
       setState(() {
         stopLoading();
@@ -611,7 +666,9 @@ class _PreJoinState extends State<PreJoinScreen> {
                     ),
                   ),
                   Visibility(
-                    visible: !widget.isHost && (widget.basicMeetingDetails?.isStandardPassword == true),
+                    visible: !widget.isHost &&
+                        (widget.basicMeetingDetails?.isStandardPassword ==
+                            true),
                     child: Container(
                       margin: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 10),
@@ -635,7 +692,10 @@ class _PreJoinState extends State<PreJoinScreen> {
                     ),
                   ),
                   Visibility(
-                    visible: !widget.isHost && (widget.basicMeetingDetails?.isCommonPassword == true || widget.basicMeetingDetails?.isStandardPassword == true),
+                    visible: !widget.isHost &&
+                        (widget.basicMeetingDetails?.isCommonPassword == true ||
+                            widget.basicMeetingDetails?.isStandardPassword ==
+                                true),
                     child: Container(
                       margin: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 10),
@@ -645,7 +705,9 @@ class _PreJoinState extends State<PreJoinScreen> {
                           border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                              _obscurePassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
                             ),
                             onPressed: () {
                               setState(() {
@@ -655,8 +717,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                           ),
                         ),
                         style: const TextStyle(
-                          color: Colors
-                              .black,
+                          color: Colors.black,
                         ),
                         enabled: true,
                         obscureText: _obscurePassword,
@@ -694,16 +755,17 @@ class _PreJoinState extends State<PreJoinScreen> {
                               message: "Please enter your name");
                           return;
                         }
-                        if(!widget.isHost) {
+                        if (!widget.isHost) {
                           var event = widget.basicMeetingDetails;
-                          if(event?.isStandardPassword == true){
-                            if(!checkValidity()){
+                          if (event?.isStandardPassword == true) {
+                            if (!checkValidity()) {
                               return;
                             }
                           }
-                          if(event?.isCommonPassword == true){
-                            if(password.isEmpty) {
-                              Utils.showSnackBar(context, message: "Please enter your password");
+                          if (event?.isCommonPassword == true) {
+                            if (password.isEmpty) {
+                              Utils.showSnackBar(context,
+                                  message: "Please enter your password");
                               return;
                             }
                           }
@@ -713,6 +775,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                         if (isLoading) {
                           return;
                         } else {
+                          isNeedToCancelApiCall = false;
                           if (widget.isHost && !isHostVerified) {
                             _showVerificationDialog(context, stopLoading);
                           } else {
@@ -743,26 +806,38 @@ class _PreJoinState extends State<PreJoinScreen> {
     super.dispose();
   }
 
-  void getFeaturesAndJoinMeeting(Function stopLoading) {
+  void getFeaturesAndJoinMeeting(Function stopLoading,
+      {bool isLobby = false, bool isParticipant = false}) {
+    if (isNeedToCancelApiCall) return;
     isLoading = true;
     apiClient.getFeatures(widget.meetingId).then((response) {
       if (response.success == 1) {
         features = response.data?.features;
-        joinMeeting(stopLoading);
+        if (isLobby) {
+          joinMeeting(stopLoading, isParticipant: true);
+        } else {
+          joinMeeting(stopLoading);
+        }
       } else {
         setState(() {
           isLoading = false;
+          isNeedToCancelApiCall = true;
           stopLoading.call();
         });
-        Utils.showSnackBar(context,
-            message: response.message ?? "Something went wrong!");
+        if (mounted) {
+          Utils.showSnackBar(context,
+              message: response.message ?? "Something went wrong!");
+        }
       }
     }).onError((handleError, stackStress) {
       setState(() {
         isLoading = false;
+        isNeedToCancelApiCall = true;
         stopLoading.call();
       });
-      Utils.showSnackBar(context, message: "Something went wrong!");
+      if (mounted) {
+        Utils.showSnackBar(context, message: "Something went wrong!");
+      }
     });
   }
 
@@ -774,11 +849,15 @@ class _PreJoinState extends State<PreJoinScreen> {
         // Request permission
         PermissionStatus micStatus = await Permission.microphone.request();
         if (micStatus.isDenied) {
-          _showPermissionDialog(context, "Microphone");
-          return false;
+          if (context.mounted) {
+            _showPermissionDialog(context, "Microphone");
+            return false;
+          }
         } else if (micStatus.isPermanentlyDenied) {
-          _showSettingsDialog(context, "Microphone");
-          return false;
+          if (context.mounted) {
+            _showSettingsDialog(context, "Microphone");
+            return false;
+          }
         }
       }
     }
@@ -789,11 +868,15 @@ class _PreJoinState extends State<PreJoinScreen> {
         // Request permission
         PermissionStatus cameraStatus = await Permission.camera.request();
         if (cameraStatus.isDenied) {
-          _showPermissionDialog(context, "Camera");
-          return false;
+          if (context.mounted) {
+            _showPermissionDialog(context, "Camera");
+            return false;
+          }
         } else if (cameraStatus.isPermanentlyDenied) {
-          _showSettingsDialog(context, "Camera");
-          return false;
+          if (context.mounted) {
+            _showSettingsDialog(context, "Camera");
+            return false;
+          }
         }
       }
     }
@@ -851,15 +934,15 @@ class _PreJoinState extends State<PreJoinScreen> {
 
   void checkMeetingType(Function stopLoading) {
     var event = widget.basicMeetingDetails;
-    if(widget.isHost){
+    if (widget.isHost) {
       getFeaturesAndJoinMeeting(stopLoading);
-    } else if(event?.isStandardPassword ==  true){
-      if(checkValidity()){
+    } else if (event?.isStandardPassword == true) {
+      if (checkValidity()) {
         verifyPasswordProtectedMeeting(stopLoading);
-      } else{
+      } else {
         stopLoading();
       }
-    } else if(event?.isCommonPassword == true){
+    } else if (event?.isCommonPassword == true) {
       if (password.isEmpty) {
         Utils.showSnackBar(context, message: "Please enter your password");
         stopLoading();
@@ -867,18 +950,19 @@ class _PreJoinState extends State<PreJoinScreen> {
       }
       verifyCommonPasswordProtectedMeeting(stopLoading);
     } else {
-      if(event?.isLobbyMode == true){
-        startAddingParticipantsPool(stopLoading);
+      if (event?.isLobbyMode == true) {
+        addParticipantToLobby(stopLoading);
+        // startAddingParticipantsPool(stopLoading);
       } else {
         getFeaturesAndJoinMeeting(stopLoading);
       }
     }
   }
 
-  bool checkValidity(){
+  bool checkValidity() {
     var isValid = false;
-    if(email.isNotEmpty) {
-      if (Utils.isValidEmail(email)){
+    if (email.isNotEmpty) {
+      if (Utils.isValidEmail(email)) {
         isValid = true;
       } else {
         Utils.showSnackBar(context, message: "Invalid email");
@@ -902,17 +986,18 @@ class _PreJoinState extends State<PreJoinScreen> {
       "password": password,
       "meeting_uid": widget.meetingId
     };
-    apiClient.verifyCommonMeetingPassword(body).then((response){
-      if(response.success == 1){
-        if(response.data?.passwordVerified == true){
+    apiClient.verifyCommonMeetingPassword(body).then((response) {
+      if (response.success == 1) {
+        if (response.data?.passwordVerified == true) {
           passwordVerified(stopLoading);
         } else {
           passwordNotVerified(stopLoading, message: "Not verified");
         }
       } else {
-        passwordNotVerified(stopLoading, message: response.message ?? "Something went wrong!");
+        passwordNotVerified(stopLoading,
+            message: response.message ?? "Something went wrong!");
       }
-    }).onError((_,__){
+    }).onError((_, __) {
       passwordNotVerified(stopLoading);
     });
   }
@@ -923,29 +1008,32 @@ class _PreJoinState extends State<PreJoinScreen> {
       "password": password,
       "meeting_uid": widget.meetingId
     };
-    apiClient.verifyMeetingPassword(body).then((response){
-      if(response.success == 1){
-        if(response.data?.passwordVerified == true){
+    apiClient.verifyMeetingPassword(body).then((response) {
+      if (response.success == 1) {
+        if (response.data?.passwordVerified == true) {
           passwordVerified(stopLoading);
         } else {
           passwordNotVerified(stopLoading, message: "Not verified");
         }
       } else {
-        passwordNotVerified(stopLoading, message: response.message ?? "Something went wrong!");
+        passwordNotVerified(stopLoading,
+            message: response.message ?? "Something went wrong!");
       }
-    }).onError((_,__){
+    }).onError((_, __) {
       passwordNotVerified(stopLoading);
     });
   }
 
-  void passwordNotVerified(Function stopLoading, {String message = "Something went wrong!"}){
+  void passwordNotVerified(Function stopLoading,
+      {String message = "Something went wrong!"}) {
     stopLoading();
     Utils.showSnackBar(context, message: message);
   }
 
   void passwordVerified(Function stopLoading) {
-    if(widget.basicMeetingDetails?.isLobbyMode == true){
-      startAddingParticipantsPool(stopLoading);
+    if (widget.basicMeetingDetails?.isLobbyMode == true) {
+      // startAddingParticipantsPool(stopLoading);
+      addParticipantToLobby(stopLoading);
     } else {
       getFeaturesAndJoinMeeting(stopLoading);
     }
