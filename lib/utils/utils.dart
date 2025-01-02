@@ -143,4 +143,45 @@ class Utils {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     return packageInfo.appName;
   }
+
+  static bool isLink(String message) {
+    final linkRegExp = RegExp(
+      r'((https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?)',
+      caseSensitive: false,
+    );
+
+    // Check if there's any match for the link
+    final matches = linkRegExp.allMatches(message);
+    if (matches.isEmpty) {
+      return false; // No link found
+    }
+
+    // Check if the message contains only a link
+    final onlyLink = matches.length == 1 && matches.first.group(0) == message.trim();
+    return onlyLink ? true : true; // Contains a link (either only or mixed with other text)
+  }
+
+  static bool isOnlyLink(String message) {
+    final linkRegExp = RegExp(
+      r'((https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?)',
+      caseSensitive: false,
+    );
+
+    // Check if the message is just a link
+    final matches = linkRegExp.allMatches(message.trim());
+    return matches.length == 1 && matches.first.group(0) == message.trim();
+  }
+
+  static String? extractFirstUrl(String message) {
+    final urlRegExp = RegExp(
+      r'((https?:\/\/)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})(\/[^\s]*)?)',
+      caseSensitive: false,
+      multiLine: true,
+    );
+
+    final match = urlRegExp.firstMatch(message);
+    return match?.group(0); // Returns the first match or null if no match is found
+  }
+
+
 }
