@@ -36,8 +36,8 @@ class DataEntryScreen extends StatefulWidget {
 }
 
 class _DataEntryState extends State<DataEntryScreen> {
-  var licenseKey = "";
-  var meetingUID = "";
+  var licenseKey = "0D16716AFADABE17F5A42C6642CF2711ED9F59F2C89C12B2";
+  var meetingUID = "33cbf1bb0ce0022f21eda901";
   var isHost = false;
 
   @override
