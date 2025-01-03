@@ -534,6 +534,55 @@ class _RestClient implements RestClient {
     return _value;
   }
 
+  @override
+  Future<BaseResponse<UploadData>> uploadFile(
+    File file, {
+    void Function(int, int)? onSendProgress,
+  }) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    final _data = FormData();
+    _data.files.add(MapEntry(
+      'file',
+      MultipartFile.fromFileSync(
+        file.path,
+        filename: file.path.split(Platform.pathSeparator).last,
+      ),
+    ));
+    final _options = _setStreamType<BaseResponse<UploadData>>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+      contentType: 'multipart/form-data',
+    )
+        .compose(
+          _dio.options,
+          'rtc/meeting/chat/uploadAttachment',
+          queryParameters: queryParameters,
+          data: _data,
+          onSendProgress: onSendProgress,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late BaseResponse<UploadData> _value;
+    try {
+      _value = BaseResponse<UploadData>.fromJson(
+        _result.data!,
+        (json) => UploadData.fromJson(json as Map<String, dynamic>),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
   RequestOptions _setStreamType<T>(RequestOptions requestOptions) {
     if (T != dynamic &&
         !(requestOptions.responseType == ResponseType.bytes ||
