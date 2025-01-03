@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:daakia_vc_flutter_sdk/api/injection.dart';
@@ -700,4 +701,47 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
   BuildContext? context;
+  
+  void uploadAttachment(File file, Function? onUploadSuccess){
+    apiClient.uploadFile(file, onSendProgress: (sent, total){
+      publicMessageProgress = sent/total;
+    }).then((response){
+      if(response.success == 1){
+        if (onUploadSuccess != null) {
+          onUploadSuccess();
+        }
+        resetProgress();
+        sendPublicMessage(response.data?.url ??"");
+      }
+    });
+  }
+
+  double _publicMessageProgress = -1;
+  double _privateMessageProgress = -1;
+
+  // Getter for public message upload progress
+  double get publicMessageProgress => _publicMessageProgress;
+
+  // Setter for public message upload progress
+  set publicMessageProgress(double progress) {
+    _publicMessageProgress = progress;
+    notifyListeners(); // Notify UI updates
+  }
+
+  // Getter for private message upload progress
+  double get privateMessageProgress => _privateMessageProgress;
+
+  // Setter for private message upload progress
+  set privateMessageProgress(double progress) {
+    _privateMessageProgress = progress;
+    notifyListeners(); // Notify UI updates
+  }
+
+  // Reset progress for both messages
+  void resetProgress() {
+    _publicMessageProgress = -1;
+    _privateMessageProgress = -1;
+    notifyListeners();
+  }
+
 }

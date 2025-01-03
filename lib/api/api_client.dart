@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:daakia_vc_flutter_sdk/model/feature_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/licence_verify_model.dart';
 import 'package:dio/dio.dart';
@@ -8,6 +10,7 @@ import '../model/event_password_protected_data.dart';
 import '../model/host_token_model.dart';
 import '../model/meeting_details_model.dart';
 import '../model/rtc_data.dart';
+import '../model/upload_data.dart';
 
 part 'api_client.g.dart';
 
@@ -33,18 +36,17 @@ abstract class RestClient {
 
   @GET("saas/sdk/meeting/basic/detail")
   Future<BaseResponse<MeetingDetailsModel>> getMeetingDetails(
-      @Query("meeting_uid") String meetingUid,
-      @Header("secret") String secret
-      );
+      @Query("meeting_uid") String meetingUid, @Header("secret") String secret);
 
   @POST("rtc/meeting/verify/commonPassword")
   Future<BaseResponse<EventPasswordProtectedData>> verifyCommonMeetingPassword(
-      @Body() Map<String, dynamic> body,
-      );
+    @Body() Map<String, dynamic> body,
+  );
+
   @POST("meeting/verify/password")
   Future<BaseResponse<EventPasswordProtectedData>> verifyMeetingPassword(
-      @Body() Map<String, dynamic> body,
-      );
+    @Body() Map<String, dynamic> body,
+  );
 
   @GET("saas/meeting/features")
   Future<BaseResponse<FeatureData>> getFeatures(
@@ -73,13 +75,19 @@ abstract class RestClient {
     @Header("Authorization") String token,
     @Body() Map<String, dynamic> body,
   );
-  
+
   @POST("rtc/meeting/addParticipant/toLobby")
   Future<BaseResponse<RtcData>> addParticipantToLobby(
-      @Body() Map<String, dynamic> body,
-      );
+    @Body() Map<String, dynamic> body,
+  );
+
   @PUT("rtc/meeting/update/participantLobbyStatus")
   Future<BaseResponse<RtcData>> acceptParticipantInLobby(
-      @Body() Map<String, dynamic> body,
-      );
+    @Body() Map<String, dynamic> body,
+  );
+
+  @POST("rtc/meeting/chat/uploadAttachment")
+  @MultiPart()
+  Future<BaseResponse<UploadData>> uploadFile(@Part() File file,
+      {@SendProgress() ProgressCallback? onSendProgress});
 }

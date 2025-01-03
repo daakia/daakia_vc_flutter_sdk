@@ -1,19 +1,19 @@
 import 'dart:collection';
 import 'dart:io';
+
 import 'package:daakia_vc_flutter_sdk/screens/web_preview.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_chat_types/flutter_chat_types.dart' show PreviewData;
 import 'package:flutter_link_previewer/flutter_link_previewer.dart';
 import 'package:mime/mime.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter_chat_types/flutter_chat_types.dart' show PreviewData;
 
 class FilePreviewWidget extends StatefulWidget {
-
   final String fileUrl;
 
   const FilePreviewWidget({super.key, required this.fileUrl});
@@ -23,7 +23,8 @@ class FilePreviewWidget extends StatefulWidget {
 }
 
 class _FilePreviewWidgetState extends State<FilePreviewWidget> {
-  final HashMap<String, PreviewData?> metadata = HashMap<String, PreviewData?>();
+  final HashMap<String, PreviewData?> metadata =
+      HashMap<String, PreviewData?>();
   double? _progress; // State variable to track download progress
 
   @override
@@ -37,7 +38,7 @@ class _FilePreviewWidgetState extends State<FilePreviewWidget> {
     final mimeType = lookupMimeType(widget.fileUrl);
     final fileExtension = widget.fileUrl.split('.').last;
 
-    TextStyle getTextStyle(Color textColor){
+    TextStyle getTextStyle(Color textColor) {
       var style = TextStyle(
         color: textColor,
         fontSize: 16,
@@ -51,24 +52,48 @@ class _FilePreviewWidgetState extends State<FilePreviewWidget> {
       if (mimeType != null) {
         if (mimeType.startsWith('image/')) {
           return Image.network(
-            width: 50,
             widget.fileUrl,
+            width: 50,
+            height: 50,
             fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) {
+                return child; // Image is fully loaded
+              }
+              return Container(
+                width: 50,
+                height: 50,
+                color: Colors.grey[800], // Background color for placeholder
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.0,
+                    color: Colors.white,
+                  ),
+                ),
+              );
+            },
             errorBuilder: (context, error, stackTrace) =>
-            const Icon(Icons.broken_image, size: 25, color: Colors.white),
+                const Icon(Icons.broken_image, size: 25, color: Colors.white),
           );
+        } else if (mimeType.startsWith('video/')) {
+          return const Icon(Icons.video_library, size: 25, color: Colors.purple);
+        } else if (mimeType.startsWith('audio/')) {
+          return const Icon(Icons.audiotrack, size: 25, color: Colors.orange);
         } else if (mimeType.startsWith('application/pdf')) {
           return const Icon(Icons.picture_as_pdf, size: 25, color: Colors.red);
         } else if (mimeType.startsWith('application/vnd') ||
             fileExtension.contains('ppt')) {
           return const Icon(Icons.slideshow, size: 25, color: Colors.orange);
         } else if (mimeType.startsWith('application/msword') ||
-            mimeType.startsWith('application/vnd.openxmlformats-officedocument.wordprocessingml.document')) {
+            mimeType.startsWith(
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document')) {
           return const Icon(Icons.description, size: 25, color: Colors.blue);
-        } else if (mimeType.startsWith('application/vnd.android.package-archive')) {
+        } else if (mimeType
+            .startsWith('application/vnd.android.package-archive')) {
           return const Icon(Icons.android, size: 25, color: Colors.green);
         } else if (mimeType.startsWith('application/')) {
-          return const Icon(Icons.insert_drive_file, size: 25, color: Colors.white);
+          return const Icon(Icons.insert_drive_file,
+              size: 25, color: Colors.white);
         }
       }
 
@@ -102,19 +127,17 @@ class _FilePreviewWidgetState extends State<FilePreviewWidget> {
           );
         } else {
           final tempDir = await getTemporaryDirectory();
-          final filePath = '${tempDir.path}/${widget.fileUrl
-              .split('/')
-              .last}';
+          final filePath = '${tempDir.path}/${widget.fileUrl.split('/').last}';
 
           if (File(filePath).existsSync()) {
             try {
               final result = await OpenFile.open(filePath);
               if (kDebugMode) {
-                print("OpenFile result: ${result.type}, message: ${result
-                  .message}");
+                print(
+                    "OpenFile result: ${result.type}, message: ${result.message}");
               }
             } catch (e) {
-              if(context.mounted) {
+              if (context.mounted) {
                 Utils.showSnackBar(context, message: "Error opening file: $e");
               }
             }
@@ -128,11 +151,11 @@ class _FilePreviewWidgetState extends State<FilePreviewWidget> {
             try {
               final result = await OpenFile.open(filePath);
               if (kDebugMode) {
-                print("OpenFile result: ${result.type}, message: ${result
-                  .message}");
+                print(
+                    "OpenFile result: ${result.type}, message: ${result.message}");
               }
             } catch (e) {
-              if(context.mounted) {
+              if (context.mounted) {
                 Utils.showSnackBar(context, message: "Error opening file: $e");
               }
             }
@@ -146,11 +169,11 @@ class _FilePreviewWidgetState extends State<FilePreviewWidget> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if(mimeType != null)
+              if (mimeType != null)
                 FittedBox(
-                child: buildPreview(),
-              ),
-              if(mimeType == null)
+                  child: buildPreview(),
+                ),
+              if (mimeType == null)
                 Flexible(
                   flex: 2, // Adjust flex value to control the width ratio
                   child: buildPreview(),
@@ -176,7 +199,8 @@ class _FilePreviewWidgetState extends State<FilePreviewWidget> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(10), // Make the corners rounded
+                borderRadius: BorderRadius.circular(10),
+                // Make the corners rounded
                 child: LinearProgressIndicator(
                   value: _progress,
                   minHeight: 5,
@@ -188,7 +212,6 @@ class _FilePreviewWidgetState extends State<FilePreviewWidget> {
         ],
       ),
     );
-
   }
 
   Future<void> _downloadFile(String url, String filePath) async {
@@ -204,6 +227,7 @@ class _FilePreviewWidgetState extends State<FilePreviewWidget> {
       },
     );
   }
+
   bool isValidUri(String uri) {
     try {
       final parsedUri = Uri.parse(uri);
@@ -213,5 +237,3 @@ class _FilePreviewWidgetState extends State<FilePreviewWidget> {
     }
   }
 }
-
-
