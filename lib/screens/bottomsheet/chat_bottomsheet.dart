@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../events/rtc_events.dart';
+import '../../utils/constants.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import '../customWidget/compact_file_preview.dart';
 
@@ -79,7 +80,7 @@ class _ChatState extends State<ChatBottomSheet> {
                   decoration: BoxDecoration(
                     color: Colors.grey[800], // Adjust the background color as needed
                     borderRadius: BorderRadius.circular(30.0), // Rounded corners
-                    border: Border.all(color: Colors.white.withOpacity(0.3)), // Optional border
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.3)), // Optional border
                   ),
                   child: Row(
                     children: [
@@ -89,11 +90,22 @@ class _ChatState extends State<ChatBottomSheet> {
                         color: Colors.white,
                         onPressed: () async {
                           try {
-                            FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: false);
+                            FilePickerResult? result = await FilePicker.platform.pickFiles(
+                              allowMultiple: false,
+                              type: FileType.custom,
+                              allowedExtensions: Constant.allowedExtensions(),
+                            );
 
                             if (result != null) {
                               File? file = result.files.single.path != null ? File(result.files.single.path!) : null;
+                              var isValidFileSize = await Utils.validateFile(file, (error){
+                                widget.viewModel.sendMessageToUI(error);
+                              });
+                              if(!isValidFileSize) {
+                                return;
+                              }
                               if(file != null) {
+                                if(!context.mounted) return;
                                 showModalBottomSheet(
                                   context: context,
                                   builder: (context) => Padding(
@@ -115,7 +127,7 @@ class _ChatState extends State<ChatBottomSheet> {
                                             Container(
                                               padding: const EdgeInsets.all(8.0),
                                               decoration: BoxDecoration(
-                                                color: Colors.redAccent.withOpacity(0.1), // Button-like background
+                                                color: Colors.redAccent.withValues(alpha: 0.5), // Button-like background
                                                 borderRadius: BorderRadius.circular(8.0),
                                               ),
                                               child: IconButton(
@@ -131,7 +143,7 @@ class _ChatState extends State<ChatBottomSheet> {
                                             Container(
                                               padding: const EdgeInsets.all(8.0),
                                               decoration: BoxDecoration(
-                                                color: Colors.green.withOpacity(0.1), // Button-like background
+                                                color: Colors.green.withValues(alpha: 0.5), // Button-like background
                                                 borderRadius: BorderRadius.circular(8.0),
                                               ),
                                               child: IconButton(
