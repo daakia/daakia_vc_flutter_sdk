@@ -2,44 +2,49 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mime/mime.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:safe_device/safe_device.dart';
 
 FutureOr<void> Function()? onWindowShouldClose;
 
 class Utils {
-
   Utils._privateConstructor();
+
   static final Utils _instance = Utils._privateConstructor();
-  factory Utils(){
+
+  factory Utils() {
     return _instance;
   }
 
-
-  static bool isMobileDevice(){
-    if(kIsWeb){
+  static bool isMobileDevice() {
+    if (kIsWeb) {
       return false;
     }
-    if(Platform.isAndroid || Platform.isIOS){
+    if (Platform.isAndroid || Platform.isIOS) {
       return true;
     } else {
       return false;
     }
   }
 
-  static void showSnackBar(BuildContext context, {required String message, String? actionText, Function? actionCallBack}){
-    if(!context.mounted) return;
+  static void showSnackBar(BuildContext context,
+      {required String message, String? actionText, Function? actionCallBack}) {
+    if (!context.mounted) return;
     final snackBar = SnackBar(
       content: Text(message),
-      action: actionText != null? SnackBarAction(
-        label: actionText,
-        onPressed: () {
-          actionCallBack?.call();
-        },
-      ) : null,
+      action: actionText != null
+          ? SnackBarAction(
+              label: actionText,
+              onPressed: () {
+                actionCallBack?.call();
+              },
+            )
+          : null,
     );
 
     // Find the ScaffoldMessenger in the widget tree
@@ -52,7 +57,9 @@ class Utils {
   }
 
   static String formatTimestampToTime(int? timestamp) {
-    if (timestamp == null) return "N/A"; // Return "N/A" if the timestamp is null
+    if (timestamp == null) {
+      return "N/A"; // Return "N/A" if the timestamp is null
+    }
     DateTime date = DateTime.fromMillisecondsSinceEpoch(timestamp);
     // Format the date to the desired format
     final formatter = DateFormat('hh:mm a'); // 12-hour format
@@ -76,7 +83,8 @@ class Utils {
   static Color generateUniqueColorFromInitials(String initials) {
     // Convert the initials to a hash code and use modulo to limit the range
     int hash = initials.hashCode.abs();
-    double hue = (hash % 360).toDouble(); // Map hash to hue angle (0-360 degrees)
+    double hue =
+        (hash % 360).toDouble(); // Map hash to hue angle (0-360 degrees)
     double saturation = 0.7; // Set saturation (0-1)
     double brightness = 0.9; // Set brightness (0-1)
 
@@ -85,7 +93,7 @@ class Utils {
   }
 
   static int calculateMinutesSince(DateTime? joinedAt) {
-    if(joinedAt == null ) return 0;
+    if (joinedAt == null) return 0;
     final currentTime = DateTime.now();
     final difference = currentTime.difference(joinedAt);
     return difference.inMinutes;
@@ -138,7 +146,6 @@ class Utils {
     return regex.hasMatch(email);
   }
 
-
   static Future<String> getAppName() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     return packageInfo.appName;
@@ -157,8 +164,11 @@ class Utils {
     }
 
     // Check if the message contains only a link
-    final onlyLink = matches.length == 1 && matches.first.group(0) == message.trim();
-    return onlyLink ? true : true; // Contains a link (either only or mixed with other text)
+    final onlyLink =
+        matches.length == 1 && matches.first.group(0) == message.trim();
+    return onlyLink
+        ? true
+        : true; // Contains a link (either only or mixed with other text)
   }
 
   static bool isOnlyLink(String message) {
@@ -180,8 +190,54 @@ class Utils {
     );
 
     final match = urlRegExp.firstMatch(message);
-    return match?.group(0); // Returns the first match or null if no match is found
+    return match
+        ?.group(0); // Returns the first match or null if no match is found
   }
 
+  static Future<bool> validateFile(
+      File? file, Function(String error) onError) async {
+    if (file == null) {
+      onError('File is null');
+      return false;
+    }
 
+    final mimeType = lookupMimeType(file.path);
+    final fileSize = await file.length();
+
+    if (mimeType != null) {
+      if (mimeType.startsWith('audio/')) {
+        if (fileSize <= 16 * 1024 * 1024) {
+          return true; // Valid audio file
+        } else {
+          onError("Audio file exceeds the size limit (16 MB)");
+        }
+      }
+      if (Constant.documentFileTypes()
+          .any((type) => mimeType.startsWith(type))) {
+        if (fileSize <= 20 * 1024 * 1024) {
+          return true; // Valid text file
+        } else {
+          onError("Text file exceeds the size limit (20 MB)");
+        }
+      } else if (mimeType.startsWith('image/')) {
+        if (fileSize <= 5 * 1024 * 1024) {
+          return true; // Valid image file
+        } else {
+          onError("Image file exceeds the size limit (5 MB)");
+        }
+      } else if (mimeType.startsWith('video/')) {
+        if (fileSize <= 16 * 1024 * 1024) {
+          return true; // Valid video file
+        } else {
+          onError("Video file exceeds the size limit (16 MB)");
+        }
+      } else {
+        onError("Unsupported file type: $mimeType");
+      }
+    } else {
+      onError('Failed to determine MIME type for "${file.path}"');
+    }
+
+    return false; // File is invalid
+  }
 }
