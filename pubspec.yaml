@@ -1,6 +1,6 @@
 name: daakia_vc_flutter_sdk
 description: "Flutter SDK for video conference."
-version: 2.0.0
+version: 2.1.3
 homepage: https://www.daakia.co.in/
 
 environment:

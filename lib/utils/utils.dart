@@ -173,7 +173,7 @@ class Utils {
 
   static bool isOnlyLink(String message) {
     final linkRegExp = RegExp(
-      r'((https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?)',
+      r'((https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w\- ./?%&=()*]*)?)',
       caseSensitive: false,
     );
 
@@ -181,6 +181,8 @@ class Utils {
     final matches = linkRegExp.allMatches(message.trim());
     return matches.length == 1 && matches.first.group(0) == message.trim();
   }
+
+
 
   static String? extractFirstUrl(String message) {
     final urlRegExp = RegExp(
@@ -192,6 +194,18 @@ class Utils {
     final match = urlRegExp.firstMatch(message);
     return match
         ?.group(0); // Returns the first match or null if no match is found
+  }
+
+  static String extractNonLinkText(String message) {
+    final linkRegExp = RegExp(
+      r'((https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w\- ./?%&=]*)?)',
+      caseSensitive: false,
+    );
+
+    // Remove all link matches from the message
+    final nonLinkText = message.replaceAll(linkRegExp, '').trim();
+
+    return nonLinkText;
   }
 
   static Future<bool> validateFile(File? file, Function(String error) onError) async {

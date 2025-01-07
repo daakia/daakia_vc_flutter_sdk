@@ -33,6 +33,7 @@ We require a set of permissions that need to be declared in your AppManifest.xml
   <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
   <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
   <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
   ...
 </manifest>
 ```
