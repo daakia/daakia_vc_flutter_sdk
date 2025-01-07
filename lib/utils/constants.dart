@@ -1,6 +1,8 @@
 import 'dart:io';
 
 class Constant {
+  static const bool RELEASE = true;
+
   static final String PLATFORM = getPlatform();
 
   static String getPlatform() {
