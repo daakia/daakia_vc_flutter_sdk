@@ -90,12 +90,13 @@ class _ChatState extends State<ChatBottomSheet> {
                         color: Colors.white,
                         onPressed: () async {
                           try {
+                            widget.viewModel.sendMainChatControllerEvent(ShowLoading());
                             FilePickerResult? result = await FilePicker.platform.pickFiles(
                               allowMultiple: false,
                               type: FileType.custom,
                               allowedExtensions: Constant.allowedExtensions(),
                             );
-
+                            widget.viewModel.sendMainChatControllerEvent(StopLoading());
                             if (result != null) {
                               File? file = result.files.single.path != null ? File(result.files.single.path!) : null;
                               var isValidFileSize = await Utils.validateFile(file, (error){
@@ -118,7 +119,7 @@ class _ChatState extends State<ChatBottomSheet> {
                                           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                                         ),
                                         const SizedBox(height: 10),
-                                        LocalFilePreview(file: file, progress: widget.viewModel.publicMessageProgress),
+                                        LocalFilePreview(file: file, progress: widget.viewModel.publicMessageProgress, viewModel: widget.viewModel),
                                         const SizedBox(height: 10),
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.center, // Center the buttons
@@ -172,6 +173,8 @@ class _ChatState extends State<ChatBottomSheet> {
                             }
                           } catch (e){
                             widget.viewModel.sendMessageToUI(e.runtimeType.toString());
+                          } finally {
+                            widget.viewModel.sendMainChatControllerEvent(StopLoading());
                           }
                         },
                       ),
@@ -194,9 +197,11 @@ class _ChatState extends State<ChatBottomSheet> {
                         icon: const Icon(Icons.send),
                         color: Colors.white,
                         onPressed: () {
-                          if (messageController.text.isEmpty) return;
-                          widget.viewModel.sendPublicMessage(messageController.text);
-                          messageController.clear();
+                          setState(() {
+                            if (messageController.text.isEmpty) return;
+                            widget.viewModel.sendPublicMessage(messageController.text);
+                            messageController.clear();
+                          });
                         },
                       ),
                     ],

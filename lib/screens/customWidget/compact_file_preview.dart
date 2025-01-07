@@ -1,16 +1,30 @@
 import 'dart:io';
 
+import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
 import 'package:flutter/material.dart';
 
-class LocalFilePreview extends StatelessWidget {
+import '../../events/rtc_events.dart';
+
+class LocalFilePreview extends StatefulWidget {
   final File file;
   double progress = 0.0;
+  final RtcViewmodel viewModel;
 
-  LocalFilePreview({super.key, required this.file, this.progress = 0.0});
+  LocalFilePreview(
+      {super.key,
+      required this.file,
+      this.progress = 0.0,
+      required this.viewModel});
 
   @override
+  State<LocalFilePreview> createState() => _LocalFilePreviewState();
+}
+
+class _LocalFilePreviewState extends State<LocalFilePreview> {
+  @override
   Widget build(BuildContext context) {
-    final fileName = file.path.split('/').last;
+    collectLobbyEvents(widget.viewModel);
+    final fileName = widget.file.path.split('/').last;
     final fileExtension = fileName.split('.').last.toLowerCase();
 
     // Determine file type icon
@@ -43,7 +57,7 @@ class LocalFilePreview extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(8.0),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -69,13 +83,13 @@ class LocalFilePreview extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           // Placeholder for upload progress
-          if (progress != -1)
+          if (widget.progress != -1)
             Container(
               width: 20,
               height: 20,
               alignment: Alignment.center,
               child: CircularProgressIndicator(
-                value: progress, // Progress value
+                value: widget.progress, // Progress value
                 strokeWidth: 2.0,
                 color: Colors.green,
                 backgroundColor: Colors.grey,
@@ -90,5 +104,25 @@ class LocalFilePreview extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  bool isEventAdded = false;
+
+  void collectLobbyEvents(RtcViewmodel? viewModel) {
+    if (isEventAdded) return;
+    isEventAdded = true;
+    viewModel?.uploadAttachmentController.listen((event) {
+      if (event is UpdateView) {
+        if (mounted) {
+          setState(() {});
+        }
+      } else if (event is ShowProgress) {
+        if (mounted) {
+          setState(() {
+            widget.progress = event.progress;
+          });
+        }
+      }
+    });
   }
 }
