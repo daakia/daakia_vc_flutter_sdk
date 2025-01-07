@@ -16,6 +16,15 @@ class OpenPrivateChat extends RTCEvents{
   OpenPrivateChat(this.participant);
 }
 
+class ShowProgress extends RTCEvents{
+  final double progress;
+  ShowProgress(this.progress);
+}
+
+class ShowLoading extends RTCEvents{}
+
+class StopLoading extends RTCEvents{}
+
 class UpdateView extends RTCEvents{}
 
 class EnterPIP extends RTCEvents{}

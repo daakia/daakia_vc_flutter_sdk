@@ -14,9 +14,10 @@ class Constant {
   }
 
   static List<String>? allowedExtensions(){
+    //TODO:: Need to add AMR Audio file in future
     return [
       // Allowed extensions for each media type
-      'aac', 'mp4', 'mpeg', 'amr', 'ogg', // Audio
+      'mp3', 'aac', 'mpeg', 'ogg', // Audio
       'txt', 'pdf', 'ppt', 'doc', 'xls', 'docx', 'pptx', 'xlsx', // Documents
       'jpg', 'jpeg', 'png', 'webp', // Images
       'mp4', '3gp', // Videos

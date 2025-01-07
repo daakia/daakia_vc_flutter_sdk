@@ -194,8 +194,7 @@ class Utils {
         ?.group(0); // Returns the first match or null if no match is found
   }
 
-  static Future<bool> validateFile(
-      File? file, Function(String error) onError) async {
+  static Future<bool> validateFile(File? file, Function(String error) onError) async {
     if (file == null) {
       onError('File is null');
       return false;
@@ -239,5 +238,16 @@ class Utils {
     }
 
     return false; // File is invalid
+  }
+
+  static String extractFileName(String url) {
+    // Extract the file name from the URL
+    final fileName = url.split('/').last;
+
+    // Use a regular expression to find the part after "-file-"
+    final match = RegExp(r'-file-(.+)$').firstMatch(fileName);
+
+    // If a match is found, return the matched group; otherwise, return the original file name
+    return match != null ? match.group(1)! : fileName;
   }
 }

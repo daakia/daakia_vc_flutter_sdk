@@ -76,7 +76,8 @@ class _FilePreviewWidgetState extends State<FilePreviewWidget> {
                 const Icon(Icons.broken_image, size: 25, color: Colors.white),
           );
         } else if (mimeType.startsWith('video/')) {
-          return const Icon(Icons.video_library, size: 25, color: Colors.purple);
+          return const Icon(Icons.video_library,
+              size: 25, color: Colors.purple);
         } else if (mimeType.startsWith('audio/')) {
           return const Icon(Icons.audiotrack, size: 25, color: Colors.orange);
         } else if (mimeType.startsWith('application/pdf')) {
@@ -182,7 +183,7 @@ class _FilePreviewWidgetState extends State<FilePreviewWidget> {
               if (mimeType != null)
                 Expanded(
                   child: Text(
-                    widget.fileUrl.split('/').last, // File name from URL
+                    Utils.extractFileName(widget.fileUrl), // File name from URL
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,

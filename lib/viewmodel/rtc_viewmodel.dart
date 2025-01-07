@@ -611,9 +611,17 @@ class RtcViewmodel extends ChangeNotifier {
   final _publicChatEventController = StreamController<RTCEvents>.broadcast();
   final _privateChatEventController = StreamController<RTCEvents>.broadcast();
 
+  final _uploadAttachmentController = StreamController<RTCEvents>.broadcast();
+
+  final _mainChatController = StreamController<RTCEvents>.broadcast();
+
   // Expose streams
   Stream<RTCEvents> get publicChatEvents => _publicChatEventController.stream;
   Stream<RTCEvents> get privateChatEvents => _privateChatEventController.stream;
+
+  Stream<RTCEvents> get uploadAttachmentController => _uploadAttachmentController.stream;
+
+  Stream<RTCEvents> get mainChatController => _mainChatController.stream;
 
   // Send events
   void sendPublicChatEvent(RTCEvents event) {
@@ -626,6 +634,16 @@ class RtcViewmodel extends ChangeNotifier {
     _privateChatEventController.sink.add(event);
   }
 
+  void sendUploadAttachmentEvent(RTCEvents event) {
+    if(_uploadAttachmentController.isClosed) return;
+    _uploadAttachmentController.sink.add(event);
+  }
+
+  void sendMainChatControllerEvent(RTCEvents event) {
+    if(_mainChatController.isClosed) return;
+    _mainChatController.sink.add(event);
+  }
+
   // Cancel chat event streams
   void cancelPublicChatEvents() {
     _publicChatEventController.close();
@@ -633,6 +651,14 @@ class RtcViewmodel extends ChangeNotifier {
 
   void cancelPrivateChatEvents() {
     _privateChatEventController.close();
+  }
+
+  void cancelUploadAttachmentEvent() {
+    _uploadAttachmentController.close();
+  }
+
+  void cancelMainChatControllerEvent() {
+    _mainChatController.close();
   }
 
   void cancelRoomEvents() {
@@ -705,6 +731,7 @@ class RtcViewmodel extends ChangeNotifier {
   void uploadAttachment(File file, Function? onUploadSuccess){
     apiClient.uploadFile(file, onSendProgress: (sent, total){
       publicMessageProgress = sent/total;
+      sendUploadAttachmentEvent(ShowProgress(publicMessageProgress));
     }).then((response){
       if(response.success == 1){
         if (onUploadSuccess != null) {
@@ -712,6 +739,21 @@ class RtcViewmodel extends ChangeNotifier {
         }
         resetProgress();
         sendPublicMessage(response.data?.url ??"");
+      }
+    });
+  }
+
+  void uploadPrivateAttachment(String identity, String name, File file, Function? onUploadSuccess){
+    apiClient.uploadFile(file, onSendProgress: (sent, total){
+      privateMessageProgress = sent/total;
+      sendUploadAttachmentEvent(ShowProgress(privateMessageProgress));
+    }).then((response){
+      if(response.success == 1){
+        if (onUploadSuccess != null) {
+          onUploadSuccess();
+        }
+        resetProgress();
+        sendPrivateMessage(identity, name, response.data?.url ??"");
       }
     });
   }
