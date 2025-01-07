@@ -95,6 +95,9 @@ class _FilePreviewWidgetState extends State<FilePreviewWidget> {
         } else if (mimeType.startsWith('application/')) {
           return const Icon(Icons.insert_drive_file,
               size: 25, color: Colors.white);
+        } else {
+          return const Icon(Icons.question_mark_rounded,
+              size: 25, color: Colors.white);
         }
       }
 

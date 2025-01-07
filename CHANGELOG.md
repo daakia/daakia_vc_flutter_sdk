@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2.1.3 (2025-01)
+
+**Enhancements:**
+
+* **Upload attachments:** Users can now share files within both public and private chat rooms.
+* **Web-View:** Added support for displaying web content directly within the chat interface for chat links.
+* **Improved UI:** Enhanced the user interface for different media types (images, videos, etc.) for a better visual experience.
+
 ## 2.0.1 (2024-12)
 
 - **Bug Fixes**:

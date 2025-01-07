@@ -61,11 +61,6 @@ class _MessageBubbleState extends State<MessageBubble> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if(!Utils.isOnlyLink(widget.message) || !Utils.isLink(widget.message))
-                          Text(
-                          widget.message,
-                          style: const TextStyle(color: Colors.white),
-                        ),
                         if(Utils.isOnlyLink(widget.message) || Utils.isLink(widget.message))
                           Center(
                             child: Card(
@@ -78,6 +73,11 @@ class _MessageBubbleState extends State<MessageBubble> {
                               child: FilePreviewWidget(fileUrl: (widget.message), // Replace with your widget
                             ),
                           ),
+                          ),
+                        if(!Utils.isOnlyLink(widget.message) || !Utils.isLink(widget.message))
+                          Text(
+                            Utils.extractNonLinkText(widget.message),
+                            style: const TextStyle(color: Colors.white),
                           ),
                         const SizedBox(height: 5.0),
               
