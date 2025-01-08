@@ -11,12 +11,12 @@ dependencies:
   flutter:
     sdk: flutter
 
-  retrofit: ^4.4.1
+  retrofit: ^4.4.2
   logger: ^2.5.0
   json_annotation: ^4.9.0
   dio: ^5.7.0
   loading_btn: ^1.0.3
-  livekit_client: ^2.3.2
+  livekit_client: ^2.3.4+hotfix.2
   fluttertoast: ^8.2.8
   pretty_dio_logger: ^1.4.0
 
@@ -26,10 +26,10 @@ dependencies:
   uuid: ^4.5.1
   intl: ^0.19.0
   collection: ^1.18.0
-  flutter_webrtc: ^0.12.3
+  flutter_webrtc: ^0.12.5+hotfix.2
   animated_emoji: ^3.1.0
-  safe_device: ^1.1.9
-  wakelock_plus: ^1.2.8
+  safe_device: ^1.2.0
+  wakelock_plus: ^1.2.10
   package_info_plus: ^8.1.1
   simple_pip_mode: ^1.0.0
   flutter_link_previewer: ^3.2.2
@@ -43,9 +43,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
-  retrofit_generator: ^9.1.5 # for Dart 3.3 use ^9.0.0
+  retrofit_generator: ^9.1.7
   build_runner: ^2.3.3
-  json_serializable: ^6.9.0
+  json_serializable: ^6.9.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
