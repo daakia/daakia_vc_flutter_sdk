@@ -199,7 +199,10 @@ class _PreJoinState extends State<PreJoinScreen> {
             setState(() {
               alertMessage = response.message ?? "";
             });
-            if (it.meetingStarted == true || widget.basicMeetingDetails?.isLobbyMode == true) return;
+            if (it.meetingStarted == true ||
+                widget.basicMeetingDetails?.isLobbyMode == true) {
+              return;
+            }
             meetingNotStarted(stopLoading);
             return;
           }
@@ -485,7 +488,8 @@ class _PreJoinState extends State<PreJoinScreen> {
       meetingDetails = MeetingDetails(
           meeting_uid: widget.meetingId,
           authorization_token: hostToken,
-          features: features);
+          features: features,
+          meetingBasicDetails: widget.basicMeetingDetails);
       if (context.mounted) {
         await Navigator.push<void>(
           context,

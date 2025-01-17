@@ -6,6 +6,9 @@ import 'package:collection/collection.dart';
 import 'package:daakia_vc_flutter_sdk/api/injection.dart';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
+import 'package:daakia_vc_flutter_sdk/model/transcription_action_model.dart';
+import 'package:daakia_vc_flutter_sdk/model/transcription_model.dart';
+import 'package:daakia_vc_flutter_sdk/utils/language_json.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -14,6 +17,7 @@ import 'package:uuid/uuid.dart';
 
 import '../model/action_model.dart';
 import '../model/emoji_message.dart';
+import '../model/language_model.dart';
 import '../model/meeting_details.dart';
 import '../model/private_chat_model.dart';
 import '../model/send_message_model.dart';
@@ -75,21 +79,21 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
-  int getUnreadCountPrivateChat(){
+  int getUnreadCountPrivateChat() {
     return _unreadMessageCountPrivateChat;
   }
 
-  void increaseUnreadPrivateChatCount(){
-    if(isPrivateChatOpen) return;
+  void increaseUnreadPrivateChatCount() {
+    if (isPrivateChatOpen) return;
     _unreadMessageCountPrivateChat++;
     notifyListeners();
   }
 
-
-  void resetUnreadPrivateChatCount(){
+  void resetUnreadPrivateChatCount() {
     _unreadMessageCountPrivateChat = 0;
     notifyListeners();
   }
+
   RtcViewmodel(this.room, this.meetingDetails);
 
   List<RemoteActivityData> getMessageList() {
@@ -275,9 +279,11 @@ class RtcViewmodel extends ChangeNotifier {
     }
 
     // Sort participants to ensure local participant comes first
-    ParticipantTrack? localParticipant = uniqueParticipants.values.firstWhereOrNull(
-          (participantTrack) =>
-      participantTrack.participant.identity == room.localParticipant?.identity,
+    ParticipantTrack? localParticipant =
+        uniqueParticipants.values.firstWhereOrNull(
+      (participantTrack) =>
+          participantTrack.participant.identity ==
+          room.localParticipant?.identity,
     );
 
     // Add local participant first if it exists
@@ -288,11 +294,14 @@ class RtcViewmodel extends ChangeNotifier {
     // Add the remaining participants excluding the local participant
     _participantTracks.addAll(
       uniqueParticipants.values.where(
-            (participantTrack) =>
-        participantTrack.participant.identity != room.localParticipant?.identity,
+        (participantTrack) =>
+            participantTrack.participant.identity !=
+            room.localParticipant?.identity,
       ),
     );
 
+    updateIdentityToNameMap();
+    requestForTranscriptionState();
     // Notify listeners of the update
     notifyListeners();
   }
@@ -617,30 +626,32 @@ class RtcViewmodel extends ChangeNotifier {
 
   // Expose streams
   Stream<RTCEvents> get publicChatEvents => _publicChatEventController.stream;
+
   Stream<RTCEvents> get privateChatEvents => _privateChatEventController.stream;
 
-  Stream<RTCEvents> get uploadAttachmentController => _uploadAttachmentController.stream;
+  Stream<RTCEvents> get uploadAttachmentController =>
+      _uploadAttachmentController.stream;
 
   Stream<RTCEvents> get mainChatController => _mainChatController.stream;
 
   // Send events
   void sendPublicChatEvent(RTCEvents event) {
-    if(_publicChatEventController.isClosed) return;
+    if (_publicChatEventController.isClosed) return;
     _publicChatEventController.sink.add(event);
   }
 
   void sendPrivateChatEvent(RTCEvents event) {
-    if(_privateChatEventController.isClosed) return;
+    if (_privateChatEventController.isClosed) return;
     _privateChatEventController.sink.add(event);
   }
 
   void sendUploadAttachmentEvent(RTCEvents event) {
-    if(_uploadAttachmentController.isClosed) return;
+    if (_uploadAttachmentController.isClosed) return;
     _uploadAttachmentController.sink.add(event);
   }
 
   void sendMainChatControllerEvent(RTCEvents event) {
-    if(_mainChatController.isClosed) return;
+    if (_mainChatController.isClosed) return;
     _mainChatController.sink.add(event);
   }
 
@@ -727,33 +738,34 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
   BuildContext? context;
-  
-  void uploadAttachment(File file, Function? onUploadSuccess){
-    apiClient.uploadFile(file, onSendProgress: (sent, total){
-      publicMessageProgress = sent/total;
+
+  void uploadAttachment(File file, Function? onUploadSuccess) {
+    apiClient.uploadFile(file, onSendProgress: (sent, total) {
+      publicMessageProgress = sent / total;
       sendUploadAttachmentEvent(ShowProgress(publicMessageProgress));
-    }).then((response){
-      if(response.success == 1){
+    }).then((response) {
+      if (response.success == 1) {
         if (onUploadSuccess != null) {
           onUploadSuccess();
         }
         resetProgress();
-        sendPublicMessage(response.data?.url ??"");
+        sendPublicMessage(response.data?.url ?? "");
       }
     });
   }
 
-  void uploadPrivateAttachment(String identity, String name, File file, Function? onUploadSuccess){
-    apiClient.uploadFile(file, onSendProgress: (sent, total){
-      privateMessageProgress = sent/total;
+  void uploadPrivateAttachment(
+      String identity, String name, File file, Function? onUploadSuccess) {
+    apiClient.uploadFile(file, onSendProgress: (sent, total) {
+      privateMessageProgress = sent / total;
       sendUploadAttachmentEvent(ShowProgress(privateMessageProgress));
-    }).then((response){
-      if(response.success == 1){
+    }).then((response) {
+      if (response.success == 1) {
         if (onUploadSuccess != null) {
           onUploadSuccess();
         }
         resetProgress();
-        sendPrivateMessage(identity, name, response.data?.url ??"");
+        sendPrivateMessage(identity, name, response.data?.url ?? "");
       }
     });
   }
@@ -786,4 +798,295 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
+  //================Transcription=============
+
+  TranscriptionModel? particalTranscription;
+  List<TranscriptionModel> _transcriptionList = [];
+
+  // Getter
+  List<TranscriptionModel> get transcriptionList => _transcriptionList;
+
+  // Setter
+  set transcriptionList(List<TranscriptionModel> value) {
+    _transcriptionList = value;
+    notifyListeners();
+  }
+
+  void addTranscription(TranscriptionModel value) {
+    _transcriptionList.add(value);
+    notifyListeners();
+  }
+
+  bool _isTranscriptionLanguageSelected = false;
+
+  set isTranscriptionLanguageSelected(bool isSelected) {
+    _isTranscriptionLanguageSelected = isSelected;
+    notifyListeners();
+  }
+
+  bool get isTranscriptionLanguageSelected => _isTranscriptionLanguageSelected;
+
+  List<LanguageModel> _languages = [];
+
+  // Getter
+  List<LanguageModel> get languages => _languages;
+
+  // Setter
+  set languages(List<LanguageModel> value) {
+    _languages = value;
+    notifyListeners();
+  }
+
+  Future<List<LanguageModel>> fetchLanguages() async {
+    // 1. Load the JSON string from the assets folder
+    const String response = languageJsonString;
+
+    // 2. Check for loading errors (optional, but good practice)
+    if (response.isEmpty) {
+      throw Exception('Error loading JSON file');
+    }
+
+    // 3. Decode the JSON string into a Dart object
+    final data = await json.decode(response) as List<
+        dynamic>; // Cast to List<dynamic> to avoid potential type errors
+
+    // 4. Convert each JSON object to a LanguageModel instance
+    return data.map((item) => LanguageModel.fromJson(item)).toList();
+  }
+
+  void setTranscriptionLanguage(
+      LanguageModel selectedLanguage, Function transcriptionEnabled) {
+    Map<String, dynamic> body = {
+      "meeting_uid": meetingDetails.meeting_uid,
+      "transcription_enable": true,
+      "transcription_lang_iso": selectedLanguage.code,
+      "transcription_lang_title": selectedLanguage.code
+    };
+    apiClient
+        .setTranscriptionLanguage(meetingDetails.authorization_token, body)
+        .then((response) {
+      if (response.success == 1) {
+        isTranscriptionLanguageSelected = true;
+        sendAction(ActionModel(
+            action: "show-live-caption",
+            liveCaptionsData: TranscriptionActionModel(
+                showIcon: true,
+                isLanguageSelected: true,
+                langCode: selectedLanguage.code,
+                sourceLang: selectedLanguage.code)));
+        transcriptionEnabled.call();
+      } else {
+        sendMessageToUI(response.message ?? "Something went wrong!");
+      }
+    }).onError((e, _) {
+      sendMessageToUI("Something went wrong!");
+    });
+  }
+
+  void startTranscription() {
+    Map<String, dynamic> body = {
+      "meeting_uid": meetingDetails.meeting_uid,
+    };
+    apiClient.startTranscription(body).then((response) {});
+  }
+
+  TranscriptionActionModel? _transcriptionLanguageData;
+
+  TranscriptionActionModel? get transcriptionLanguageData =>
+      _transcriptionLanguageData;
+
+  // Setter method to set the value of _transcriptionLanguageData
+  set transcriptionLanguageData(TranscriptionActionModel? value) {
+    _transcriptionLanguageData = value;
+    notifyListeners();
+  }
+
+  void saveTranscriptionLanguage(TranscriptionActionModel? liveCaptionsData) {
+    if (liveCaptionsData == null) return;
+    isTranscriptionLanguageSelected =
+        liveCaptionsData.isLanguageSelected ?? false;
+    transcriptionLanguageData = liveCaptionsData;
+  }
+
+  void collectTranscriptionData(RemoteActivityData remoteData) {
+    // Check if the incoming data is a final transcription
+    if (remoteData.finalTranscription?.isNotEmpty == true) {
+      // If there's an existing partial transcription, finalize it
+      if (particalTranscription != null) {
+        particalTranscription = particalTranscription!.copyWith(
+            name: getParticipantNameByIdentity(remoteData.participantIdentity),
+            transcription: Utils.decodeUnicode(remoteData.finalTranscription),
+            isFinal: true,
+            sourceLang: transcriptionLanguageData?.sourceLang,
+            targetLang: translationLanguage?.code ??
+                transcriptionLanguageData?.sourceLang);
+
+        // Replace the existing transcription in the list with the finalized one
+        _updateTranscriptionInList(particalTranscription!);
+
+        // Trigger translation if source and target languages differ
+        if (particalTranscription?.sourceLang !=
+            particalTranscription?.targetLang) {
+          translateText(particalTranscription!);
+        }
+      } else {
+        // Create and add a new finalized transcription
+        final newTranscription = TranscriptionModel(
+          id: const Uuid().v4(),
+          name: getParticipantNameByIdentity(remoteData.participantIdentity),
+          transcription: Utils.decodeUnicode(remoteData.finalTranscription),
+          timestamp: Utils.formatTimestampToTime(
+              DateTime.now().millisecondsSinceEpoch),
+          isFinal: true,
+          sourceLang: transcriptionLanguageData?.sourceLang ?? "",
+          targetLang: translationLanguage?.code ??
+              (transcriptionLanguageData?.sourceLang ?? ""),
+        );
+        addTranscription(newTranscription);
+
+        // Trigger translation if source and target languages differ
+        if (newTranscription.sourceLang != newTranscription.targetLang) {
+          translateText(newTranscription);
+        }
+      }
+
+      // Reset the partial transcription
+      particalTranscription = null;
+    } else if (remoteData.partialTranscription?.isNotEmpty == true) {
+      // Handle partial transcription updates
+      if (particalTranscription != null) {
+        // Update the existing partial transcription
+        particalTranscription = particalTranscription!.copyWith(
+            name: getParticipantNameByIdentity(remoteData.participantIdentity),
+            transcription: remoteData.partialTranscription ?? "",
+            isFinal: false,
+            sourceLang: transcriptionLanguageData?.sourceLang,
+            targetLang: translationLanguage?.code ??
+                transcriptionLanguageData?.sourceLang);
+
+        // Update the transcription in the list
+        _updateTranscriptionInList(particalTranscription!);
+      } else {
+        // Create and add a new partial transcription
+        particalTranscription = TranscriptionModel(
+          id: const Uuid().v4(),
+          name: getParticipantNameByIdentity(remoteData.participantIdentity),
+          transcription: remoteData.partialTranscription ?? "",
+          timestamp: Utils.formatTimestampToTime(
+              DateTime.now().millisecondsSinceEpoch),
+          isFinal: false,
+          sourceLang: transcriptionLanguageData?.sourceLang ?? "",
+          targetLang: translationLanguage?.code ??
+              (transcriptionLanguageData?.sourceLang ?? ""),
+        );
+        addTranscription(particalTranscription!);
+      }
+    }
+  }
+
+  void _updateTranscriptionInList(TranscriptionModel updatedModel) {
+    final index = _transcriptionList.indexWhere((t) => t.id == updatedModel.id);
+    if (index != -1) {
+      _transcriptionList[index] = updatedModel;
+    } else {
+      _transcriptionList
+          .add(updatedModel); // Add if it doesn't exist (fallback)
+    }
+    notifyListeners();
+  }
+
+  final Map<String, String> _identityToNameMap = {};
+
+  void updateIdentityToNameMap() {
+    _identityToNameMap.clear();
+    for (final track in _participantTracks) {
+      final identity = track.participant.identity;
+      final name = track.participant.name;
+      _identityToNameMap[identity] = name;
+    }
+  }
+
+  String getParticipantNameByIdentity(String? identity) {
+    if (identity == null) return "Unknown";
+    return _identityToNameMap[identity] ?? "Unknown";
+  }
+
+  var _isRequestedForTranscription = false;
+
+  void requestForTranscriptionState() {
+    if (_isRequestedForTranscription) return;
+    _isRequestedForTranscription = true;
+    if (meetingDetails.meetingBasicDetails?.transcriptionDetail != null) {
+      if (meetingDetails
+              .meetingBasicDetails?.transcriptionDetail?.transcriptionEnable ==
+          true) {
+        var data = meetingDetails.meetingBasicDetails?.transcriptionDetail;
+        isTranscriptionLanguageSelected = true;
+        transcriptionLanguageData = TranscriptionActionModel(
+            showIcon: data?.transcriptionEnable,
+            isLanguageSelected: data?.transcriptionEnable,
+            langCode: data?.transcriptionLangIso,
+            sourceLang: data?.transcriptionLangIso);
+        return;
+      }
+    }
+    // Skip the first participant (alias "you") and check the others
+    for (int i = 1; i < _participantTracks.length; i++) {
+      var participantTrack = _participantTracks[i];
+      var participant = participantTrack.participant;
+      if (!Utils.isHost(participant.metadata) &&
+          !Utils.isCoHost(participant.metadata)) {
+        // Send the action with the participant's ID (assuming `identity` is the ID)
+        sendPrivateAction(
+          ActionModel(action: "request-livecaption-drawer-state"),
+          participant.identity, // Using participant's identity (ID)
+        );
+        break; // Exit after sending the action to the first valid participant
+      }
+    }
+  }
+
+  void checkTranscriptionStateAndReturn(RemoteActivityData remoteData) {
+    if (_transcriptionLanguageData != null) {
+      if (_transcriptionLanguageData?.isLanguageSelected == true) {
+        sendPrivateAction(
+            ActionModel(
+                action: "show-live-caption",
+                liveCaptionsData: TranscriptionActionModel(
+                    showIcon: true,
+                    isLanguageSelected: true,
+                    langCode: _transcriptionLanguageData?.langCode,
+                    sourceLang: _transcriptionLanguageData?.sourceLang)),
+            remoteData.participantIdentity);
+      }
+    }
+  }
+
+  LanguageModel? _translationLanguage;
+
+  LanguageModel? get translationLanguage => _translationLanguage;
+
+  set translationLanguage(LanguageModel? language) {
+    _translationLanguage = language;
+    notifyListeners();
+  }
+
+  void translateText(TranscriptionModel transcriptionData,
+      {Function? callBack}) {
+    Map<String, dynamic> body = {
+      "source_language": transcriptionData.sourceLang,
+      "target_language": translationLanguage?.code,
+      "text": transcriptionData.transcription,
+    };
+    apiClientTranslate.translateText(body).then((response) {
+      if (response.status == "success") {
+        _updateTranscriptionInList(transcriptionData.copyWith(
+            translatedTranscription: response.data?.translatedText,
+            targetLang: translationLanguage?.code));
+        callBack?.call();
+      }
+    }).onError((e, _) {
+      sendMessageToUI("Something went wrong!");
+    });
+  }
 }

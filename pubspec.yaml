@@ -16,7 +16,7 @@ dependencies:
   json_annotation: ^4.9.0
   dio: ^5.7.0
   loading_btn: ^1.0.3
-  livekit_client: ^2.3.4+hotfix.2
+  livekit_client: ^2.3.5
   fluttertoast: ^8.2.8
   pretty_dio_logger: ^1.4.0
 
@@ -38,13 +38,14 @@ dependencies:
   webview_flutter: ^4.10.0
   path_provider: ^2.1.5
   file_picker: ^8.1.7
+  flutter_svg: ^2.0.17
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
   retrofit_generator: ^9.1.7
-  build_runner: ^2.3.3
+  build_runner: ^2.4.14
   json_serializable: ^6.9.2
 
 # For information on the generic Dart part of this file, see the
@@ -52,10 +53,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
-  # To add assets to your package, add an assets section, like this:
-   assets:
-     - assets/
+  assets:
+    - assets/icons/
   #
   # For details regarding assets in packages, see
   # https://flutter.dev/to/asset-from-package

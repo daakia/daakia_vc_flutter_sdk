@@ -1,5 +1,6 @@
 import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/all_participant_bottomsheet.dart';
 import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/chat_controller.dart';
+import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/transcription_screen.dart';
 import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/webinar_controls.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
 import 'package:flutter/foundation.dart';
@@ -72,6 +73,15 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                     : viewModel.startRecording();
                 Navigator.pop(context);
               }),
+              // Live Caption
+              buildOption(context,
+                  icon: Icons.closed_caption, // Replace with your host control icon
+                  text: 'Live Captions',
+                  isVisible: viewModel.isHost() || viewModel.isTranscriptionLanguageSelected,
+                  onTap: () async {
+                    Navigator.pop(context);
+                    showLiveCaptions(viewModel);
+                  }),
               // Host Controls
               buildOption(context,
                   icon: Icons.security, // Replace with your host control icon
@@ -181,6 +191,14 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
     Navigator.of(context).push(MaterialPageRoute<Null>(
         builder: (BuildContext context) {
           return const WebinarControls();
+        },
+        fullscreenDialog: true));
+  }
+
+  void showLiveCaptions(RtcViewmodel viewModel) {
+    Navigator.of(context).push(MaterialPageRoute<Null>(
+        builder: (BuildContext context) {
+          return TranscriptionScreen(viewModel);
         },
         fullscreenDialog: true));
   }

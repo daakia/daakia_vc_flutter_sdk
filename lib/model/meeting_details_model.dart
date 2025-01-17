@@ -21,6 +21,7 @@ class MeetingDetailsModel {
   bool? isLobbyMode;
   bool? isStandardPassword;
   bool? isCommonPassword;
+  TranscriptionDetail? transcriptionDetail;
 
   MeetingDetailsModel(
       {this.eventMode,
@@ -44,7 +45,9 @@ class MeetingDetailsModel {
         this.conferenceStatus,
         this.isLobbyMode,
         this.isStandardPassword,
-        this.isCommonPassword});
+        this.isCommonPassword,
+        this.transcriptionDetail,
+      });
 
   MeetingDetailsModel.fromJson(Map<String, dynamic> json) {
     eventMode = json['event_mode'];
@@ -71,6 +74,9 @@ class MeetingDetailsModel {
     isLobbyMode = json['is_lobby_mode'];
     isStandardPassword = json['is_standard_password'];
     isCommonPassword = json['is_common_password'];
+    transcriptionDetail = json['conference_status'] != null
+        ? TranscriptionDetail.fromJson(json['transcription_detail'])
+        : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -99,6 +105,9 @@ class MeetingDetailsModel {
     data['is_lobby_mode'] = isLobbyMode;
     data['is_standard_password'] = isStandardPassword;
     data['is_common_password'] = isCommonPassword;
+    if (transcriptionDetail != null) {
+      data['transcription_detail'] = transcriptionDetail!.toJson();
+    }
     return data;
   }
 }
@@ -115,6 +124,28 @@ class ConferenceStatus {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['title'] = title;
+    return data;
+  }
+}
+
+class TranscriptionDetail {
+  bool? transcriptionEnable;
+  String? transcriptionLangIso;
+  String? transcriptionLangTitle;
+
+  TranscriptionDetail({transcriptionEnable, transcriptionLangIso, transcriptionLangTitle});
+
+  TranscriptionDetail.fromJson(Map<String, dynamic> json) {
+    transcriptionEnable = json['transcription_enable'];
+    transcriptionLangIso = json['transcription_lang_iso'];
+    transcriptionLangTitle = json['transcription_lang_title'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['transcription_enable'] = transcriptionEnable;
+    data['transcription_enable'] = transcriptionLangIso;
+    data['transcription_lang_title'] = transcriptionLangTitle;
     return data;
   }
 }

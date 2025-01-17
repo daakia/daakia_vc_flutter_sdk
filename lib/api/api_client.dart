@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:daakia_vc_flutter_sdk/model/feature_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/licence_verify_model.dart';
+import 'package:daakia_vc_flutter_sdk/model/translate_base_model.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
@@ -90,4 +91,20 @@ abstract class RestClient {
   @MultiPart()
   Future<BaseResponse<UploadData>> uploadFile(@Part() File file,
       {@SendProgress() ProgressCallback? onSendProgress});
+
+  @POST("rtc/meeting/update/transcriptionLanguage")
+  Future<BaseResponse> setTranscriptionLanguage(
+    @Header("Authorization") String token,
+    @Body() Map<String, dynamic> body,
+  );
+
+  @POST("rtc/meeting/transcription/start")
+  Future<BaseResponse> startTranscription(
+      @Body() Map<String, dynamic> body,
+      );
+
+  @POST("api/translator/translate/text")
+  Future<TranslateBaseModel> translateText(
+      @Body() Map<String, dynamic> body,
+      );
 }

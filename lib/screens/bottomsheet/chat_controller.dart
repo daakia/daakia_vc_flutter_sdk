@@ -1,6 +1,7 @@
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/chat_bottomsheet.dart';
 import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/private_chat_bottomsheet.dart';
+import 'package:daakia_vc_flutter_sdk/screens/customWidget/loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -68,19 +69,7 @@ class _ChatControllerState extends State<ChatController> {
                 ),
               ],
             ),
-            if (_isLoading)
-              AbsorbPointer(
-                absorbing: true, // Prevents interactions with the UI
-                child: Container(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  // Semi-transparent overlay
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
+            if (_isLoading) const CustomLoader(),
           ],
         ),
       ),
