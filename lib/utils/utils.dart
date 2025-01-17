@@ -182,8 +182,6 @@ class Utils {
     return matches.length == 1 && matches.first.group(0) == message.trim();
   }
 
-
-
   static String? extractFirstUrl(String message) {
     final urlRegExp = RegExp(
       r'((https?:\/\/)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})(\/[^\s]*)?)',
@@ -208,7 +206,8 @@ class Utils {
     return nonLinkText;
   }
 
-  static Future<bool> validateFile(File? file, Function(String error) onError) async {
+  static Future<bool> validateFile(
+      File? file, Function(String error) onError) async {
     if (file == null) {
       onError('File is null');
       return false;
@@ -263,5 +262,13 @@ class Utils {
 
     // If a match is found, return the matched group; otherwise, return the original file name
     return match != null ? match.group(1)! : fileName;
+  }
+
+  static String decodeUnicode(String? input) {
+    if (input == null) return "";
+    return input.replaceAllMapped(RegExp(r'\\u([0-9a-fA-F]{4})'), (match) {
+      final hexCode = match.group(1);
+      return String.fromCharCode(int.parse(hexCode!, radix: 16));
+    });
   }
 }

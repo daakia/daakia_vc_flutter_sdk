@@ -23,6 +23,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../model/emoji_message.dart';
 import '../model/remote_activity_data.dart';
+import '../screens/bottomsheet/transcription_screen.dart';
 import '../utils/utils.dart';
 import 'method_channels/reply_kit.dart';
 
@@ -70,8 +71,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     SystemChrome.setSystemUIOverlayStyle(
         const SystemUiOverlayStyle(statusBarColor: Colors.black));
     WakelockPlus.enable();
-    if(lkPlatformIs(PlatformType.android)){
-      pip = SimplePip()..setAutoPipMode(aspectRatio: (1,1), seamlessResize: true, autoEnter: true);
+    if (lkPlatformIs(PlatformType.android)) {
+      pip = SimplePip()
+        ..setAutoPipMode(
+            aspectRatio: (1, 1), seamlessResize: true, autoEnter: true);
     }
     // add callback for a `RoomEvent` as opposed to a `ParticipantEvent`
     widget.room.addListener(_onRoomDidUpdate);
@@ -235,6 +238,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   late LobbyRequestManager? lobbyManager;
 
   Future<void> _checkReceivedDataType(RemoteActivityData remoteData) async {
+    debugPrint("Data Channel Action: ${remoteData.action}");
     var viewModel = _livekitProviderKey.currentState?.viewModel;
     switch (remoteData.action) {
       case "raise_hand":
@@ -265,7 +269,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         break;
 
       case "lobby":
-        if(viewModel?.isHost() == true || viewModel?.isCoHost() == true) {
+        if (viewModel?.isHost() == true || viewModel?.isCoHost() == true) {
           viewModel?.checkAndAddUserToLobbyList(remoteData);
           lobbyManager?.showLobbyRequestDialog(remoteData);
         }
@@ -328,6 +332,34 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         } else {
           viewModel?.setCameraAlpha(1.0);
         }
+        break;
+
+      case "show-live-caption":
+        if (remoteData.liveCaptionsData != null) {
+          if (viewModel == null) return;
+          viewModel.saveTranscriptionLanguage(remoteData.liveCaptionsData);
+          if (remoteData.liveCaptionsData?.isLanguageSelected == true &&
+              !viewModel.isTranscriptionLanguageSelected) {
+            showSnackBar(
+                message: "Live Caption is started",
+                actionText: "Show",
+                actionCallBack: () {
+                  Navigator.of(context).push(MaterialPageRoute<Null>(
+                      builder: (BuildContext context) {
+                        return TranscriptionScreen(viewModel);
+                      },
+                      fullscreenDialog: true));
+                });
+          }
+        }
+        break;
+
+      case "live-caption":
+        viewModel?.collectTranscriptionData(remoteData);
+        break;
+
+      case "request-livecaption-drawer-state":
+        viewModel?.checkTranscriptionStateAndReturn(remoteData);
         break;
 
       case "":
@@ -481,10 +513,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {
-        if(!context.mounted) return;
+        if (!context.mounted) return;
         final shouldExit = await _showExitConfirmationDialog(context);
         if (shouldExit) {
-          if(!context.mounted) return;
+          if (!context.mounted) return;
           Navigator.of(context).pop(); // Exit to previous page
         }
       },
