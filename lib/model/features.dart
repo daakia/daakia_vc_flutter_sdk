@@ -156,4 +156,8 @@ class Features {
   bool isMuteParticipantsAllowed() => muteParticipant == 1;
 
   bool isDisableCameraAllowed() => disableCamera == 1;
+
+  bool isVoiceTranscriptionAllowed() => voiceTranscription == 1;
+
+  bool isVoiceTextTranslationAllowed() => voiceTextTranslation == 1;
 }

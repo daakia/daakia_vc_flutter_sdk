@@ -132,7 +132,7 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          if (!widget.viewModel.isHost())
+          if (!widget.viewModel.isHost() && widget.viewModel.meetingDetails.features!.isVoiceTextTranslationAllowed())
             IconButton(
               icon: SvgPicture.asset(
                 'assets/icons/ic_translate_chats_colored.svg',
@@ -144,7 +144,7 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
               color: Colors.white,
               onPressed: () => handleSelectTranslationButtonPressed(),
             ),
-          if (widget.viewModel.isHost())
+          if (widget.viewModel.isHost() || widget.viewModel.isCoHost())
             IconButton(
               icon: const Icon(Icons.download),
               color: Colors.white,

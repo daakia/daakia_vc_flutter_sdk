@@ -77,7 +77,7 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
               buildOption(context,
                   icon: Icons.closed_caption, // Replace with your host control icon
                   text: 'Live Captions',
-                  isVisible: viewModel.isHost() || viewModel.isTranscriptionLanguageSelected,
+                  isVisible: viewModel.meetingDetails.features!.isVoiceTranscriptionAllowed() && (viewModel.isHost() || viewModel.isTranscriptionLanguageSelected),
                   onTap: () async {
                     Navigator.pop(context);
                     showLiveCaptions(viewModel);
