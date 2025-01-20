@@ -25,6 +25,11 @@ abstract class RestClient {
     @Body() Map<String, dynamic> body,
   );
 
+  @POST("rtc/meeting/delete")
+  Future<BaseResponse> endMeeting(
+    @Body() Map<String, dynamic> body,
+  );
+
   @POST("meeting/verifyHost")
   Future<BaseResponse<HostTokenModel>> verifyHostToken(
     @Body() Map<String, dynamic> body,
@@ -100,11 +105,11 @@ abstract class RestClient {
 
   @POST("rtc/meeting/transcription/start")
   Future<BaseResponse> startTranscription(
-      @Body() Map<String, dynamic> body,
-      );
+    @Body() Map<String, dynamic> body,
+  );
 
   @POST("api/translator/translate/text")
   Future<TranslateBaseModel> translateText(
-      @Body() Map<String, dynamic> body,
-      );
+    @Body() Map<String, dynamic> body,
+  );
 }

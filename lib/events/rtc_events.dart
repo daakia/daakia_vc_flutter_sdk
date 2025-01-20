@@ -28,3 +28,5 @@ class StopLoading extends RTCEvents{}
 class UpdateView extends RTCEvents{}
 
 class EnterPIP extends RTCEvents{}
+
+class EndMeeting extends RTCEvents{}

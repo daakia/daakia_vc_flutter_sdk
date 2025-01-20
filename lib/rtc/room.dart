@@ -56,6 +56,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   SimplePip? pip;
   bool isInPipMode = false;
 
+  bool _isProgrammaticPop = false; // Flag to track programmatic pop
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
@@ -139,7 +141,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               Timer(const Duration(seconds: 3), () {
                 if (mounted) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    Navigator.popUntil(context, (route) => route.isFirst);
+                    closeMeetingProgrammatically(context);
                   });
                 }
               });
@@ -151,7 +153,19 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               Timer(const Duration(seconds: 3), () {
                 if (mounted) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    Navigator.popUntil(context, (route) => route.isFirst);
+                    closeMeetingProgrammatically(context);
+                  });
+                }
+              });
+              break;
+            }
+          case DisconnectReason.roomDeleted:
+            {
+              showSnackBar(message: "Meeting ended");
+              Timer(const Duration(seconds: 3), () {
+                if (mounted) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    closeMeetingProgrammatically(context);
                   });
                 }
               });
@@ -162,7 +176,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               Timer(const Duration(seconds: 3), () {
                 if (mounted) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    Navigator.popUntil(context, (route) => route.isFirst);
+                    closeMeetingProgrammatically(context);
                   });
                 }
               });
@@ -513,12 +527,25 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {
-        if (!context.mounted) return;
-        final shouldExit = await _showExitConfirmationDialog(context);
-        if (shouldExit) {
-          if (!context.mounted) return;
-          Navigator.of(context).pop(); // Exit to previous page
-        }
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) async {
+            if (_isProgrammaticPop) {
+              _isProgrammaticPop = false; // Reset the flag
+              return;
+            }
+            if (!context.mounted) return;
+            final shouldExit = await _showExitConfirmationDialog(context);
+            if (shouldExit) {
+              // Delay the pop operation to avoid navigation conflicts
+              Future.delayed(Duration.zero, () {
+                if (!context.mounted) return;
+                if (Navigator.canPop(context)) {
+                  Navigator.of(context).pop(); // Exit to previous page
+                }
+              });
+            }
+          },
+        );
       },
       child: RtcProvider(
         key: _livekitProviderKey,
@@ -670,6 +697,12 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         if (mounted) {
           setState(() {});
         }
+      } else if (event is EndMeeting) {
+        if (mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            closeMeetingProgrammatically(context);
+          });
+        }
       }
     });
   }
@@ -708,5 +741,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         senderName: senderName,
         timestamp: DateTime.now().millisecondsSinceEpoch.toString());
     viewModel.addEmoji(newMessage);
+  }
+
+  // When closing the meeting programmatically
+  void closeMeetingProgrammatically(BuildContext context) {
+    _isProgrammaticPop = true; // Set the flag
+    Navigator.popUntil(context, (route) => route.isFirst); // Close all routes
   }
 }
