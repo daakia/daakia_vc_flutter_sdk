@@ -74,7 +74,7 @@ class MeetingDetailsModel {
     isLobbyMode = json['is_lobby_mode'];
     isStandardPassword = json['is_standard_password'];
     isCommonPassword = json['is_common_password'];
-    transcriptionDetail = json['conference_status'] != null
+    transcriptionDetail = json['transcription_detail'] != null
         ? TranscriptionDetail.fromJson(json['transcription_detail'])
         : null;
   }
