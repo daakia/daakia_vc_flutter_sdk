@@ -1,8 +1,11 @@
+import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
+import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/end_meeting_bottomsheet.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:provider/provider.dart';
+
 import '../../resources/colors/color.dart';
 import '../../screens/bottomsheet/more_option_bottomsheet.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
@@ -89,8 +92,8 @@ class _RtcControlState extends State<RtcControls> {
                 : null,
             icon: Icon(
               _speakerphoneOn ? Icons.speaker_phone : Icons.phone_android,
-              color: Colors.white.withOpacity(
-                  Hardware.instance.canSwitchSpeakerphone ? 1.0 : 0.5),
+              color: Colors.white.withValues(
+                  alpha: Hardware.instance.canSwitchSpeakerphone ? 1.0 : 0.5),
             ),
             iconSize: 30,
           ),
@@ -106,7 +109,7 @@ class _RtcControlState extends State<RtcControls> {
               participant.isCameraEnabled()
                   ? Icons.videocam
                   : Icons.videocam_off,
-              color: Colors.white.withOpacity(viewModel.getCameraAlpha()),
+              color: Colors.white.withValues(alpha: viewModel.getCameraAlpha()),
             ),
             iconSize: 30,
           ),
@@ -120,20 +123,20 @@ class _RtcControlState extends State<RtcControls> {
             },
             icon: Icon(
               participant.isMicrophoneEnabled() ? Icons.mic : Icons.mic_off,
-              color: Colors.white.withOpacity(viewModel.getMicAlpha()),
+              color: Colors.white.withValues(alpha: viewModel.getMicAlpha()),
             ),
             iconSize: 30,
           ),
           IconButton(
             onPressed: () {
-              if(participant.isCameraEnabled()) {
+              if (participant.isCameraEnabled()) {
                 _toggleCamera();
               }
             },
             icon: Icon(
               Icons.flip_camera_android,
-              color: Colors.white.withOpacity(participant.isCameraEnabled()
-                  ? 1 : 0.5),
+              color: Colors.white
+                  .withValues(alpha: participant.isCameraEnabled() ? 1 : 0.5),
             ),
             iconSize: 30,
           ),
@@ -162,7 +165,11 @@ class _RtcControlState extends State<RtcControls> {
           ),
           IconButton(
             onPressed: () {
-              _onTapDisconnect(viewModel);
+              if (viewModel.isHost()) {
+                _endMeetingOptions(viewModel);
+              } else {
+                _onTapDisconnect(viewModel);
+              }
             },
             icon: const Icon(
               Icons.call_end,
@@ -190,6 +197,28 @@ class _RtcControlState extends State<RtcControls> {
       viewModel.isMeetingEnded = true;
       await widget.room.disconnect();
     }
+  }
+
+  void _endMeetingOptions(RtcViewmodel viewModel) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+      ),
+      builder: (context) {
+        return EndMeetingBottomSheet(
+          onEndCall: () {
+            Navigator.pop(context); // Close the BottomSheet
+            viewModel.endMeetingForAll();
+          },
+          onLeaveCall: () {
+            Navigator.pop(context); // Close the BottomSheet
+            viewModel.sendEvent(EndMeeting());
+          },
+        );
+      },
+    );
   }
 
   @override
