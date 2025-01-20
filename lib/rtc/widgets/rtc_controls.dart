@@ -165,7 +165,7 @@ class _RtcControlState extends State<RtcControls> {
           ),
           IconButton(
             onPressed: () {
-              if (viewModel.isHost()) {
+              if (viewModel.isHost() || viewModel.isCoHost()) {
                 _endMeetingOptions(viewModel);
               } else {
                 _onTapDisconnect(viewModel);

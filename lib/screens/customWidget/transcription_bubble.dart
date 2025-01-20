@@ -59,7 +59,8 @@ class _TranscriptionBubbleState extends State<TranscriptionBubble> {
                             widget.transcriptionData.transcription,
                         style: const TextStyle(color: Colors.white),
                       ),
-                      if (widget.transcriptionData.isFinal &&
+                      if ((widget.viewModel.meetingDetails.features?.isVoiceTextTranslationAllowed() == true) &&
+                      widget.transcriptionData.isFinal &&
                           (widget.transcriptionData.targetLang !=
                               (widget.viewModel.translationLanguage?.code ??
                                   widget.transcriptionData.targetLang)))
