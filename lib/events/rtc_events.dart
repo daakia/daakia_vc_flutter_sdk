@@ -6,6 +6,12 @@ class ShowSnackBar extends RTCEvents {
   final String message;
   ShowSnackBar(this.message);
 }
+
+class ShowTranscriptionDownload extends RTCEvents {
+  final String message;
+  final String? path;
+  ShowTranscriptionDownload({required this.message, required this.path});
+}
 class ShowReaction extends RTCEvents{
   final String emoji;
   ShowReaction(this.emoji);

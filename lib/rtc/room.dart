@@ -691,7 +691,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     viewModel?.roomEvents.listen((event) {
       if (event is ShowSnackBar) {
         showSnackBar(message: event.message);
-      } else if (event is ShowReaction) {
+      } else if (event is ShowTranscriptionDownload) {
+        showSnackBar(message: event.message, actionText: (event.path == null) ? "" : "Open", actionCallBack: () {
+          Utils.openMediaFile(event.path??"", context);
+        });
+      }else if (event is ShowReaction) {
         showReaction(event.emoji, viewModel);
       } else if (event is UpdateView) {
         if (mounted) {

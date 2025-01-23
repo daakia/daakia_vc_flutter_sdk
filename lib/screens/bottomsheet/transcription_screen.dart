@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/language_select_dialog.dart';
 import 'package:daakia_vc_flutter_sdk/screens/customWidget/loader.dart';
 import 'package:daakia_vc_flutter_sdk/screens/customWidget/transcription_bubble.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 import '../../model/language_model.dart';
+import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 
 class TranscriptionScreen extends StatefulWidget {
@@ -86,10 +88,19 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
     setState(() {
       _isLoading = true;
     });
-    //TODO:: need to work on logic
+    String formattedTranscript =
+        Utils.getTranscriptFormattedToSave(widget.viewModel.transcriptionList);
+    var result = await Utils.saveDataToFile(formattedTranscript,
+        "caption_${widget.viewModel.meetingDetails.meeting_uid}_${DateTime.now().millisecondsSinceEpoch}");
     setState(() {
       _isLoading = false;
     });
+
+    if (result.isSuccess) {
+      widget.viewModel.sendEvent(ShowTranscriptionDownload(message: "File saved successfully!", path: result.filePath));
+    } else {
+      widget.viewModel.sendMessageToUI("Failed to save file!");
+    }
   }
 
   void handleSelectTranslationButtonPressed() {
@@ -132,7 +143,9 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          if (!widget.viewModel.isHost() && widget.viewModel.meetingDetails.features!.isVoiceTextTranslationAllowed())
+          if (!widget.viewModel.isHost() &&
+              widget.viewModel.meetingDetails.features!
+                  .isVoiceTextTranslationAllowed())
             IconButton(
               icon: SvgPicture.asset(
                 'assets/icons/ic_translate_chats_colored.svg',
