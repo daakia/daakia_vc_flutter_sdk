@@ -2,13 +2,18 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:daakia_vc_flutter_sdk/model/saved_data.dart';
 import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mime/mime.dart';
+import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:safe_device/safe_device.dart';
+
+import '../model/transcription_model.dart';
 
 FutureOr<void> Function()? onWindowShouldClose;
 
@@ -270,5 +275,73 @@ class Utils {
       final hexCode = match.group(1);
       return String.fromCharCode(int.parse(hexCode!, radix: 16));
     });
+  }
+
+  static String getTranscriptFormattedToSave(
+      List<TranscriptionModel> transcriptions) {
+    StringBuffer contentBuffer = StringBuffer();
+    for (var entry in transcriptions) {
+      contentBuffer.writeln('${entry.name} ${entry.timestamp}');
+      contentBuffer.writeln(entry.transcription);
+      contentBuffer.writeln();
+      contentBuffer.writeln();
+    }
+    return contentBuffer.toString();
+  }
+
+  static Future<SavedData> saveDataToFile(String data, String fileName) async {
+    try {
+      // Request storage permission for Android only
+      // if (Platform.isAndroid) {
+      //   var status = await Permission.storage.request();
+      //   if (!status.isGranted) {
+      //     debugPrint('Permission denied.');
+      //     return false;
+      //   }
+      // }
+      //TODO:: need to check this permission block for Android 34
+      // Get the directory for the Downloads folder (Android) or Documents folder (iOS)
+      String downloadsPath = "";
+      if (Platform.isAndroid) {
+        final PackageInfo packageInfo = await PackageInfo.fromPlatform();
+        downloadsPath =
+            '/storage/emulated/0/Download/${packageInfo.appName}/transcriptions';
+      } else if (Platform.isIOS) {
+        final Directory directory = await getApplicationDocumentsDirectory();
+        downloadsPath = '${directory.path}/transcriptions';
+      }
+
+      // Ensure the directory exists
+      Directory downloadsFolder = Directory(downloadsPath);
+      if (!await downloadsFolder.exists()) {
+        await downloadsFolder.create(recursive: true);
+      }
+
+      // Create the file path
+      String filePath = '$downloadsPath/$fileName.txt';
+      File file = File(filePath);
+
+      // Write the formatted content to the file
+      await file.writeAsString(data);
+      debugPrint('File saved at $filePath');
+      return SavedData(isSuccess: true, filePath: filePath);
+    } catch (e) {
+      debugPrint('Error saving file: $e');
+      return SavedData(isSuccess: false);
+    }
+  }
+
+  static Future<void> openMediaFile(
+      String filePath, BuildContext context) async {
+    try {
+      final result = await OpenFile.open(filePath);
+      if (kDebugMode) {
+        print("OpenFile result: ${result.type}, message: ${result.message}");
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Utils.showSnackBar(context, message: "Error opening file: $e");
+      }
+    }
   }
 }
