@@ -27,14 +27,22 @@ class ParticipantTile extends StatelessWidget {
     final viewModel = Provider.of<RtcViewmodel>(context);
     return Container(
       color: emptyVideoColor,
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Initials Circle
           InitialsCircle(
               initials: Utils.getInitials(
-                  isForLobby ? lobbyRequest?.displayName : participant?.name)),
+                  isForLobby ? lobbyRequest?.displayName : participant?.name),
+              onEdit: (!isForLobby &&
+                      ((participant?.identity ==
+                              viewModel.room.localParticipant?.identity) ||
+                          (viewModel.isHost() || viewModel.isCoHost())))
+                  ? () {
+                      _showEditNameDialog(context, viewModel);
+                    }
+                  : null),
           const SizedBox(width: 10),
           // Name and Details
           Expanded(
@@ -154,6 +162,44 @@ class ParticipantTile extends StatelessWidget {
                 onDismissBottomSheet!();
               }
             },
+          );
+        });
+  }
+
+  void _showEditNameDialog(BuildContext context, RtcViewmodel viewModel) {
+    final TextEditingController nameController =
+        TextEditingController(text: participant?.name ?? "");
+
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Edit Name"),
+            content: TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: "Enter new name",
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                },
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () {
+                  final newName = nameController.text.trim();
+                  if (newName.isNotEmpty) {
+                    viewModel.updateParticipantName(
+                        participant: participant?.identity, newName: newName);
+                  }
+                  Navigator.of(context).pop(); // Close dialog
+                },
+                child: const Text("Save"),
+              ),
+            ],
           );
         });
   }

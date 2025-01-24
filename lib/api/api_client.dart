@@ -112,4 +112,9 @@ abstract class RestClient {
   Future<TranslateBaseModel> translateText(
     @Body() Map<String, dynamic> body,
   );
+
+  @POST("rtc/meeting/updateParticipant/name")
+  Future<BaseResponse> updateParticipantName(
+      @Body() Map<String, dynamic> body,
+      );
 }

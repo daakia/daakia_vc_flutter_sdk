@@ -1104,4 +1104,22 @@ class RtcViewmodel extends ChangeNotifier {
       sendMessageToUI("Something went wrong!");
     });
   }
+
+  void updateParticipantName({String? participant, required String newName}) {
+    if(participant == null) return;
+    Map<String, dynamic> body = {
+      "meeting_uid": meetingDetails.meeting_uid,
+      "participant_identity": participant,
+      "new_name": newName,
+    };
+    apiClient.updateParticipantName(body).then((response){
+      if(response.success == 1){
+        // sendEvent(EndMeeting());
+      } else {
+        sendMessageToUI(response.message ?? "Something went wrong!");
+      }
+    }).onError((e, _) {
+      sendMessageToUI("Something went wrong!");
+    });
+  }
 }
