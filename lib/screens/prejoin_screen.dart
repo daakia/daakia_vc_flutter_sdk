@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:daakia_vc_flutter_sdk/model/features.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details_model.dart';
+import 'package:daakia_vc_flutter_sdk/rtc/meeting_manager.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:loading_btn/loading_btn.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../api/injection.dart';
+
 import '../resources/colors/color.dart';
 import '../rtc/room.dart';
 import '../utils/utils.dart';
@@ -69,12 +71,17 @@ class _PreJoinState extends State<PreJoinScreen> {
 
   Features? features;
 
+  late final MeetingManager meetingManager;
+
   @override
   void initState() {
     checkPermission();
     _subscription =
         Hardware.instance.onDeviceChange.stream.listen(_loadDevices);
     Hardware.instance.enumerateDevices().then(_loadDevices);
+    meetingManager = MeetingManager(
+        endDate: widget.basicMeetingDetails?.endDate,
+        endMeetingCallBack: () {});
     super.initState();
   }
 
@@ -208,6 +215,7 @@ class _PreJoinState extends State<PreJoinScreen> {
           }
 
           if (it.participantCanJoin == true) {
+            if(!mounted) return;
             isUserCanJoin = true;
             _join(context, stopLoading,
                 livekitUrl: response.data?.livekitServerURL ?? "",
@@ -224,6 +232,7 @@ class _PreJoinState extends State<PreJoinScreen> {
             meetingNotStarted(stopLoading);
             return;
           }
+          if(!mounted) return;
           _join(context, stopLoading,
               livekitUrl: response.data?.livekitServerURL ?? "",
               livekitToken: response.data?.accessToken ?? "");
@@ -757,6 +766,11 @@ class _PreJoinState extends State<PreJoinScreen> {
                         if (name.isEmpty) {
                           Utils.showSnackBar(context,
                               message: "Please enter your name");
+                          return;
+                        }
+                        if (meetingManager.isMeetingEnded()) {
+                          Utils.showSnackBar(context,
+                              message: "The meeting has already ended!");
                           return;
                         }
                         if (!widget.isHost) {

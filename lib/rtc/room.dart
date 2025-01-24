@@ -25,6 +25,7 @@ import '../model/emoji_message.dart';
 import '../model/remote_activity_data.dart';
 import '../screens/bottomsheet/transcription_screen.dart';
 import '../utils/utils.dart';
+import 'meeting_manager.dart';
 import 'method_channels/reply_kit.dart';
 
 class RoomPage extends StatefulWidget {
@@ -58,6 +59,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
   bool _isProgrammaticPop = false; // Flag to track programmatic pop
 
+  late final MeetingManager meetingManager;
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
@@ -90,10 +93,14 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       if (!fastConnection) {
         _askPublish();
       }
+      meetingManager = MeetingManager(endDate: viewModel?.meetingDetails.meetingBasicDetails?.endDate, endMeetingCallBack: (){
+        _meetingEndLogic(viewModel);
+      });
+      meetingManager.startMeetingEndScheduler(context);
     });
 
     if (lkPlatformIs(PlatformType.android)) {
-      Hardware.instance.setSpeakerphoneOn(true);
+      Hardware.instance.setSpeakerphoneOn(false);
     }
 
     if (lkPlatformIs(PlatformType.iOS)) {
@@ -111,10 +118,12 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    super.dispose();
     WidgetsBinding.instance.removeObserver(this);
     var viewModel = _livekitProviderKey.currentState?.viewModel;
     viewModel?.stopLobbyCheck();
     viewModel?.cancelRoomEvents();
+    meetingManager.cancelMeetingEndScheduler();
     // always dispose listener
     (() async {
       if (lkPlatformIs(PlatformType.iOS)) {
@@ -127,7 +136,6 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     onWindowShouldClose = null;
     WakelockPlus.disable();
     pip = null;
-    super.dispose();
   }
 
   void _setUpListeners() => _listener
@@ -751,5 +759,32 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   void closeMeetingProgrammatically(BuildContext context) {
     _isProgrammaticPop = true; // Set the flag
     Navigator.popUntil(context, (route) => route.isFirst); // Close all routes
+  }
+  
+  void _meetingEndLogic(RtcViewmodel? viewModel){
+    if(viewModel?.meetingDetails.features?.isBasicPlan() == true){
+      showSnackBar(message: "Meeting ended");
+      Timer(const Duration(seconds: 3), () {
+        if (mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            closeMeetingProgrammatically(context);
+          });
+        }
+      });
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Meeting Ended"),
+          content: const Text("The meeting has ended."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }
