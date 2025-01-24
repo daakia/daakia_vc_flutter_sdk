@@ -12,7 +12,6 @@ import 'package:daakia_vc_flutter_sdk/rtc/widgets/pip_screen.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/rtc_controls.dart';
 import 'package:daakia_vc_flutter_sdk/screens/customWidget/emoji_reaction_widget.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
-import 'package:daakia_vc_flutter_sdk/utils/storage_helper.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_provider.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
 import 'package:flutter/foundation.dart';
@@ -25,8 +24,8 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../model/emoji_message.dart';
 import '../model/remote_activity_data.dart';
 import '../screens/bottomsheet/transcription_screen.dart';
-import '../utils/constants.dart';
 import '../utils/utils.dart';
+import 'meeting_manager.dart';
 import 'method_channels/reply_kit.dart';
 
 class RoomPage extends StatefulWidget {
@@ -60,7 +59,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
   bool _isProgrammaticPop = false; // Flag to track programmatic pop
 
-  Timer? _configRecordingTimer;
+  late final MeetingManager meetingManager;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -94,10 +93,14 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       if (!fastConnection) {
         _askPublish();
       }
+      meetingManager = MeetingManager(endDate: viewModel?.meetingDetails.meetingBasicDetails?.endDate, endMeetingCallBack: (){
+        _meetingEndLogic(viewModel);
+      });
+      meetingManager.startMeetingEndScheduler(context);
     });
 
     if (lkPlatformIs(PlatformType.android)) {
-      Hardware.instance.setSpeakerphoneOn(true);
+      Hardware.instance.setSpeakerphoneOn(false);
     }
 
     if (lkPlatformIs(PlatformType.iOS)) {
@@ -115,10 +118,12 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    super.dispose();
     WidgetsBinding.instance.removeObserver(this);
     var viewModel = _livekitProviderKey.currentState?.viewModel;
     viewModel?.stopLobbyCheck();
     viewModel?.cancelRoomEvents();
+    meetingManager.cancelMeetingEndScheduler();
     // always dispose listener
     (() async {
       if (lkPlatformIs(PlatformType.iOS)) {
@@ -131,7 +136,6 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     onWindowShouldClose = null;
     WakelockPlus.disable();
     pip = null;
-    super.dispose();
   }
 
   void _setUpListeners() => _listener
@@ -198,14 +202,6 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       viewModel?.setRecording(widget.room.isRecording);
       // sort participants on many track events as noted in documentation linked above
       _sortParticipants();
-
-      // Debounce `configAutoRecording` to ensure it is called only once within 1 second
-      if (_configRecordingTimer?.isActive ?? false) {
-        _configRecordingTimer?.cancel();
-      }
-      _configRecordingTimer = Timer(const Duration(seconds: 2), () {
-        viewModel?.configAutoRecording();
-      });
     })
     ..on<ParticipantConnectedEvent>((event) {
       _sortParticipants();
@@ -238,12 +234,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     ..on<ParticipantNameUpdatedEvent>((event) {
       _sortParticipants();
     })
-    ..on<ParticipantMetadataUpdatedEvent>((event) {
-      var viewModel = _livekitProviderKey.currentState?.viewModel;
-      StorageHelper().saveData(Constant.MEETING_UID, viewModel?.meetingDetails.meeting_uid ?? "");
-      StorageHelper().saveData(Constant.SESSION_UID, Utils.getMetadataSessionUid(event.metadata));
-      StorageHelper().saveData(Constant.ATTENDANCE_ID, Utils.getMetadataAttendanceId(event.metadata));
-    })
+    ..on<ParticipantMetadataUpdatedEvent>((event) {})
     ..on<RoomMetadataChangedEvent>((event) {})
     ..on<DataReceivedEvent>((event) {
       _handleDataChannel(event);
@@ -342,7 +333,6 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               remoteData.token ?? "";
         } else {
           viewModel?.setCoHost(false);
-          StorageHelper().clearAllData();
         }
         break;
 
@@ -769,5 +759,32 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   void closeMeetingProgrammatically(BuildContext context) {
     _isProgrammaticPop = true; // Set the flag
     Navigator.popUntil(context, (route) => route.isFirst); // Close all routes
+  }
+  
+  void _meetingEndLogic(RtcViewmodel? viewModel){
+    if(viewModel?.meetingDetails.features?.isBasicPlan() == true){
+      showSnackBar(message: "Meeting ended");
+      Timer(const Duration(seconds: 3), () {
+        if (mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            closeMeetingProgrammatically(context);
+          });
+        }
+      });
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Meeting Ended"),
+          content: const Text("The meeting has ended."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }
