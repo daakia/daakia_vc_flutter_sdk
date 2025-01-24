@@ -131,7 +131,6 @@
                               ),
                           ],
                         ),
-                        const SizedBox(height: 10.0),
                         ListView.builder(
                           shrinkWrap: true, // Let the list take only the space it needs
                           physics: const NeverScrollableScrollPhysics(), // Disable inner scrolling
