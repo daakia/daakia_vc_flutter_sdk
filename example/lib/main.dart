@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const Scaffold(
-        body: DataEntryScreen(),
+        body: SafeArea(child: DataEntryScreen()),
       ),
     );
   }
@@ -37,7 +37,7 @@ class DataEntryScreen extends StatefulWidget {
 
 class _DataEntryState extends State<DataEntryScreen> {
   var licenseKey = "0D16716AFADABE17F5A42C6642CF2711ED9F59F2C89C12B2";
-  var meetingUID = "eea23a0a8dacb2616a6bf2fa";
+  var meetingUID = "c77b66c9f3b80f87cc7f3744";
   var isHost = false;
 
   @override

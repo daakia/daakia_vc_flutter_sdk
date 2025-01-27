@@ -58,6 +58,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
   bool _isProgrammaticPop = false; // Flag to track programmatic pop
 
+  Timer? _configRecordingTimer;
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
@@ -194,6 +196,14 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       viewModel?.setRecording(widget.room.isRecording);
       // sort participants on many track events as noted in documentation linked above
       _sortParticipants();
+
+      // Debounce `configAutoRecording` to ensure it is called only once within 1 second
+      if (_configRecordingTimer?.isActive ?? false) {
+        _configRecordingTimer?.cancel();
+      }
+      _configRecordingTimer = Timer(const Duration(seconds: 2), () {
+        viewModel?.configAutoRecording();
+      });
     })
     ..on<ParticipantConnectedEvent>((event) {
       _sortParticipants();
