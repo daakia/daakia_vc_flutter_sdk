@@ -1122,4 +1122,17 @@ class RtcViewmodel extends ChangeNotifier {
       sendMessageToUI("Something went wrong!");
     });
   }
+
+  void configAutoRecording() {
+    if(isHost()){
+      if(meetingDetails.meetingBasicDetails?.meetingConfig != null){
+        var meetingConfig = meetingDetails.meetingBasicDetails?.meetingConfig!;
+        if(meetingConfig?.recordingForceStopped != 1 && meetingConfig?.autoStartRecording == 1){
+          if(!isRecording) {
+            startRecording();
+          }
+        }
+      }
+    }
+  }
 }

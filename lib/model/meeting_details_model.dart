@@ -22,6 +22,7 @@ class MeetingDetailsModel {
   bool? isStandardPassword;
   bool? isCommonPassword;
   TranscriptionDetail? transcriptionDetail;
+  MeetingConfig? meetingConfig;
 
   MeetingDetailsModel(
       {this.eventMode,
@@ -47,6 +48,7 @@ class MeetingDetailsModel {
         this.isStandardPassword,
         this.isCommonPassword,
         this.transcriptionDetail,
+        this.meetingConfig,
       });
 
   MeetingDetailsModel.fromJson(Map<String, dynamic> json) {
@@ -76,6 +78,9 @@ class MeetingDetailsModel {
     isCommonPassword = json['is_common_password'];
     transcriptionDetail = json['transcription_detail'] != null
         ? TranscriptionDetail.fromJson(json['transcription_detail'])
+        : null;
+    meetingConfig = json['meeting_config'] != null
+        ? MeetingConfig.fromJson(json['meeting_config'])
         : null;
   }
 
@@ -107,6 +112,9 @@ class MeetingDetailsModel {
     data['is_common_password'] = isCommonPassword;
     if (transcriptionDetail != null) {
       data['transcription_detail'] = transcriptionDetail!.toJson();
+    }
+    if (meetingConfig != null) {
+      data['meeting_config'] = meetingConfig!.toJson();
     }
     return data;
   }
@@ -146,6 +154,25 @@ class TranscriptionDetail {
     data['transcription_enable'] = transcriptionEnable;
     data['transcription_enable'] = transcriptionLangIso;
     data['transcription_lang_title'] = transcriptionLangTitle;
+    return data;
+  }
+}
+
+class MeetingConfig {
+  int? autoStartRecording;
+  int? recordingForceStopped;
+
+  MeetingConfig({autoStartRecording, recordingForceStopped});
+
+  MeetingConfig.fromJson(Map<String, dynamic> json) {
+    autoStartRecording = json['auto_start_recording'];
+    recordingForceStopped = json['recording_force_stopped'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['auto_start_recording'] = autoStartRecording;
+    data['recording_force_stopped'] = recordingForceStopped;
     return data;
   }
 }
