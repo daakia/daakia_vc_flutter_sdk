@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:daakia_vc_flutter_sdk/model/features.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details_model.dart';
+import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
+import 'package:daakia_vc_flutter_sdk/utils/storage_helper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -166,6 +168,16 @@ class _PreJoinState extends State<PreJoinScreen> {
     if (isParticipant) {
       body["lobby_request_id"] = lobbyRequestId;
     }
+    final cacheData = StorageHelper();
+    if (!widget.isHost){
+      if(await cacheData.getData(Constant.MEETING_UID) == widget.meetingId){
+        if(await cacheData.getData(Constant.SESSION_UID) == widget.basicMeetingDetails?.currentSessionUid){
+          if(await cacheData.getData(Constant.ATTENDANCE_ID) != ""){
+            body["meeting_attendance_uid"] = await cacheData.getData(Constant.ATTENDANCE_ID);
+          }
+        }
+      }
+    }
 
     apiClient.getMeetingJoinDetail(token, body).then((response) {
       if (response.success == 1) {
@@ -208,6 +220,7 @@ class _PreJoinState extends State<PreJoinScreen> {
           }
 
           if (it.participantCanJoin == true) {
+            widget.basicMeetingDetails?.currentSessionUid = it.currentSessionUid;
             isUserCanJoin = true;
             _join(context, stopLoading,
                 livekitUrl: response.data?.livekitServerURL ?? "",
@@ -224,6 +237,7 @@ class _PreJoinState extends State<PreJoinScreen> {
             meetingNotStarted(stopLoading);
             return;
           }
+          widget.basicMeetingDetails?.currentSessionUid = it.currentSessionUid;
           _join(context, stopLoading,
               livekitUrl: response.data?.livekitServerURL ?? "",
               livekitToken: response.data?.accessToken ?? "");

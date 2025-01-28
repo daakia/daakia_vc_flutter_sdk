@@ -8,6 +8,7 @@ class RtcData {
   bool? meetingStarted;
   bool? isRejected;
   String? requestId;
+  String? currentSessionUid;
 
   RtcData(
       {accessToken,
@@ -18,7 +19,9 @@ class RtcData {
         participantCanJoin,
         meetingStarted,
         isRejected,
-        requestId});
+        requestId,
+        String? currentSessionUid,
+      });
 
   RtcData.fromJson(Map<String, dynamic> json) {
     accessToken = json['access_token'];
@@ -30,6 +33,7 @@ class RtcData {
     meetingStarted = json['meeting_started'];
     isRejected = json['is_rejected'];
     requestId = json['request_id'];
+    currentSessionUid = json['current_session_uid'];
   }
 
   Map<String, dynamic> toJson() {
@@ -43,6 +47,7 @@ class RtcData {
     data['meeting_started'] = meetingStarted;
     data['is_rejected'] = isRejected;
     data['request_id'] = requestId;
+    data['current_session_uid'] = currentSessionUid;
     return data;
   }
 }
