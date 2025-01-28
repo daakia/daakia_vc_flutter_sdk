@@ -160,4 +160,6 @@ class Features {
   bool isVoiceTranscriptionAllowed() => voiceTranscription == 1;
 
   bool isVoiceTextTranslationAllowed() => voiceTextTranslation == 1;
+
+  bool isBasicPlan() => isBasic == 1;
 }
