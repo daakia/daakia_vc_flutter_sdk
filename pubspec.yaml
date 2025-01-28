@@ -39,6 +39,7 @@ dependencies:
   path_provider: ^2.1.5
   file_picker: ^8.1.7
   flutter_svg: ^2.0.17
+  shared_preferences: ^2.4.0
 
 dev_dependencies:
   flutter_test:

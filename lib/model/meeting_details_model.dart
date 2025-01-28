@@ -23,6 +23,7 @@ class MeetingDetailsModel {
   bool? isCommonPassword;
   TranscriptionDetail? transcriptionDetail;
   MeetingConfig? meetingConfig;
+  String? currentSessionUid;
 
   MeetingDetailsModel(
       {this.eventMode,
@@ -49,6 +50,7 @@ class MeetingDetailsModel {
         this.isCommonPassword,
         this.transcriptionDetail,
         this.meetingConfig,
+        this.currentSessionUid,
       });
 
   MeetingDetailsModel.fromJson(Map<String, dynamic> json) {
@@ -76,6 +78,7 @@ class MeetingDetailsModel {
     isLobbyMode = json['is_lobby_mode'];
     isStandardPassword = json['is_standard_password'];
     isCommonPassword = json['is_common_password'];
+    currentSessionUid = json['current_session_uid'].toString();
     transcriptionDetail = json['transcription_detail'] != null
         ? TranscriptionDetail.fromJson(json['transcription_detail'])
         : null;
@@ -110,6 +113,7 @@ class MeetingDetailsModel {
     data['is_lobby_mode'] = isLobbyMode;
     data['is_standard_password'] = isStandardPassword;
     data['is_common_password'] = isCommonPassword;
+    data['current_session_uid'] = currentSessionUid.toString();
     if (transcriptionDetail != null) {
       data['transcription_detail'] = transcriptionDetail!.toJson();
     }

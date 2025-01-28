@@ -12,6 +12,7 @@ import 'package:daakia_vc_flutter_sdk/rtc/widgets/pip_screen.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/rtc_controls.dart';
 import 'package:daakia_vc_flutter_sdk/screens/customWidget/emoji_reaction_widget.dart';
 import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
+import 'package:daakia_vc_flutter_sdk/utils/storage_helper.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_provider.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
 import 'package:flutter/foundation.dart';
@@ -24,6 +25,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../model/emoji_message.dart';
 import '../model/remote_activity_data.dart';
 import '../screens/bottomsheet/transcription_screen.dart';
+import '../utils/constants.dart';
 import '../utils/utils.dart';
 import 'method_channels/reply_kit.dart';
 
@@ -236,7 +238,12 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     ..on<ParticipantNameUpdatedEvent>((event) {
       _sortParticipants();
     })
-    ..on<ParticipantMetadataUpdatedEvent>((event) {})
+    ..on<ParticipantMetadataUpdatedEvent>((event) {
+      var viewModel = _livekitProviderKey.currentState?.viewModel;
+      StorageHelper().saveData(Constant.MEETING_UID, viewModel?.meetingDetails.meeting_uid ?? "");
+      StorageHelper().saveData(Constant.SESSION_UID, Utils.getMetadataSessionUid(event.metadata));
+      StorageHelper().saveData(Constant.ATTENDANCE_ID, Utils.getMetadataAttendanceId(event.metadata));
+    })
     ..on<RoomMetadataChangedEvent>((event) {})
     ..on<DataReceivedEvent>((event) {
       _handleDataChannel(event);
@@ -335,6 +342,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               remoteData.token ?? "";
         } else {
           viewModel?.setCoHost(false);
+          StorageHelper().clearAllData();
         }
         break;
 

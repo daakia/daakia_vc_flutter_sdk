@@ -116,6 +116,36 @@ class Utils {
     }
   }
 
+  static String getMetadataAttendanceId(String? metadata) {
+    if (metadata == null) return '';
+
+    try {
+      // Parse the JSON string
+      final Map<String, dynamic> jsonData = jsonDecode(metadata);
+      // Return the `meeting_attendance_id` if it exists, otherwise null
+      return jsonData['meeting_attendance_id'].toString();
+    } catch (e) {
+      // Handle JSON parsing errors
+      debugPrint('Error parsing JSON: $e');
+      return "";
+    }
+  }
+
+  static String getMetadataSessionUid(String? metadata) {
+    if (metadata == null) return '';
+
+    try {
+      // Parse the JSON string
+      final Map<String, dynamic> jsonData = jsonDecode(metadata);
+      // Return the `meeting_attendance_id` if it exists, otherwise null
+      return jsonData['current_session_uid'].toString();
+    } catch (e) {
+      // Handle JSON parsing errors
+      debugPrint('Error parsing JSON: $e');
+      return "";
+    }
+  }
+
   static String getParticipantType(String? metadata) {
     String role = getMetadataRole(metadata);
 

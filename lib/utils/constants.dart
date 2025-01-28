@@ -5,6 +5,10 @@ class Constant {
 
   static final String PLATFORM = getPlatform();
 
+  static const String MEETING_UID = "MEETING_UID";
+  static const String SESSION_UID = "SESSION_UID";
+  static const String ATTENDANCE_ID = "ATTENDANCE_ID";
+
   static String getPlatform() {
     if (Platform.isAndroid) {
       return "android";
