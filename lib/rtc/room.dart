@@ -211,7 +211,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       if (_configRecordingTimer?.isActive ?? false) {
         _configRecordingTimer?.cancel();
       }
-      _configRecordingTimer = Timer(const Duration(seconds: 2), () {
+      _configRecordingTimer = Timer(const Duration(seconds: 5), () {
         viewModel?.configAutoRecording();
       });
     })
