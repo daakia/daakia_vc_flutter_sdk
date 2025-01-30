@@ -413,7 +413,7 @@ class RtcViewmodel extends ChangeNotifier {
 
   bool get isRecording => _isRecording;
 
-  void startRecording() {
+  void startRecording({bool isNeedToShowError = true}) {
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meeting_uid,
     };
@@ -424,7 +424,9 @@ class RtcViewmodel extends ChangeNotifier {
         setRecording(true);
         sendMessageToUI("Recording Starting");
       } else {
-        sendMessageToUI(response.message ?? "Something went wrong!");
+        if(isNeedToShowError) {
+          sendMessageToUI(response.message ?? "Something went wrong!");
+        }
       }
     });
   }
@@ -1129,7 +1131,7 @@ class RtcViewmodel extends ChangeNotifier {
         var meetingConfig = meetingDetails.meetingBasicDetails?.meetingConfig!;
         if(meetingConfig?.recordingForceStopped != 1 && meetingConfig?.autoStartRecording == 1){
           if(!isRecording) {
-            startRecording();
+            startRecording(isNeedToShowError: false);
           }
         }
       }

@@ -289,7 +289,7 @@ class RemoteTrackPublicationMenuWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: Colors.black.withOpacity(0.3),
+        color: Colors.black.withValues(alpha: 0.3),
         child: PopupMenuButton<Function>(
           tooltip: 'Subscribe menu',
           icon: Icon(icon,
@@ -328,7 +328,7 @@ class RemoteTrackFPSMenuWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: Colors.black.withOpacity(0.3),
+        color: Colors.black.withValues(alpha: 0.3),
         child: PopupMenuButton<Function>(
           tooltip: 'Preferred FPS',
           icon: Icon(icon, color: Colors.white),
@@ -363,7 +363,7 @@ class RemoteTrackQualityMenuWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: Colors.black.withOpacity(0.3),
+        color: Colors.black.withValues(alpha: 0.3),
         child: PopupMenuButton<Function>(
           tooltip: 'Preferred Quality',
           icon: Icon(icon, color: Colors.white),
