@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## v3.0.0 (2025-02)
+
+### 🚀 New Features
+- **Live Transcription:** Automatically transcribe meetings in real time.
+- **Translation:** Support for multilingual translations during meetings.
+- **End Meeting:** Hosts can now end meetings for all participants.
+- **Scheduled Meeting End:** Meetings will now automatically end at the scheduled time based on the subscription plan.
+- **Co-Host Modification:** Enhanced co-host management capabilities.
+- **Participant Name Change:** Participants can update their display names during a meeting.
+- **Auto-Recording:** Meetings now support automatic recording upon start.
+
+### 🛠 Bug Fixes & Improvements
+- Stability enhancements and performance optimizations.
+- General UI and user experience improvements.
+
+
 ## 2.1.3 (2025-01)
 
 **Enhancements:**
