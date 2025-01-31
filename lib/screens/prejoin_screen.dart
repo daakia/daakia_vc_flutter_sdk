@@ -422,7 +422,14 @@ class _PreJoinState extends State<PreJoinScreen> {
               onPressed: () {
                 String email = emailController.text;
                 String pin = pinController.text;
-
+                if(!Utils.isValidEmail(email)){
+                  Utils.showSnackBar(context, message: "Please enter your valid email");
+                  return;
+                }
+                if(pin.isEmpty){
+                  Utils.showSnackBar(context, message: "Please enter your pin");
+                  return;
+                }
                 verifyHost(email, pin, stopLoading);
 
                 // Close the dialog
