@@ -1,3 +1,4 @@
+@Deprecated("Use TranslationData")
 class TranslateBaseModel {
   String? status;
   String? code;

@@ -1076,12 +1076,13 @@ class RtcViewmodel extends ChangeNotifier {
   void translateText(TranscriptionModel transcriptionData,
       {Function? callBack}) {
     Map<String, dynamic> body = {
+      "meeting_uid": meetingDetails.meeting_uid,
       "source_language": transcriptionData.sourceLang,
       "target_language": translationLanguage?.code,
       "text": transcriptionData.transcription,
     };
-    apiClientTranslate.translateText(body).then((response) {
-      if (response.status == "success") {
+    apiClient.translateText(body).then((response) {
+      if (response.success == 1) {
         _updateTranscriptionInList(transcriptionData.copyWith(
             translatedTranscription: response.data?.translatedText,
             targetLang: translationLanguage?.code));

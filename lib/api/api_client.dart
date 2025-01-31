@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:daakia_vc_flutter_sdk/model/feature_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/licence_verify_model.dart';
-import 'package:daakia_vc_flutter_sdk/model/translate_base_model.dart';
+import 'package:daakia_vc_flutter_sdk/model/translation_data.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
@@ -108,13 +108,13 @@ abstract class RestClient {
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("api/translator/translate/text")
-  Future<TranslateBaseModel> translateText(
+  @POST("rtc/meeting/text/translation")
+  Future<BaseResponse<TranslationData>> translateText(
     @Body() Map<String, dynamic> body,
   );
 
   @POST("rtc/meeting/updateParticipant/name")
   Future<BaseResponse> updateParticipantName(
-      @Body() Map<String, dynamic> body,
-      );
+    @Body() Map<String, dynamic> body,
+  );
 }
