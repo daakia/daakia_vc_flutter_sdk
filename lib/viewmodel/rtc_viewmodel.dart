@@ -899,6 +899,9 @@ class RtcViewmodel extends ChangeNotifier {
 
   // Setter method to set the value of _transcriptionLanguageData
   set transcriptionLanguageData(TranscriptionActionModel? value) {
+    if (value != null) {
+      value.sourceLang ??= value.langCode;
+    }
     _transcriptionLanguageData = value;
     notifyListeners();
   }
@@ -1087,8 +1090,11 @@ class RtcViewmodel extends ChangeNotifier {
             translatedTranscription: response.data?.translatedText,
             targetLang: translationLanguage?.code));
         callBack?.call();
+      } else{
+        callBack?.call();
       }
     }).onError((e, _) {
+      callBack?.call();
       sendMessageToUI("Something went wrong!");
     });
   }
