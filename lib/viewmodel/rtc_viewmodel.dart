@@ -441,6 +441,9 @@ class RtcViewmodel extends ChangeNotifier {
       if (response.success == 1) {
         setRecording(false);
         sendMessageToUI("Recording Stop");
+        try{
+          meetingDetails.meetingBasicDetails?.meetingConfig?.recordingForceStopped = 1;
+        } catch(_) {}
       } else {
         sendMessageToUI(response.message ?? "Something went wrong!");
       }
