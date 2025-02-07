@@ -128,6 +128,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     viewModel?.stopLobbyCheck();
     viewModel?.cancelRoomEvents();
     meetingManager.cancelMeetingEndScheduler();
+    widget.room.disconnect();
     // always dispose listener
     (() async {
       if (lkPlatformIs(PlatformType.iOS)) {
@@ -247,10 +248,6 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       _sortParticipants();
     })
     ..on<ParticipantMetadataUpdatedEvent>((event) {
-      var viewModel = _livekitProviderKey.currentState?.viewModel;
-      StorageHelper().saveData(Constant.MEETING_UID, viewModel?.meetingDetails.meeting_uid ?? "");
-      StorageHelper().saveData(Constant.SESSION_UID, Utils.getMetadataSessionUid(event.metadata));
-      StorageHelper().saveData(Constant.ATTENDANCE_ID, Utils.getMetadataAttendanceId(event.metadata));
     })
     ..on<RoomMetadataChangedEvent>((event) {})
     ..on<DataReceivedEvent>((event) {
@@ -348,6 +345,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           viewModel?.setCoHost(true);
           viewModel?.meetingDetails.authorization_token =
               remoteData.token ?? "";
+          var metadata = viewModel?.room.localParticipant?.metadata;
+          StorageHelper().saveData(Constant.MEETING_UID, viewModel?.meetingDetails.meeting_uid ?? "");
+          StorageHelper().saveData(Constant.SESSION_UID, Utils.getMetadataSessionUid(metadata));
+          StorageHelper().saveData(Constant.ATTENDANCE_ID, Utils.getMetadataAttendanceId(metadata));
         } else {
           viewModel?.setCoHost(false);
           StorageHelper().clearAllData();
@@ -568,6 +569,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
                 if (Navigator.canPop(context)) {
                   Navigator.of(context).pop(); // Exit to previous page
                 }
+                _isProgrammaticPop = true;
               });
             }
           },
@@ -731,6 +733,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         if (mounted) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             closeMeetingProgrammatically(context);
+            widget.room.disconnect();
           });
         }
       }

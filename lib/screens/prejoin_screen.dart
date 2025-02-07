@@ -957,7 +957,7 @@ class _PreJoinState extends State<PreJoinScreen> {
     );
   }
 
-  void checkMeetingType(Function stopLoading) {
+  Future<void> checkMeetingType(Function stopLoading) async {
     var event = widget.basicMeetingDetails;
     if (widget.isHost) {
       getFeaturesAndJoinMeeting(stopLoading);
@@ -975,7 +975,7 @@ class _PreJoinState extends State<PreJoinScreen> {
       }
       verifyCommonPasswordProtectedMeeting(stopLoading);
     } else {
-      if (event?.isLobbyMode == true) {
+      if (event?.isLobbyMode == true && !await shouldAddAttendanceId()) {
         addParticipantToLobby(stopLoading);
         // startAddingParticipantsPool(stopLoading);
       } else {
@@ -983,6 +983,14 @@ class _PreJoinState extends State<PreJoinScreen> {
       }
     }
   }
+
+  Future<bool> shouldAddAttendanceId() async {
+    final cacheData = StorageHelper();
+    return await cacheData.getData(Constant.MEETING_UID) == widget.meetingId &&
+        await cacheData.getData(Constant.SESSION_UID) == widget.basicMeetingDetails?.currentSessionUid &&
+        await cacheData.getData(Constant.ATTENDANCE_ID) != "";
+  }
+
 
   bool checkValidity() {
     var isValid = false;
@@ -1055,8 +1063,8 @@ class _PreJoinState extends State<PreJoinScreen> {
     Utils.showSnackBar(context, message: message);
   }
 
-  void passwordVerified(Function stopLoading) {
-    if (widget.basicMeetingDetails?.isLobbyMode == true) {
+  Future<void> passwordVerified(Function stopLoading) async {
+    if (widget.basicMeetingDetails?.isLobbyMode == true &&  !await shouldAddAttendanceId()) {
       // startAddingParticipantsPool(stopLoading);
       addParticipantToLobby(stopLoading);
     } else {

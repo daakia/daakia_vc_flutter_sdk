@@ -195,7 +195,7 @@ class _RtcControlState extends State<RtcControls> {
     final result = await context.showDisconnectDialog();
     if (result == true) {
       viewModel.isMeetingEnded = true;
-      await widget.room.disconnect();
+      viewModel.sendEvent(EndMeeting());
     }
   }
 
