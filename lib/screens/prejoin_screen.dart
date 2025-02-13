@@ -789,11 +789,6 @@ class _PreJoinState extends State<PreJoinScreen> {
                               message: "Please enter your name");
                           return;
                         }
-                        if (meetingManager.isMeetingEnded()) {
-                          Utils.showSnackBar(context,
-                              message: "The meeting has already ended!");
-                          return;
-                        }
                         if (!widget.isHost) {
                           var event = widget.basicMeetingDetails;
                           if (event?.isStandardPassword == true) {
@@ -852,6 +847,17 @@ class _PreJoinState extends State<PreJoinScreen> {
     apiClient.getFeatures(widget.meetingId).then((response) {
       if (response.success == 1) {
         features = response.data?.features;
+        if (meetingManager.isMeetingEnded() && features?.isBasicPlan() == true && mounted) {
+          // Prevents joining if the meeting has already ended and the user is on a basic plan.
+          setState(() {
+            isLoading = false;
+            isNeedToCancelApiCall = true;
+            stopLoading.call();
+          });
+          Utils.showSnackBar(context,
+              message: "The meeting has already ended!");
+          return;
+        }
         if (isLobby) {
           joinMeeting(stopLoading, isParticipant: true);
         } else {
