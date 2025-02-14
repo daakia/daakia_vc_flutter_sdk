@@ -1,9 +1,11 @@
 
 ![Logo](https://www.f6s.com/content-resource/media/4017238_b1244117504746312035f33e4d2d052109f7b7e5.jpg)
 
+## Supported Platforms
+✅ **Android**  | ✅ **iOS**
+
 
 # How to use
-
 
 
 
