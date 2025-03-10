@@ -165,18 +165,27 @@ class TranscriptionDetail {
 class MeetingConfig {
   int? autoStartRecording;
   int? recordingForceStopped;
+  int? autoMeetingEnd;
+  String? autoMeetingEndSchedule;
+  String? autoMeetingEndScheduleTimezoneFormated;
 
-  MeetingConfig({autoStartRecording, recordingForceStopped});
+  MeetingConfig({autoStartRecording, recordingForceStopped, autoMeetingEnd, autoMeetingEndSchedule, autoMeetingEndScheduleTimezoneFormated});
 
   MeetingConfig.fromJson(Map<String, dynamic> json) {
     autoStartRecording = json['auto_start_recording'];
     recordingForceStopped = json['recording_force_stopped'];
+    autoMeetingEnd = json['auto_meeting_end'];
+    autoMeetingEndSchedule = json['auto_meeting_end_schedule'];
+    autoMeetingEndScheduleTimezoneFormated = json['auto_meeting_end_schedule_timezone_formated'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['auto_start_recording'] = autoStartRecording;
     data['recording_force_stopped'] = recordingForceStopped;
+    data['auto_meeting_end'] = autoMeetingEnd;
+    data['auto_meeting_end_schedule'] = autoMeetingEndSchedule;
+    data['auto_meeting_end_schedule_timezone_formated'] = autoMeetingEndScheduleTimezoneFormated;
     return data;
   }
 }

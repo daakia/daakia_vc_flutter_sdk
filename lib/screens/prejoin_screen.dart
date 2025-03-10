@@ -80,9 +80,13 @@ class _PreJoinState extends State<PreJoinScreen> {
         Hardware.instance.onDeviceChange.stream.listen(_loadDevices);
     Hardware.instance.enumerateDevices().then(_loadDevices);
     meetingManager = MeetingManager(
-        endDate: widget.basicMeetingDetails?.endDate,
-        endMeetingCallBack: () {});
+        endDate: getMeetingEndDate(),
+        endMeetingCallBack: (event) {}, context: context);
     super.initState();
+  }
+
+  String? getMeetingEndDate(){
+    return widget.basicMeetingDetails?.meetingConfig?.autoMeetingEndSchedule ?? widget.basicMeetingDetails?.endDate;
   }
 
   void _loadDevices(List<MediaDevice> devices) async {
@@ -833,6 +837,17 @@ class _PreJoinState extends State<PreJoinScreen> {
     apiClient.getFeatures(widget.meetingId).then((response) {
       if (response.success == 1) {
         features = response.data?.features;
+        if (meetingManager.isMeetingEnded() && widget.basicMeetingDetails?.meetingConfig?.autoMeetingEnd == 1 && mounted) {
+          // Prevents joining if the meeting has already ended and the user has Auto-Meeting-End enabled.
+          setState(() {
+            isLoading = false;
+            isNeedToCancelApiCall = true;
+            stopLoading.call();
+          });
+          Utils.showSnackBar(context,
+              message: "The meeting has already ended!");
+          return;
+        }
         if (meetingManager.isMeetingEnded() && features?.isBasicPlan() == true && mounted) {
           // Prevents joining if the meeting has already ended and the user is on a basic plan.
           setState(() {

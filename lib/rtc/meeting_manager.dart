@@ -1,79 +1,118 @@
 import 'dart:async';
+import 'package:daakia_vc_flutter_sdk/events/meeting_end_events.dart';
+import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class MeetingManager {
-  final String? endDate;
+  DateTime? endDateTime;
   Timer? popupTimer;
   Timer? endMeetingTimer;
-  VoidCallback endMeetingCallBack;
+  Function(MeetingEndEvents event) endMeetingCallBack;
+  bool? isAutoMeetingEnd = false;
+  late BuildContext _globalContext; // Store a safe context
 
-  MeetingManager({required this.endDate, required this.endMeetingCallBack});
-
-  void startMeetingEndScheduler(BuildContext context) {
-    if (endDate == null || endDate!.isEmpty) {
-      // If endDate is null or empty, skip scheduling
-      return;
-    }
-
-    // Parse endDate
-    final DateTime? endDateTime = _parseEndDate(endDate!);
+  MeetingManager({required String? endDate, required this.endMeetingCallBack, required BuildContext context, this.isAutoMeetingEnd}) {
+    _globalContext = context; // Store a parent-level context
+    endDateTime = _parseEndDate(endDate);
     if (endDateTime == null) {
-      // If parsing fails, log or handle the error
-      debugPrint("Invalid endDate format");
+      debugPrint("Error: Invalid endDate format. Meeting scheduling will not proceed.");
+    }
+  }
+
+  bool _canExtendMeeting() => isAutoMeetingEnd == true;
+
+  void startMeetingEndScheduler() {
+    if (endDateTime == null) {
+      debugPrint("Skipping scheduling due to invalid endDate.");
       return;
     }
+    _scheduleTimers();
+  }
+
+  void _scheduleTimers() {
+    if (endDateTime == null) return;
 
     final DateTime currentTime = DateTime.now();
-    final Duration timeDifference = endDateTime.difference(currentTime);
+    final Duration timeDifference = endDateTime!.difference(currentTime);
 
     if (timeDifference.isNegative) {
-      // If endDate is in the past, end the meeting immediately
-      _endMeeting(context);
+      _endMeeting();
       return;
     }
 
-    // Schedule popup 5 minutes before the end
-    final Duration popupDuration = timeDifference - const Duration(minutes: 5);
+    // Schedule popup MEETING_ENDING_SOON_TIME minutes before the end time
+    final Duration popupDuration = timeDifference - const Duration(minutes: Constant.MEETING_ENDING_SOON_TIME);
     if (popupDuration > Duration.zero) {
+      popupTimer?.cancel();
       popupTimer = Timer(popupDuration, () {
-        _showEndingSoonPopup(context);
+        if (_globalContext.mounted) {
+          _showEndingSoonPopup();
+        }
       });
     }
 
     // Schedule meeting end
+    endMeetingTimer?.cancel();
     endMeetingTimer = Timer(timeDifference, () {
-      _endMeeting(context);
+      _endMeeting();
     });
   }
 
-  void _showEndingSoonPopup(BuildContext context) {
+  void _showEndingSoonPopup() {
+    if (!_globalContext.mounted) return; // Prevent crashes
+
     showDialog(
-      context: context,
+      context: _globalContext,
       builder: (context) => AlertDialog(
         title: const Text("Meeting Ending Soon"),
-        content: const Text("The meeting will end in 5 minutes."),
+        content: Text(
+          _canExtendMeeting()
+              ? "The meeting will end in ${Constant.MEETING_ENDING_SOON_TIME} minutes. You can extend it by ${Constant.MEETING_EXTEND_TIME} minutes."
+              : "The meeting will end in ${Constant.MEETING_ENDING_SOON_TIME} minutes.",
+        ),
         actions: [
+          if (_canExtendMeeting())
+            TextButton(
+              onPressed: () {
+                endMeetingCallBack.call(MeetingExtends());
+                extendMeetingBy10Minutes();
+                Navigator.of(context).pop();
+              },
+              child: const Text("Extend"),
+            ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text("OK"),
+            child: const Text("Dismiss"),
           ),
         ],
       ),
     );
   }
 
-  void _endMeeting(BuildContext context) {
-    endMeetingCallBack.call();
+  void extendMeetingBy10Minutes() {
+    if (endDateTime == null) {
+      debugPrint("Error: Cannot extend meeting. endDateTime is null.");
+      return;
+    }
+
+    endDateTime = endDateTime!.add(const Duration(minutes: Constant.MEETING_EXTEND_TIME));
+    debugPrint("Meeting extended by ${Constant.MEETING_EXTEND_TIME} minutes. New end time: $endDateTime");
+    _scheduleTimers();
+  }
+
+  void _endMeeting() {
+    endMeetingCallBack.call(MeetingEnd());
   }
 
   void cancelMeetingEndScheduler() {
-    // Cancel all timers
     popupTimer?.cancel();
     endMeetingTimer?.cancel();
   }
 
-  DateTime? _parseEndDate(String endDate) {
+  DateTime? _parseEndDate(String? endDate) {
+    if (endDate == null || endDate.isEmpty) return null;
+
     try {
       return DateFormat("yyyy-MM-ddTHH:mm:ss.SSSZ").parse(endDate, true).toLocal();
     } catch (e) {
@@ -82,18 +121,8 @@ class MeetingManager {
     }
   }
 
-  /// Function to check if the meeting has ended
   bool isMeetingEnded() {
-    if (endDate == null || endDate!.isEmpty) {
-      return false; // No end date, so the meeting is ongoing
-    }
-
-    final DateTime? endDateTime = _parseEndDate(endDate!);
-    if (endDateTime == null) {
-      return false; // Unable to parse the end date, assume ongoing
-    }
-
-    final DateTime currentTime = DateTime.now();
-    return currentTime.isAfter(endDateTime); // Check if the current time is past the end time
+    if (endDateTime == null) return false;
+    return DateTime.now().isAfter(endDateTime!);
   }
 }

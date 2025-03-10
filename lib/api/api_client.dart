@@ -117,4 +117,10 @@ abstract class RestClient {
   Future<BaseResponse> updateParticipantName(
     @Body() Map<String, dynamic> body,
   );
+
+  @POST("rtc/meeting/time/extend")
+  Future<BaseResponse> meetingTimeExtend(
+      @Header("Authorization") String token,
+      @Body() Map<String, dynamic> body,
+  );
 }

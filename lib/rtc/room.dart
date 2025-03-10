@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:animated_emoji/emoji_data.dart';
 import 'package:animated_emoji/emojis.g.dart';
+import 'package:daakia_vc_flutter_sdk/events/meeting_end_events.dart';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/lobby_request_manager.dart';
@@ -97,10 +98,14 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       if (!fastConnection) {
         _askPublish();
       }
-      meetingManager = MeetingManager(endDate: viewModel?.meetingDetails.meetingBasicDetails?.endDate, endMeetingCallBack: (){
-        _meetingEndLogic(viewModel);
-      });
-      meetingManager.startMeetingEndScheduler(context);
+      meetingManager = MeetingManager(endDate: viewModel?.getMeetingEndDate(), isAutoMeetingEnd: viewModel?.isAutoMeetingEndEnable(), endMeetingCallBack: (event) {
+        if(event is MeetingEnd) {
+          _meetingEndLogic(viewModel);
+        } else if(event is MeetingExtends){
+          viewModel?.meetingTimeExtend();
+        }
+      }, context: context);
+      meetingManager.startMeetingEndScheduler();
     });
 
     if (lkPlatformIs(PlatformType.android)) {
@@ -401,6 +406,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
       case "request-livecaption-drawer-state":
         viewModel?.checkTranscriptionStateAndReturn(remoteData);
+        break;
+
+      case "extend-meeting-end-time":
+        showSnackBar(message: "Meeting has been extended by 10 minutes.");
+        meetingManager.extendMeetingBy10Minutes();
         break;
 
       case "":
@@ -783,6 +793,18 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   }
 
   void _meetingEndLogic(RtcViewmodel? viewModel){
+    //TODO NEED TO UPDATE LOGIC
+    if(viewModel?.meetingDetails.meetingBasicDetails?.meetingConfig?.autoMeetingEnd == 1){
+      showSnackBar(message: "Meeting ended");
+      Timer(const Duration(seconds: 3), () {
+        if (mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            closeMeetingProgrammatically(context);
+          });
+        }
+      });
+      return;
+    }
     if(viewModel?.meetingDetails.features?.isBasicPlan() == true){
       showSnackBar(message: "Meeting ended");
       Timer(const Duration(seconds: 3), () {

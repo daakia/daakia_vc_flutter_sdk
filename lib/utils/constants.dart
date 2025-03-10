@@ -1,13 +1,16 @@
 import 'dart:io';
 
 class Constant {
-  static const bool RELEASE = true;
+  static const bool RELEASE = false;
 
   static final String PLATFORM = getPlatform();
 
   static const String MEETING_UID = "MEETING_UID";
   static const String SESSION_UID = "SESSION_UID";
   static const String ATTENDANCE_ID = "ATTENDANCE_ID";
+
+  static const int MEETING_EXTEND_TIME = 10;
+  static const int MEETING_ENDING_SOON_TIME = 10;
 
   static String getPlatform() {
     if (Platform.isAndroid) {
