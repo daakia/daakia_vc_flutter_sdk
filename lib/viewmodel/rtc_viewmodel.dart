@@ -1147,4 +1147,27 @@ class RtcViewmodel extends ChangeNotifier {
       }
     }
   }
+
+  void meetingTimeExtend() {
+    Map<String, dynamic> body = {
+      "meeting_uid": meetingDetails.meeting_uid,
+      "is_extend_time": true,
+    };
+    apiClient.meetingTimeExtend(meetingDetails.authorization_token, body).then((response){
+      if(response.success == 1){
+        sendAction(ActionModel(action: "extend-meeting-end-time"));
+      }
+    });
+  }
+
+  bool isAutoMeetingEndEnable() {
+    if(isHost() && meetingDetails.meetingBasicDetails?.meetingConfig?.autoMeetingEnd == 1){
+      return true;
+    }
+    return false;
+  }
+
+  String? getMeetingEndDate() {
+    return meetingDetails.meetingBasicDetails?.meetingConfig?.autoMeetingEndSchedule ?? meetingDetails.meetingBasicDetails?.endDate;
+  }
 }
