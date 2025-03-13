@@ -1,16 +1,32 @@
-# example
+# Daakia Video Conference Flutter SDK - Example
 
-A new Flutter project.
+This example demonstrates how to integrate the Daakia Video Conference Flutter SDK with user input for meeting credentials.
 
-## Getting Started
+## Prerequisites
 
-This project is a starting point for a Flutter application.
+* Flutter SDK installed.
+* Valid `meetingId` and `secretKey` (license key) obtained from [Daakia](https://www.daakia.co.in/).
 
-A few resources to get you started if this is your first Flutter project:
+## Setup
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+1.  **Clone & Get Dependencies:**
+    ```bash
+    git clone [repository_url]
+    cd [repository_directory]/example
+    flutter pub get
+    ```
+2.  **Run the App:**
+    ```bash
+    flutter run
+    ```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Usage
+
+* Enter your `License Key` and `Meeting UID` into the provided text fields.
+* Use the "Host" toggle to specify if you are the meeting host.
+* Tap the "Test SDK" button to initiate the video conference using the entered credentials.
+* The app validates the input fields; an error message is displayed if any field is empty.
+
+## Support
+
+For assistance, please contact [contact@daakia.co.in](mailto:contact@daakia.co.in).
