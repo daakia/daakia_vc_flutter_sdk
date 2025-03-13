@@ -1,5 +1,10 @@
 
-![Logo](https://www.f6s.com/content-resource/media/4017238_b1244117504746312035f33e4d2d052109f7b7e5.jpg)
+![Logo](https://www.daakia.co.in/assets/images/frontend/logo-dark.svg)
+
+# Daakia VC Flutter SDK
+Integrate Daakia's video conferencing capabilities into your Flutter applications with ease.
+
+This SDK provides a simple and efficient way to add video conferencing features to your Flutter apps, supporting both Android and iOS platforms.
 
 ## Supported Platforms
 ✅ **Android**  | ✅ **iOS**
@@ -41,7 +46,7 @@ We require a set of permissions that need to be declared in your AppManifest.xml
   ...
 </manifest>
 ```
-## iOs
+## iOS
 
 Camera and microphone usage need to be declared in your `Info.plist` file.
 
@@ -107,6 +112,18 @@ To run the `DaakiaVideoConferenceWidget`, you will need to pass the following pa
   This optional parameter defines the user's role. When set to `true`, the user will join as the host of the meeting; otherwise, they will be a participant.
 
 
+## Obtaining Meeting ID and License Key
+
+To use the Daakia Video Conference SDK, you will need a `meetingId` and a `secretKey` (license key). These are required for accessing and initiating meetings.
+
+**How to Obtain:**
+
+* **Contact Us:** Reach out to us directly at [contact@daakia.co.in](mailto:contact@daakia.co.in). Our team will assist you in setting up your account and providing the necessary credentials.
+* **Visit Our Website:** You can also find more information and request access by visiting our website: [https://www.daakia.co.in/](https://www.daakia.co.in/).
+
+We will guide you through the process of creating meetings and obtaining your unique license key.
+
+
 
 ## Screen Share
 
@@ -135,7 +152,7 @@ In the app's AndroidManifest.xml file, declare the service with the appropriate 
   </application>
 </manifest>
 ```
-### iOs
+### iOS
 On iOS, a broadcast extension is needed in order to capture screen content from other apps. See For iOS-specific setup, refer to the [setup guide](example/ios/README.md) for instructions.
 ## Support
 
