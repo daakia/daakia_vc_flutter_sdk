@@ -36,8 +36,8 @@ class DataEntryScreen extends StatefulWidget {
 }
 
 class _DataEntryState extends State<DataEntryScreen> {
-  var licenseKey = "";
-  var meetingUID = "";
+  var licenseKey = '';
+  var meetingUID = '';
   var isHost = false;
 
   @override
@@ -97,8 +97,9 @@ class _DataEntryState extends State<DataEntryScreen> {
             const SizedBox(height: 50),
             ElevatedButton(
                 onPressed: () async {
-                  if(licenseKey.isEmpty || meetingUID.isEmpty){
-                    Utils.showSnackBar(context, message: "Those fields are mandatory!");
+                  if (licenseKey.isEmpty || meetingUID.isEmpty) {
+                    Utils.showSnackBar(context,
+                        message: "Those fields are mandatory!");
                     return;
                   }
                   await Navigator.push<void>(
