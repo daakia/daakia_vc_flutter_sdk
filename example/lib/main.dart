@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'Daakia VC Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -36,8 +36,8 @@ class DataEntryScreen extends StatefulWidget {
 }
 
 class _DataEntryState extends State<DataEntryScreen> {
-  var licenseKey = '';
-  var meetingUID = '';
+  var licenseKey = "";
+  var meetingUID = "";
   var isHost = false;
 
   @override
