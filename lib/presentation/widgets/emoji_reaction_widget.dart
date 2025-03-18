@@ -1,4 +1,4 @@
-import 'package:daakia_vc_flutter_sdk/screens/customWidget/reaction_bubble.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/reaction_bubble.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

@@ -5,7 +5,7 @@ import '../../model/action_model.dart';
 import '../../utils/meeting_actions.dart';
 import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
-import 'chat_controller.dart';
+import '../pages/chat_controller.dart';
 
 class ParticipantDialogControls extends StatefulWidget {
   const ParticipantDialogControls(

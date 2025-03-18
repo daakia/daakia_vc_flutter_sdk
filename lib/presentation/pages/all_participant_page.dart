@@ -1,5 +1,5 @@
-  import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/pariticipant_dialog_controls.dart';
-  import 'package:daakia_vc_flutter_sdk/screens/customWidget/participant_tile.dart';
+  import 'package:daakia_vc_flutter_sdk/presentation/dialog/pariticipant_dialog_controls.dart';
+  import 'package:daakia_vc_flutter_sdk/presentation/widgets/participant_tile.dart';
   import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
   import 'package:flutter/material.dart';
   import 'package:provider/provider.dart';
@@ -7,8 +7,8 @@
   import '../../resources/colors/color.dart';
   import '../../viewmodel/rtc_viewmodel.dart';
 
-  class AllParticipantBottomsheet extends StatelessWidget {
-    const AllParticipantBottomsheet({super.key});
+  class AllParticipantPage extends StatelessWidget {
+    const AllParticipantPage({super.key});
 
     @override
     Widget build(BuildContext context) {
