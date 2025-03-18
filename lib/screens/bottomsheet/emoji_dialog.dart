@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../../events/rtc_events.dart';
 import '../../model/action_model.dart';
+import '../../utils/meeting_actions.dart';
 
 class EmojiDialog extends StatefulWidget {
   const EmojiDialog(this.viewModel, {super.key});
@@ -96,11 +97,11 @@ class _EmojiDialogState extends State<EmojiDialog>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildIcon(context, AnimatedEmojis.redHeart, 0, "heart"),
-                _buildIcon(context, AnimatedEmojis.blush, 1, "blush"),
-                _buildIcon(context, AnimatedEmojis.clap, 2, "clap"),
-                _buildIcon(context, AnimatedEmojis.smile, 3, "smile"),
-                _buildIcon(context, AnimatedEmojis.thumbsUp, 4, "thumbsUp"),
+                _buildIcon(context, AnimatedEmojis.redHeart, 0, MeetingActions.heart),
+                _buildIcon(context, AnimatedEmojis.blush, 1, MeetingActions.blush),
+                _buildIcon(context, AnimatedEmojis.clap, 2, MeetingActions.clap),
+                _buildIcon(context, AnimatedEmojis.smile, 3, MeetingActions.smile),
+                _buildIcon(context, AnimatedEmojis.thumbsUp, 4, MeetingActions.thumbsUp),
               ],
             ),
           ),

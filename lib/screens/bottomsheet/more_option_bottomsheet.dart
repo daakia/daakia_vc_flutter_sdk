@@ -9,8 +9,10 @@ import 'package:flutter_background/flutter_background.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:provider/provider.dart';
+
 import '../../model/action_model.dart';
 import '../../resources/colors/color.dart';
+import '../../utils/meeting_actions.dart';
 import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import 'emoji_dialog.dart';
@@ -75,19 +77,22 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
               }),
               // Live Caption
               buildOption(context,
-                  icon: Icons.closed_caption, // Replace with your host control icon
+                  icon: Icons.closed_caption,
+                  // Replace with your host control icon
                   text: 'Live Captions',
-                  isVisible: viewModel.meetingDetails.features!.isVoiceTranscriptionAllowed() && (viewModel.isHost() || viewModel.isTranscriptionLanguageSelected),
+                  isVisible: viewModel.meetingDetails.features!
+                          .isVoiceTranscriptionAllowed() &&
+                      (viewModel.isHost() ||
+                          viewModel.isTranscriptionLanguageSelected),
                   onTap: () async {
-                    Navigator.pop(context);
-                    showLiveCaptions(viewModel);
-                  }),
+                Navigator.pop(context);
+                showLiveCaptions(viewModel);
+              }),
               // Host Controls
               buildOption(context,
                   icon: Icons.security, // Replace with your host control icon
                   text: 'Host Control',
-                  isVisible: viewModel.isHost(),
-                  onTap: () {
+                  isVisible: viewModel.isHost(), onTap: () {
                 Navigator.pop(context);
                 showWebinarControls();
               }),
@@ -98,8 +103,7 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                   text:
                       '${(viewModel.room.localParticipant?.isScreenShareEnabled() == true) ? "Stop" : "Start"} Screen Sharing',
                   isVisible: viewModel.meetingDetails.features!
-                      .isScreenSharingAllowed(),
-                  onTap: () {
+                      .isScreenSharingAllowed(), onTap: () {
                 Navigator.pop(context);
                 if (viewModel.room.localParticipant?.isScreenShareEnabled() ==
                     true) {
@@ -117,8 +121,9 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                   isVisible: viewModel.meetingDetails.features!
                       .isRaiseHandAllowed(), onTap: () {
                 viewModel.setMyHandRaised(!viewModel.isMyHandRaised);
-                var raisedHand =
-                    viewModel.isMyHandRaised ? "raise_hand" : "stop_raise_hand";
+                var raisedHand = viewModel.isMyHandRaised
+                    ? MeetingActions.raiseHand
+                    : MeetingActions.stopRaiseHand;
                 viewModel.sendAction(ActionModel(action: raisedHand));
                 Navigator.pop(context);
               }),
@@ -309,7 +314,7 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
     if (lkPlatformIs(PlatformType.android)) {
       // Android specific
       try {
-          await FlutterBackground.disableBackgroundExecution();
+        await FlutterBackground.disableBackgroundExecution();
       } catch (error) {
         if (kDebugMode) {
           print('error disabling screen share: $error');
@@ -367,5 +372,6 @@ Widget buildOption(BuildContext context,
 
 class BadgeData {
   int unreadCount;
+
   BadgeData(this.unreadCount);
 }
