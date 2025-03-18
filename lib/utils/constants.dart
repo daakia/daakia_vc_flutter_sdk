@@ -1,8 +1,6 @@
 import 'dart:io';
 
 class Constant {
-  static const bool RELEASE = true;
-
   static final String PLATFORM = getPlatform();
 
   static const String MEETING_UID = "MEETING_UID";
