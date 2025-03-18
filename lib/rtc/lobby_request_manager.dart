@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 
-import 'package:daakia_vc_flutter_sdk/screens/customWidget/initials_circle.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/initials_circle.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
 import 'package:flutter/material.dart';
 

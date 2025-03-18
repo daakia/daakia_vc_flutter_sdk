@@ -1,7 +1,7 @@
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/resources/colors/color.dart';
-import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/pariticipant_dialog_controls.dart';
-import 'package:daakia_vc_flutter_sdk/screens/customWidget/initials_circle.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/dialog/pariticipant_dialog_controls.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/initials_circle.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';

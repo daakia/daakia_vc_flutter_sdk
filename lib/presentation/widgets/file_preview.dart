@@ -1,7 +1,7 @@
 import 'dart:collection';
 import 'dart:io';
 
-import 'package:daakia_vc_flutter_sdk/screens/web_preview.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/screens/web_preview.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';

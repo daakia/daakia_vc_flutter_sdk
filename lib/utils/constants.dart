@@ -1,8 +1,6 @@
 import 'dart:io';
 
 class Constant {
-  static const bool RELEASE = true;
-
   static final String PLATFORM = getPlatform();
 
   static const String MEETING_UID = "MEETING_UID";
@@ -11,6 +9,8 @@ class Constant {
 
   static const int MEETING_EXTEND_TIME = 10;
   static const int MEETING_ENDING_SOON_TIME = 10;
+
+  static const int MAX_MESSAGE_SIZE = 16384; // 16 KB limit
 
   static String getPlatform() {
     if (Platform.isAndroid) {

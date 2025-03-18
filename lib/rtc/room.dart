@@ -11,8 +11,8 @@ import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant_info.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/pip_screen.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/rtc_controls.dart';
-import 'package:daakia_vc_flutter_sdk/screens/customWidget/emoji_reaction_widget.dart';
-import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/emoji_reaction_widget.dart';
+import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
 import 'package:daakia_vc_flutter_sdk/utils/storage_helper.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_provider.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
@@ -25,8 +25,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../model/emoji_message.dart';
 import '../model/remote_activity_data.dart';
-import '../screens/bottomsheet/transcription_screen.dart';
+import '../presentation/pages/transcription_screen.dart';
 import '../utils/constants.dart';
+import '../utils/meeting_actions.dart';
 import '../utils/utils.dart';
 import 'meeting_manager.dart';
 import 'method_channels/reply_kit.dart';
@@ -279,77 +280,72 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   late LobbyRequestManager? lobbyManager;
 
   Future<void> _checkReceivedDataType(RemoteActivityData remoteData) async {
-    debugPrint("Data Channel Action: ${remoteData.action}");
     var viewModel = _livekitProviderKey.currentState?.viewModel;
+    if(!MeetingActions.isValidAction(remoteData.action)) return;
     switch (remoteData.action) {
-      case "raise_hand":
+      case MeetingActions.raiseHand:
         viewModel?.setHandRaised(remoteData);
         showSnackBar(message: "${remoteData.identity?.name ?? ''} raised hand");
         break;
 
-      case "stop_raise_hand":
+      case MeetingActions.stopRaiseHand:
         viewModel?.setHandRaised(remoteData);
         break;
 
-      case "stop_raise_hand_all":
+      case MeetingActions.stopRaiseHandAll:
         viewModel?.stopHandRaisedForAll();
         break;
 
-      case "send_private_message":
-        if (remoteData.message != null &&
-            remoteData.message?.isNotEmpty == true) {
+      case MeetingActions.sendPrivateMessage:
+        if (remoteData.message?.isNotEmpty == true) {
           viewModel?.addPrivateMessage(remoteData);
         }
         break;
 
-      case "send_public_message":
-        if (remoteData.message != null &&
-            remoteData.message?.isNotEmpty == true) {
+      case MeetingActions.sendPublicMessage:
+        if (remoteData.message?.isNotEmpty == true) {
           viewModel?.addMessage(remoteData);
         }
         break;
 
-      case "lobby":
+      case MeetingActions.lobby:
         if (viewModel?.isHost() == true || viewModel?.isCoHost() == true) {
           viewModel?.checkAndAddUserToLobbyList(remoteData);
           lobbyManager?.showLobbyRequestDialog(remoteData);
         }
         break;
-      //
-      case "heart":
-      case "blush":
-      case "clap":
-      case "smile":
-      case "thumbsUp":
+
+      case MeetingActions.heart:
+      case MeetingActions.blush:
+      case MeetingActions.clap:
+      case MeetingActions.smile:
+      case MeetingActions.thumbsUp:
         showReaction(remoteData.action, viewModel,
             name: remoteData.identity?.name ?? '');
         break;
-      //
-      case "mute_camera":
+
+      case MeetingActions.muteCamera:
         viewModel?.disableVideo();
         break;
 
-      case "mute_mic":
+      case MeetingActions.muteMic:
         viewModel?.disableAudio();
         break;
-      //
-      case "ask_to_unmute_mic":
-        final result = await context
-            .showPermissionAskDialog("Host is asking you to turn on your mic");
+
+      case MeetingActions.askToUnmuteMic:
+        final result = await context.showPermissionAskDialog("Host is asking you to turn on your mic");
         if (result == true) viewModel?.enableAudio();
         break;
 
-      case "ask_to_unmute_camera":
-        final result = await context.showPermissionAskDialog(
-            "Host is asking you to turn on your camera");
+      case MeetingActions.askToUnmuteCamera:
+        final result = await context.showPermissionAskDialog("Host is asking you to turn on your camera");
         if (result == true) viewModel?.enableVideo();
         break;
 
-      case "makeCoHost":
+      case MeetingActions.makeCoHost:
         if (Utils.isCoHost(viewModel?.room.localParticipant?.metadata)) {
           viewModel?.setCoHost(true);
-          viewModel?.meetingDetails.authorization_token =
-              remoteData.token ?? "";
+          viewModel?.meetingDetails.authorization_token = remoteData.token ?? "";
           var metadata = viewModel?.room.localParticipant?.metadata;
           StorageHelper().saveData(Constant.MEETING_UID, viewModel?.meetingDetails.meeting_uid ?? "");
           StorageHelper().saveData(Constant.SESSION_UID, Utils.getMetadataSessionUid(metadata));
@@ -360,7 +356,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         }
         break;
 
-      case "force_mute_all":
+      case MeetingActions.forceMuteAll:
         viewModel?.isAudioPermissionEnable = !remoteData.value;
         if (!(viewModel?.isAudioPermissionEnable ?? false)) {
           viewModel?.disableAudio();
@@ -370,7 +366,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         }
         break;
 
-      case "force_video_off_all":
+      case MeetingActions.forceVideoOffAll:
         viewModel?.isVideoPermissionEnable = !remoteData.value;
         if (!(viewModel?.isVideoPermissionEnable ?? false)) {
           viewModel?.disableVideo();
@@ -380,7 +376,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         }
         break;
 
-      case "show-live-caption":
+      case MeetingActions.showLiveCaption:
         if (remoteData.liveCaptionsData != null) {
           if (viewModel == null) return;
           if (!viewModel.meetingDetails.features!.isVoiceTranscriptionAllowed()) return;
@@ -400,26 +396,28 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         }
         break;
 
-      case "live-caption":
+      case MeetingActions.liveCaption:
         viewModel?.collectTranscriptionData(remoteData);
         break;
 
-      case "request-livecaption-drawer-state":
+      case MeetingActions.requestLiveCaptionDrawerState:
         viewModel?.checkTranscriptionStateAndReturn(remoteData);
         break;
 
-      case "extend-meeting-end-time":
+      case MeetingActions.extendMeetingEndTime:
         showSnackBar(message: "Meeting has been extended by 10 minutes.");
         meetingManager.extendMeetingBy10Minutes();
         break;
 
       case "":
-        // Handle empty action case if needed
+      // Handle empty action case if needed
         break;
 
       default:
       // Handle null or unknown action
+        break;
     }
+
   }
 
   RemoteActivityData parseJsonData(List<int> jsonData) {

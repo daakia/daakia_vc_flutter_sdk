@@ -1,11 +1,11 @@
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
-import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/chat_bottomsheet.dart';
-import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/private_chat_bottomsheet.dart';
-import 'package:daakia_vc_flutter_sdk/screens/customWidget/loader.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/pages/private_chat_page.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../viewmodel/rtc_viewmodel.dart';
+import 'chat_page.dart';
 
 class ChatController extends StatefulWidget {
   const ChatController(
@@ -58,8 +58,8 @@ class _ChatControllerState extends State<ChatController> {
                 Expanded(
                   child: TabBarView(
                     children: [
-                      ChatBottomSheet(viewModel: widget.viewModel),
-                      PrivateChatBottomSheet(
+                      ChatPage(viewModel: widget.viewModel),
+                      PrivateChatPage(
                         viewModel: widget.viewModel,
                         identity: widget.identity,
                         name: widget.name,
