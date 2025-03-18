@@ -22,6 +22,7 @@ import '../model/meeting_details.dart';
 import '../model/private_chat_model.dart';
 import '../model/send_message_model.dart';
 import '../rtc/widgets/participant_info.dart';
+import '../utils/meeting_actions.dart';
 
 class RtcViewmodel extends ChangeNotifier {
   final List<RemoteActivityData> _messageList = [];
@@ -155,7 +156,7 @@ class RtcViewmodel extends ChangeNotifier {
   Future<void> sendPublicMessage(String userMessage) async {
     // Create a message
     final message = SendMessageModel(
-      action: "send_public_message",
+      action: MeetingActions.sendPublicMessage,
       id: const Uuid().v4(), // Generate a unique ID
       message: userMessage,
       timestamp: DateTime.now().millisecondsSinceEpoch, // Current timestamp
@@ -174,7 +175,7 @@ class RtcViewmodel extends ChangeNotifier {
         id: message.id,
         message: message.message,
         timestamp: message.timestamp,
-        action: "send_public_message",
+        action: MeetingActions.sendPublicMessage,
         // Assuming no action is provided
         isSender: true, // isSender
       ),
@@ -185,7 +186,7 @@ class RtcViewmodel extends ChangeNotifier {
       String? identity, String? name, String userMessage) async {
     // Create a message
     final message = SendMessageModel(
-      action: "send_private_message",
+      action: MeetingActions.sendPrivateMessage,
       id: const Uuid().v4(), // Generate a unique ID
       message: userMessage,
       timestamp: DateTime.now().millisecondsSinceEpoch, // Current timestamp
@@ -208,7 +209,7 @@ class RtcViewmodel extends ChangeNotifier {
               id: message.id,
               message: message.message,
               timestamp: message.timestamp,
-              action: "send_private_message",
+              action: MeetingActions.sendPrivateMessage,
               // Assuming no action is provided
               isSender: true,
               // isSender
@@ -397,7 +398,7 @@ class RtcViewmodel extends ChangeNotifier {
       if (response.success == 1) {
         sendPrivateAction(
             ActionModel(
-                action: "makeCoHost",
+                action: MeetingActions.makeCoHost,
                 token: meetingDetails.authorization_token),
             identity);
       } else {
@@ -484,7 +485,7 @@ class RtcViewmodel extends ChangeNotifier {
 
   void setHandRaisedForLocal(ActionModel action) {
     _raisedHandMap[room.localParticipant?.identity ?? ""] =
-        (action.action == "raise_hand");
+        (action.action == MeetingActions.raiseHand);
     notifyListeners();
   }
 
@@ -514,8 +515,8 @@ class RtcViewmodel extends ChangeNotifier {
     _isAudioModeEnable = value;
     _isVideoModeEnable = value;
     notifyListeners();
-    sendAction(ActionModel(action: "force_mute_all", value: value));
-    sendAction(ActionModel(action: "force_video_off_all", value: value));
+    sendAction(ActionModel(action: MeetingActions.forceMuteAll, value: value));
+    sendAction(ActionModel(action: MeetingActions.forceVideoOffAll, value: value));
   }
 
 // Getter and Setter for _isAudioModeEnable
@@ -524,7 +525,7 @@ class RtcViewmodel extends ChangeNotifier {
   set isAudioModeEnable(bool value) {
     _isAudioModeEnable = value;
     _isWebinarModeEnable = (_isAudioModeEnable && _isVideoModeEnable);
-    sendAction(ActionModel(action: "force_mute_all", value: value));
+    sendAction(ActionModel(action: MeetingActions.forceMuteAll, value: value));
     notifyListeners();
   }
 
@@ -534,7 +535,7 @@ class RtcViewmodel extends ChangeNotifier {
   set isVideoModeEnable(bool value) {
     _isVideoModeEnable = value;
     _isWebinarModeEnable = (_isAudioModeEnable && _isVideoModeEnable);
-    sendAction(ActionModel(action: "force_video_off_all", value: value));
+    sendAction(ActionModel(action: MeetingActions.forceVideoOffAll, value: value));
     notifyListeners();
   }
 
@@ -873,7 +874,7 @@ class RtcViewmodel extends ChangeNotifier {
       if (response.success == 1) {
         isTranscriptionLanguageSelected = true;
         sendAction(ActionModel(
-            action: "show-live-caption",
+            action: MeetingActions.showLiveCaption,
             liveCaptionsData: TranscriptionActionModel(
                 showIcon: true,
                 isLanguageSelected: true,
@@ -1046,7 +1047,7 @@ class RtcViewmodel extends ChangeNotifier {
           !Utils.isCoHost(participant.metadata)) {
         // Send the action with the participant's ID (assuming `identity` is the ID)
         sendPrivateAction(
-          ActionModel(action: "request-livecaption-drawer-state"),
+          ActionModel(action: MeetingActions.requestLiveCaptionDrawerState),
           participant.identity, // Using participant's identity (ID)
         );
         break; // Exit after sending the action to the first valid participant
@@ -1059,7 +1060,7 @@ class RtcViewmodel extends ChangeNotifier {
       if (_transcriptionLanguageData?.isLanguageSelected == true) {
         sendPrivateAction(
             ActionModel(
-                action: "show-live-caption",
+                action: MeetingActions.showLiveCaption,
                 liveCaptionsData: TranscriptionActionModel(
                     showIcon: true,
                     isLanguageSelected: true,
@@ -1155,7 +1156,7 @@ class RtcViewmodel extends ChangeNotifier {
     };
     apiClient.meetingTimeExtend(meetingDetails.authorization_token, body).then((response){
       if(response.success == 1){
-        sendAction(ActionModel(action: "extend-meeting-end-time"));
+        sendAction(ActionModel(action: MeetingActions.extendMeetingEndTime));
       }
     });
   }

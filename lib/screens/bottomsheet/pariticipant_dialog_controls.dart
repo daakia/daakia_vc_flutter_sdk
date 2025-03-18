@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 
 import '../../model/action_model.dart';
+import '../../utils/meeting_actions.dart';
 import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import 'chat_controller.dart';
@@ -55,8 +56,8 @@ class ParticipantDialogState extends State<ParticipantDialogControls> {
                   widget.viewModel.sendPrivateAction(
                       ActionModel(
                           action: widget.participant.isMicrophoneEnabled()
-                              ? "mute_mic"
-                              : "ask_to_unmute_mic"),
+                              ? MeetingActions.muteMic
+                              : MeetingActions.askToUnmuteMic),
                       widget.participant.identity);
                 },
                 isVisible: (widget.isForIndividual &&
@@ -72,8 +73,8 @@ class ParticipantDialogState extends State<ParticipantDialogControls> {
                   widget.viewModel.sendPrivateAction(
                       ActionModel(
                           action: widget.participant.isCameraEnabled()
-                              ? "mute_camera"
-                              : "ask_to_unmute_camera"),
+                              ? MeetingActions.muteCamera
+                              : MeetingActions.askToUnmuteCamera),
                       widget.participant.identity);
                 },
                 isVisible: (widget.isForIndividual &&
@@ -122,7 +123,7 @@ class ParticipantDialogState extends State<ParticipantDialogControls> {
                 text: "Mute All",
                 onTap: () {
                   Navigator.pop(context);
-                  widget.viewModel.sendAction(ActionModel(action: "mute_mic"));
+                  widget.viewModel.sendAction(ActionModel(action: MeetingActions.muteMic));
                 },
                 isVisible: !widget.isForIndividual,
               ),
@@ -131,7 +132,7 @@ class ParticipantDialogState extends State<ParticipantDialogControls> {
                 onTap: () {
                   Navigator.pop(context);
                   widget.viewModel
-                      .sendAction(ActionModel(action: "mute_camera"));
+                      .sendAction(ActionModel(action: MeetingActions.muteCamera));
                 },
                 isVisible: !widget.isForIndividual,
               ),
@@ -140,7 +141,7 @@ class ParticipantDialogState extends State<ParticipantDialogControls> {
                 onTap: () {
                   Navigator.pop(context);
                   widget.viewModel
-                      .sendAction(ActionModel(action: "stop_raise_hand_all"));
+                      .sendAction(ActionModel(action: MeetingActions.stopRaiseHandAll));
                   widget.viewModel.stopHandRaisedForAll();
                 },
                 isVisible: !widget.isForIndividual &&
