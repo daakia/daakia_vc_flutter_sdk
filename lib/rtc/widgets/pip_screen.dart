@@ -1,4 +1,4 @@
-import 'package:daakia_vc_flutter_sdk/screens/customWidget/initials_circle.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/initials_circle.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

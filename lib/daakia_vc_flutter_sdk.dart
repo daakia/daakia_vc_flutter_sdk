@@ -1,9 +1,9 @@
 library daakia_vc_flutter_sdk;
 
 import 'package:daakia_vc_flutter_sdk/api/injection.dart';
-import 'package:daakia_vc_flutter_sdk/screens/license_expired.dart';
-import 'package:daakia_vc_flutter_sdk/screens/loading_screen.dart';
-import 'package:daakia_vc_flutter_sdk/screens/prejoin_screen.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/screens/license_expired.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/screens/loading_screen.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/screens/prejoin_screen.dart';
 import 'package:flutter/widgets.dart';
 
 import 'model/meeting_details_model.dart';

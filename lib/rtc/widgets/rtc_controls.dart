@@ -1,13 +1,13 @@
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
-import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/end_meeting_bottomsheet.dart';
-import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/bottom_sheets/end_meeting_bottomsheet.dart';
+import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:provider/provider.dart';
 
 import '../../resources/colors/color.dart';
-import '../../screens/bottomsheet/more_option_bottomsheet.dart';
+import '../../presentation/bottom_sheets/more_option_bottomsheet.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 
 class RtcControls extends StatefulWidget {

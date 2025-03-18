@@ -19,7 +19,7 @@ class ReactionBubble extends StatelessWidget{
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30),
-              color: Colors.blueAccent.withOpacity(0.7),
+              color: Colors.blueAccent.withValues(alpha: 0.7),
             ),
             padding: const EdgeInsets.all(10),
             child: AnimatedEmoji(emojiMessage?.emoji ?? AnimatedEmojis.alarmClock),

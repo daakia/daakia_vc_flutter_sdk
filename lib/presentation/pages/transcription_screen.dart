@@ -2,15 +2,15 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
-import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/language_select_dialog.dart';
-import 'package:daakia_vc_flutter_sdk/screens/customWidget/loader.dart';
-import 'package:daakia_vc_flutter_sdk/screens/customWidget/transcription_bubble.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/loader.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/transcription_bubble.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 import '../../model/language_model.dart';
 import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
+import '../dialog/language_select_dialog.dart';
 
 class TranscriptionScreen extends StatefulWidget {
   final RtcViewmodel viewModel;

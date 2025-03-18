@@ -3,19 +3,21 @@ import 'dart:async';
 import 'package:daakia_vc_flutter_sdk/model/features.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details_model.dart';
+import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/meeting_manager.dart';
-import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
+import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
+import 'package:daakia_vc_flutter_sdk/utils/storage_helper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:loading_btn/loading_btn.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../api/injection.dart';
+import '../../api/injection.dart';
 
-import '../resources/colors/color.dart';
-import '../rtc/room.dart';
-import '../utils/utils.dart';
+import '../../resources/colors/color.dart';
+import '../../rtc/room.dart';
+import '../../utils/utils.dart';
 
 @protected
 class PreJoinScreen extends StatefulWidget {
@@ -177,6 +179,16 @@ class _PreJoinState extends State<PreJoinScreen> {
     if (isParticipant) {
       body["lobby_request_id"] = lobbyRequestId;
     }
+    final cacheData = StorageHelper();
+    if (!widget.isHost){
+      if(await cacheData.getData(Constant.MEETING_UID) == widget.meetingId){
+        if(await cacheData.getData(Constant.SESSION_UID) == widget.basicMeetingDetails?.currentSessionUid){
+          if(await cacheData.getData(Constant.ATTENDANCE_ID) != ""){
+            body["meeting_attendance_uid"] = await cacheData.getData(Constant.ATTENDANCE_ID);
+          }
+        }
+      }
+    }
 
     apiClient.getMeetingJoinDetail(token, body).then((response) {
       if (response.success == 1) {
@@ -219,6 +231,7 @@ class _PreJoinState extends State<PreJoinScreen> {
           }
 
           if (it.participantCanJoin == true) {
+            widget.basicMeetingDetails?.currentSessionUid = it.currentSessionUid;
             if(!mounted) return;
             isUserCanJoin = true;
             _join(context, stopLoading,
@@ -236,6 +249,7 @@ class _PreJoinState extends State<PreJoinScreen> {
             meetingNotStarted(stopLoading);
             return;
           }
+          widget.basicMeetingDetails?.currentSessionUid = it.currentSessionUid;
           if(!mounted) return;
           _join(context, stopLoading,
               livekitUrl: response.data?.livekitServerURL ?? "",

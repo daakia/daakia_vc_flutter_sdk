@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:daakia_vc_flutter_sdk/screens/customWidget/message_bubble.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/message_bubble.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -8,10 +8,10 @@ import 'package:flutter/material.dart';
 import '../../events/rtc_events.dart';
 import '../../utils/constants.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
-import '../customWidget/compact_file_preview.dart';
+import '../../presentation/widgets/compact_file_preview.dart';
 
-class ChatBottomSheet extends StatefulWidget {
-  const ChatBottomSheet({required this.viewModel, super.key});
+class ChatPage extends StatefulWidget {
+  const ChatPage({required this.viewModel, super.key});
 
   final RtcViewmodel viewModel;
 
@@ -21,7 +21,7 @@ class ChatBottomSheet extends StatefulWidget {
   }
 }
 
-class _ChatState extends State<ChatBottomSheet> {
+class _ChatState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();

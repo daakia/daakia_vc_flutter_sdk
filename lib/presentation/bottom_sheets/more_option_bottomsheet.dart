@@ -1,8 +1,6 @@
-import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/all_participant_bottomsheet.dart';
-import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/chat_controller.dart';
-import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/transcription_screen.dart';
-import 'package:daakia_vc_flutter_sdk/screens/bottomsheet/webinar_controls.dart';
-import 'package:daakia_vc_flutter_sdk/utils/exts.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/pages/chat_controller.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/pages/webinar_controls.dart';
+import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background/flutter_background.dart';
@@ -15,7 +13,9 @@ import '../../resources/colors/color.dart';
 import '../../utils/meeting_actions.dart';
 import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
-import 'emoji_dialog.dart';
+import '../dialog/emoji_dialog.dart';
+import '../pages/all_participant_page.dart';
+import '../pages/transcription_screen.dart';
 
 class MoreOptionBottomSheet extends StatefulWidget {
   const MoreOptionBottomSheet({super.key});
@@ -164,7 +164,7 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
     }
     Navigator.of(context).push(MaterialPageRoute<Null>(
         builder: (BuildContext context) {
-          return const AllParticipantBottomsheet();
+          return const AllParticipantPage();
         },
         fullscreenDialog: true));
   }

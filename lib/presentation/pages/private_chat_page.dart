@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:daakia_vc_flutter_sdk/screens/customWidget/initials_circle.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/initials_circle.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -8,11 +8,11 @@ import '../../events/rtc_events.dart';
 import '../../utils/constants.dart';
 import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
-import '../customWidget/compact_file_preview.dart';
-import '../customWidget/message_bubble.dart';
+import '../widgets/compact_file_preview.dart';
+import '../widgets/message_bubble.dart';
 
-class PrivateChatBottomSheet extends StatefulWidget {
-  PrivateChatBottomSheet(
+class PrivateChatPage extends StatefulWidget {
+  PrivateChatPage(
       {required this.viewModel, this.identity = "", this.name = "", super.key});
 
   final String identity;
@@ -27,7 +27,7 @@ class PrivateChatBottomSheet extends StatefulWidget {
   }
 }
 
-class PrivateChantState extends State<PrivateChatBottomSheet> {
+class PrivateChantState extends State<PrivateChatPage> {
   @override
   void dispose() {
     super.dispose();
