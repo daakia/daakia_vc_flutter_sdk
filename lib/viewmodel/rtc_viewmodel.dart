@@ -154,6 +154,10 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
   Future<void> sendPublicMessage(String userMessage) async {
+    if (!Utils.isMessageSizeValid(userMessage)) {
+      sendMessageToUI("Message is too long! Please shorten it and try again.");
+      return;
+    }
     // Create a message
     final message = SendMessageModel(
       action: MeetingActions.sendPublicMessage,
@@ -184,6 +188,10 @@ class RtcViewmodel extends ChangeNotifier {
 
   Future<void> sendPrivateMessage(
       String? identity, String? name, String userMessage) async {
+    if (!Utils.isMessageSizeValid(userMessage)) {
+      sendMessageToUI("Message is too long! Please shorten it and try again.");
+      return;
+    }
     // Create a message
     final message = SendMessageModel(
       action: MeetingActions.sendPrivateMessage,
@@ -225,6 +233,11 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
   Future<void> sendPrivateAction(ActionModel action, String? identity) async {
+    if (!MeetingActions.isValidAction(action.action)) {
+      sendMessageToUI("Action not allowed.");
+      return;
+    }
+
     if (identity != null) {
       List<String> participantList = [identity];
       try {
@@ -243,6 +256,11 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
   Future<void> sendAction(ActionModel action) async {
+    if (!MeetingActions.isValidAction(action.action)) {
+      sendMessageToUI("Action not allowed.");
+      return;
+    }
+
     try {
       String jsonData = jsonEncode(action.toJson());
       await room.localParticipant?.publishData(
