@@ -63,6 +63,7 @@ pubspec.lock
 # Android related
 **/android/**/gradle-wrapper.jar
 .gradle/
+**/app/.cxx
 **/android/captures/
 **/android/gradlew
 **/android/gradlew.bat
