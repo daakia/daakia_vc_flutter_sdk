@@ -38,6 +38,7 @@ class MeetingActions {
   static const String askToUnmuteCamera = "ask_to_unmute_camera";
 
   static const String makeCoHost = "makeCoHost";
+  static const String removeCoHost = "removeCoHost";
   static const String forceMuteAll = "force_mute_all";
   static const String forceVideoOffAll = "force_video_off_all";
 
@@ -77,6 +78,7 @@ class MeetingActions {
     askToUnmuteMic,
     askToUnmuteCamera,
     makeCoHost,
+    removeCoHost,
     forceMuteAll,
     forceVideoOffAll,
     showLiveCaption,
