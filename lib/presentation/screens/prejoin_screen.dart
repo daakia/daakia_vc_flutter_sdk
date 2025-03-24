@@ -59,6 +59,8 @@ class _PreJoinState extends State<PreJoinScreen> {
   var _enableAudio = false;
   var _enableVideo = false;
 
+  var _isCoHostVerified = false;
+
   //============== RTC ===============
   StreamSubscription? _subscription;
   List<MediaDevice> _audioInputs = [];
@@ -85,6 +87,7 @@ class _PreJoinState extends State<PreJoinScreen> {
         endDate: getMeetingEndDate(),
         endMeetingCallBack: (event) {}, context: context);
     super.initState();
+    verifyCoHost();
   }
 
   String? getMeetingEndDate(){
@@ -704,7 +707,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                     ),
                   ),
                   Visibility(
-                    visible: !widget.isHost &&
+                    visible: !widget.isHost && !_isCoHostVerified &&
                         (widget.basicMeetingDetails?.isStandardPassword ==
                             true),
                     child: Container(
@@ -730,7 +733,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                     ),
                   ),
                   Visibility(
-                    visible: !widget.isHost &&
+                    visible: !widget.isHost && !_isCoHostVerified &&
                         (widget.basicMeetingDetails?.isCommonPassword == true ||
                             widget.basicMeetingDetails?.isStandardPassword ==
                                 true),
@@ -793,7 +796,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                               message: "Please enter your name");
                           return;
                         }
-                        if (!widget.isHost) {
+                        if (!widget.isHost && !await shouldAddAttendanceId()) {
                           var event = widget.basicMeetingDetails;
                           if (event?.isStandardPassword == true) {
                             if (!checkValidity()) {
@@ -802,6 +805,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                           }
                           if (event?.isCommonPassword == true) {
                             if (password.isEmpty) {
+                              if(!context.mounted) return;
                               Utils.showSnackBar(context,
                                   message: "Please enter your password");
                               return;
@@ -815,6 +819,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                         } else {
                           isNeedToCancelApiCall = false;
                           if (widget.isHost && !isHostVerified) {
+                            if(!context.mounted) return;
                             _showVerificationDialog(context, stopLoading);
                           } else {
                             checkMeetingType(stopLoading);
@@ -994,6 +999,11 @@ class _PreJoinState extends State<PreJoinScreen> {
 
   Future<void> checkMeetingType(Function stopLoading) async {
     var event = widget.basicMeetingDetails;
+    if (await shouldAddAttendanceId()) {
+      // If shouldAddAttendanceId is true, bypass other checks
+      getFeaturesAndJoinMeeting(stopLoading);
+      return;
+    }
     if (widget.isHost) {
       getFeaturesAndJoinMeeting(stopLoading);
     } else if (event?.isStandardPassword == true) {
@@ -1004,7 +1014,9 @@ class _PreJoinState extends State<PreJoinScreen> {
       }
     } else if (event?.isCommonPassword == true) {
       if (password.isEmpty) {
-        Utils.showSnackBar(context, message: "Please enter your password");
+        if (mounted) {
+          Utils.showSnackBar(context, message: "Please enter your password");
+        }
         stopLoading();
         return;
       }
@@ -1024,6 +1036,10 @@ class _PreJoinState extends State<PreJoinScreen> {
     return await cacheData.getData(Constant.MEETING_UID) == widget.meetingId &&
         await cacheData.getData(Constant.SESSION_UID) == widget.basicMeetingDetails?.currentSessionUid &&
         await cacheData.getData(Constant.ATTENDANCE_ID) != "";
+  }
+
+  Future<void> verifyCoHost() async {
+    _isCoHostVerified = await shouldAddAttendanceId();
   }
 
 
