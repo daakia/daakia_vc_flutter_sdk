@@ -356,6 +356,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         }
         break;
 
+      case MeetingActions.removeCoHost:
+        viewModel?.setCoHost(false);
+        StorageHelper().clearAllData();
+        break;
+
       case MeetingActions.forceMuteAll:
         viewModel?.isAudioPermissionEnable = !remoteData.value;
         if (!(viewModel?.isAudioPermissionEnable ?? false)) {
