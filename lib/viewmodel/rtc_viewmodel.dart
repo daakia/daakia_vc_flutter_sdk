@@ -416,8 +416,8 @@ class RtcViewmodel extends ChangeNotifier {
       if (response.success == 1) {
         sendPrivateAction(
             ActionModel(
-                action: MeetingActions.makeCoHost,
-                token: meetingDetails.authorization_token),
+                action: !isCoHost ? MeetingActions.removeCoHost : MeetingActions.makeCoHost,
+                token: !isCoHost ? "" : meetingDetails.authorization_token),
             identity);
       } else {
         sendMessageToUI(response.message ?? "Something went wrong!");
