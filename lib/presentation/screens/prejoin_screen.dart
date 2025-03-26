@@ -746,7 +746,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                           border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword
+                              !_obscurePassword
                                   ? Icons.visibility
                                   : Icons.visibility_off,
                             ),

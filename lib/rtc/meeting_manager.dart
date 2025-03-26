@@ -64,6 +64,7 @@ class MeetingManager {
 
     showDialog(
       context: _globalContext,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text("Meeting Ending Soon"),
         content: Text(
