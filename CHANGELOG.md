@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## v3.0.0 (2025-02)
+## v3.0.1 (2025-03)
 
 ### 🚀 New Features
 - **Live Transcription:** Automatically transcribe meetings in real time.
@@ -10,10 +10,13 @@
 - **Co-Host Modification:** Enhanced co-host management capabilities.
 - **Participant Name Change:** Participants can update their display names during a meeting.
 - **Auto-Recording:** Meetings now support automatic recording upon start.
+- **Meeting Extension:** Host can extend meetings based on their subscription plan.
 
 ### 🛠 Bug Fixes & Improvements
 - Stability enhancements and performance optimizations.
 - General UI and user experience improvements.
+- Resolved caching problems affecting co-host functionality.
+- Upgraded dependencies for better performance and compatibility.
 
 
 ## 2.1.3 (2025-01)
@@ -44,11 +47,11 @@
 - **Bug Fixes**:
   - Connection bug fixes.
   - Permission issue fixed in iOs.
-  
+
 ## 1.0.0 (2024-11)
 
 - **Initial Release**:
-    - Implemented Web-RTC integration for real-time video and audio calls.
-    - Added core functionality for video conferencing.
-    - Introduced participant management with local and remote participants.
-    - Added cloud recording.
+  - Implemented Web-RTC integration for real-time video and audio calls.
+  - Added core functionality for video conferencing.
+  - Introduced participant management with local and remote participants.
+  - Added cloud recording.
