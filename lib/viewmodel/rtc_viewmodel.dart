@@ -393,15 +393,12 @@ class RtcViewmodel extends ChangeNotifier {
       "participant_id": identity,
       "meeting_uid": meetingDetails.meeting_uid
     };
-    apiClient
-        .removeParticipant(meetingDetails.authorization_token, body)
-        .then((response) {
-      if (response.success == 1) {
-        sendMessageToUI("Participant Removed");
-      } else {
-        sendMessageToUI(response.message ?? "Something went wrong!");
-      }
-    });
+    networkRequestHandler(
+      apiCall: () =>
+          apiClient.removeParticipant(meetingDetails.authorization_token, body),
+      onSuccess: (_) => sendMessageToUI("Participant Removed"),
+      onError: (message) => sendMessageToUI(message),
+    );
   }
 
   void makeCoHost(String identity, bool isCoHost) {
@@ -410,19 +407,18 @@ class RtcViewmodel extends ChangeNotifier {
       "meeting_uid": meetingDetails.meeting_uid,
       "is_co_host": isCoHost
     };
-    apiClient
-        .makeCoHost(meetingDetails.authorization_token, body)
-        .then((response) {
-      if (response.success == 1) {
-        sendPrivateAction(
-            ActionModel(
-                action: !isCoHost ? MeetingActions.removeCoHost : MeetingActions.makeCoHost,
-                token: !isCoHost ? "" : meetingDetails.authorization_token),
-            identity);
-      } else {
-        sendMessageToUI(response.message ?? "Something went wrong!");
-      }
-    });
+    networkRequestHandler(
+      apiCall: () =>
+          apiClient.makeCoHost(meetingDetails.authorization_token, body),
+      onSuccess: (_) => sendPrivateAction(
+          ActionModel(
+              action: !isCoHost
+                  ? MeetingActions.removeCoHost
+                  : MeetingActions.makeCoHost,
+              token: !isCoHost ? "" : meetingDetails.authorization_token),
+          identity),
+      onError: (message) => sendMessageToUI(message),
+    );
   }
 
   void setRecording(bool isRecording) {
@@ -436,37 +432,38 @@ class RtcViewmodel extends ChangeNotifier {
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meeting_uid,
     };
-    apiClient
-        .startRecording(meetingDetails.authorization_token, body)
-        .then((response) {
-      if (response.success == 1) {
+    networkRequestHandler(
+      apiCall: () =>
+          apiClient.startRecording(meetingDetails.authorization_token, body),
+      onSuccess: (_) {
         setRecording(true);
         sendMessageToUI("Recording Starting");
-      } else {
-        if(isNeedToShowError) {
-          sendMessageToUI(response.message ?? "Something went wrong!");
+      },
+      onError: (message) {
+        if (isNeedToShowError) {
+          sendMessageToUI(message);
         }
-      }
-    });
+      },
+    );
   }
 
   void stopRecording() {
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meeting_uid,
     };
-    apiClient
-        .stopRecording(meetingDetails.authorization_token, body)
-        .then((response) {
-      if (response.success == 1) {
+    networkRequestHandler(
+      apiCall: () =>
+          apiClient.startRecording(meetingDetails.authorization_token, body),
+      onSuccess: (_) {
         setRecording(false);
         sendMessageToUI("Recording Stop");
-        try{
-          meetingDetails.meetingBasicDetails?.meetingConfig?.recordingForceStopped = 1;
-        } catch(_) {}
-      } else {
-        sendMessageToUI(response.message ?? "Something went wrong!");
-      }
-    });
+        try {
+          meetingDetails
+              .meetingBasicDetails?.meetingConfig?.recordingForceStopped = 1;
+        } catch (_) {}
+      },
+      onError: (message) => sendMessageToUI(message),
+    );
   }
 
   bool isHost() {
@@ -534,7 +531,8 @@ class RtcViewmodel extends ChangeNotifier {
     _isVideoModeEnable = value;
     notifyListeners();
     sendAction(ActionModel(action: MeetingActions.forceMuteAll, value: value));
-    sendAction(ActionModel(action: MeetingActions.forceVideoOffAll, value: value));
+    sendAction(
+        ActionModel(action: MeetingActions.forceVideoOffAll, value: value));
   }
 
 // Getter and Setter for _isAudioModeEnable
@@ -553,7 +551,8 @@ class RtcViewmodel extends ChangeNotifier {
   set isVideoModeEnable(bool value) {
     _isVideoModeEnable = value;
     _isWebinarModeEnable = (_isAudioModeEnable && _isVideoModeEnable);
-    sendAction(ActionModel(action: MeetingActions.forceVideoOffAll, value: value));
+    sendAction(
+        ActionModel(action: MeetingActions.forceVideoOffAll, value: value));
     notifyListeners();
   }
 
@@ -571,17 +570,16 @@ class RtcViewmodel extends ChangeNotifier {
     } else {
       body["is_admit_all"] = acceptAll;
     }
-    apiClient.acceptParticipantInLobby(body).then((response) {
-      if (response.success == 1) {
-        if (accept) {
-          sendMessageToUI("Participant accepted");
-        } else {
-          sendMessageToUI("Participant rejected");
-        }
-      } else {
-        sendMessageToUI("Something went wrong!");
-      }
-    });
+    networkRequestHandler(
+        apiCall: () => apiClient.acceptParticipantInLobby(body),
+        onSuccess: (_) {
+          if (accept) {
+            sendMessageToUI("Participant accepted");
+          } else {
+            sendMessageToUI("Participant rejected");
+          }
+        },
+        onError: (message) => sendMessageToUI(message));
   }
 
   final Map<String, int> requestTimestamps = {};
@@ -764,34 +762,36 @@ class RtcViewmodel extends ChangeNotifier {
   BuildContext? context;
 
   void uploadAttachment(File file, Function? onUploadSuccess) {
-    apiClient.uploadFile(file, onSendProgress: (sent, total) {
-      publicMessageProgress = sent / total;
-      sendUploadAttachmentEvent(ShowProgress(publicMessageProgress));
-    }).then((response) {
-      if (response.success == 1) {
-        if (onUploadSuccess != null) {
-          onUploadSuccess();
-        }
-        resetProgress();
-        sendPublicMessage(response.data?.url ?? "");
-      }
-    });
+    networkRequestHandler(
+        apiCall: () =>
+            apiClient.uploadFile(file, onSendProgress: (sent, total) {
+              publicMessageProgress = sent / total;
+              sendUploadAttachmentEvent(ShowProgress(publicMessageProgress));
+            }),
+        onSuccess: (data) {
+          if (onUploadSuccess != null) {
+            onUploadSuccess();
+          }
+          resetProgress();
+          sendPublicMessage(data?.url ?? "");
+        });
   }
 
   void uploadPrivateAttachment(
       String identity, String name, File file, Function? onUploadSuccess) {
-    apiClient.uploadFile(file, onSendProgress: (sent, total) {
-      privateMessageProgress = sent / total;
-      sendUploadAttachmentEvent(ShowProgress(privateMessageProgress));
-    }).then((response) {
-      if (response.success == 1) {
-        if (onUploadSuccess != null) {
-          onUploadSuccess();
-        }
-        resetProgress();
-        sendPrivateMessage(identity, name, response.data?.url ?? "");
-      }
-    });
+    networkRequestHandler(
+        apiCall: () =>
+            apiClient.uploadFile(file, onSendProgress: (sent, total) {
+              privateMessageProgress = sent / total;
+              sendUploadAttachmentEvent(ShowProgress(privateMessageProgress));
+            }),
+        onSuccess: (data) {
+          if (onUploadSuccess != null) {
+            onUploadSuccess();
+          }
+          resetProgress();
+          sendPrivateMessage(identity, name, data?.url ?? "");
+        });
   }
 
   double _publicMessageProgress = -1;
@@ -886,32 +886,28 @@ class RtcViewmodel extends ChangeNotifier {
       "transcription_lang_iso": selectedLanguage.code,
       "transcription_lang_title": selectedLanguage.code
     };
-    apiClient
-        .setTranscriptionLanguage(meetingDetails.authorization_token, body)
-        .then((response) {
-      if (response.success == 1) {
-        isTranscriptionLanguageSelected = true;
-        sendAction(ActionModel(
-            action: MeetingActions.showLiveCaption,
-            liveCaptionsData: TranscriptionActionModel(
-                showIcon: true,
-                isLanguageSelected: true,
-                langCode: selectedLanguage.code,
-                sourceLang: selectedLanguage.code)));
-        transcriptionEnabled.call();
-      } else {
-        sendMessageToUI(response.message ?? "Something went wrong!");
-      }
-    }).onError((e, _) {
-      sendMessageToUI("Something went wrong!");
-    });
+    networkRequestHandler(
+        apiCall: () => apiClient.setTranscriptionLanguage(
+            meetingDetails.authorization_token, body),
+        onSuccess: (data) {
+          isTranscriptionLanguageSelected = true;
+          sendAction(ActionModel(
+              action: MeetingActions.showLiveCaption,
+              liveCaptionsData: TranscriptionActionModel(
+                  showIcon: true,
+                  isLanguageSelected: true,
+                  langCode: selectedLanguage.code,
+                  sourceLang: selectedLanguage.code)));
+          transcriptionEnabled.call();
+        },
+        onError: (message) => sendMessageToUI(message));
   }
 
   void startTranscription() {
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meeting_uid,
     };
-    apiClient.startTranscription(body).then((response) {});
+    networkRequestHandler(apiCall: () => apiClient.startTranscription(body));
   }
 
   TranscriptionActionModel? _transcriptionLanguageData;
@@ -1106,60 +1102,51 @@ class RtcViewmodel extends ChangeNotifier {
       "target_language": translationLanguage?.code,
       "text": transcriptionData.transcription,
     };
-    apiClient.translateText(body).then((response) {
-      if (response.success == 1) {
-        _updateTranscriptionInList(transcriptionData.copyWith(
-            translatedTranscription: response.data?.translatedText,
-            targetLang: translationLanguage?.code));
-        callBack?.call();
-      } else{
-        callBack?.call();
-      }
-    }).onError((e, _) {
-      callBack?.call();
-      sendMessageToUI("Something went wrong!");
-    });
+    networkRequestHandler(
+        apiCall: () => apiClient.translateText(body),
+        onSuccess: (data) {
+          _updateTranscriptionInList(transcriptionData.copyWith(
+            translatedTranscription: data?.translatedText,
+            targetLang: translationLanguage?.code,
+          ));
+          callBack?.call();
+        },
+        onError: (message) {
+          callBack?.call();
+          sendMessageToUI(message);
+        });
   }
 
   void endMeetingForAll() {
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meeting_uid,
     };
-    apiClient.endMeeting(body).then((response){
-      if(response.success == 1){
-        sendEvent(EndMeeting());
-      } else {
-        sendMessageToUI(response.message ?? "Something went wrong!");
-      }
-    }).onError((e, _) {
-      sendMessageToUI("Something went wrong!");
-    });
+    networkRequestHandler(
+      apiCall: () => apiClient.endMeeting(body),
+      onSuccess: (_) => sendEvent(EndMeeting()),
+      onError: (message) => sendMessageToUI(message),
+    );
   }
 
   void updateParticipantName({String? participant, required String newName}) {
-    if(participant == null) return;
+    if (participant == null) return;
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meeting_uid,
       "participant_identity": participant,
       "new_name": newName,
     };
-    apiClient.updateParticipantName(body).then((response){
-      if(response.success == 1){
-        // sendEvent(EndMeeting());
-      } else {
-        sendMessageToUI(response.message ?? "Something went wrong!");
-      }
-    }).onError((e, _) {
-      sendMessageToUI("Something went wrong!");
-    });
+    networkRequestHandler(
+        apiCall: () => apiClient.updateParticipantName(body),
+        onError: (message) => sendMessageToUI(message));
   }
 
   void configAutoRecording() {
-    if(isHost()){
-      if(meetingDetails.meetingBasicDetails?.meetingConfig != null){
+    if (isHost()) {
+      if (meetingDetails.meetingBasicDetails?.meetingConfig != null) {
         var meetingConfig = meetingDetails.meetingBasicDetails?.meetingConfig!;
-        if(meetingConfig?.recordingForceStopped != 1 && meetingConfig?.autoStartRecording == 1){
-          if(!isRecording) {
+        if (meetingConfig?.recordingForceStopped != 1 &&
+            meetingConfig?.autoStartRecording == 1) {
+          if (!isRecording) {
             startRecording(isNeedToShowError: false);
           }
         }
@@ -1172,21 +1159,25 @@ class RtcViewmodel extends ChangeNotifier {
       "meeting_uid": meetingDetails.meeting_uid,
       "is_extend_time": true,
     };
-    apiClient.meetingTimeExtend(meetingDetails.authorization_token, body).then((response){
-      if(response.success == 1){
-        sendAction(ActionModel(action: MeetingActions.extendMeetingEndTime));
-      }
-    });
+    networkRequestHandler(
+        apiCall: () => apiClient.meetingTimeExtend(
+            meetingDetails.authorization_token, body),
+        onSuccess: (_) => sendAction(
+            ActionModel(action: MeetingActions.extendMeetingEndTime)));
   }
 
   bool isAutoMeetingEndEnable() {
-    if(isHost() && meetingDetails.meetingBasicDetails?.meetingConfig?.autoMeetingEnd == 1){
+    if (isHost() &&
+        meetingDetails.meetingBasicDetails?.meetingConfig?.autoMeetingEnd ==
+            1) {
       return true;
     }
     return false;
   }
 
   String? getMeetingEndDate() {
-    return meetingDetails.meetingBasicDetails?.meetingConfig?.autoMeetingEndSchedule ?? meetingDetails.meetingBasicDetails?.endDate;
+    return meetingDetails
+            .meetingBasicDetails?.meetingConfig?.autoMeetingEndSchedule ??
+        meetingDetails.meetingBasicDetails?.endDate;
   }
 }
