@@ -170,7 +170,10 @@ class _PreJoinState extends State<PreJoinScreen> {
   bool isUserCanJoin = false;
 
   void joinMeeting(Function stopLoading, {bool isParticipant = false}) async {
-    if (isNeedToCancelApiCall) return;
+    if (isNeedToCancelApiCall) {
+      stopLoading.call();
+      return;
+    }
 
     isLoading = true;
 
@@ -320,7 +323,10 @@ class _PreJoinState extends State<PreJoinScreen> {
   }
 
   void addParticipantToLobby(Function stopLoading) {
-    if (isNeedToCancelApiCall) return;
+    if (isNeedToCancelApiCall) {
+      stopLoading.call();
+      return;
+    }
     Map<String, dynamic> body = {
       "meeting_uid": widget.meetingId,
       "display_name": name,
@@ -350,6 +356,7 @@ class _PreJoinState extends State<PreJoinScreen> {
     // Set up a timer to repeat every 10 seconds
     _participantTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       if (isNeedToCancelApiCall) {
+        stopLoading.call();
         timer.cancel();
         return;
       }
@@ -839,12 +846,16 @@ class _PreJoinState extends State<PreJoinScreen> {
   @override
   void dispose() {
     _subscription?.cancel();
+    _participantTimer?.cancel();
     super.dispose();
   }
 
   void getFeaturesAndJoinMeeting(Function stopLoading,
       {bool isLobby = false, bool isParticipant = false}) {
-    if (isNeedToCancelApiCall) return;
+    if (isNeedToCancelApiCall) {
+      stopLoading.call();
+      return;
+    }
     isLoading = true;
 
     networkRequestHandler(
