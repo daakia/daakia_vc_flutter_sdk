@@ -196,85 +196,93 @@ class _PreJoinState extends State<PreJoinScreen> {
       }
     }
 
-    networkRequestHandlerWithMessage(
-        apiCall: () => apiClient.getMeetingJoinDetail(token, body),
-        onSuccess: (response) {
-          if (response?.data == null) {
-            if (mounted) {
-              Utils.showSnackBar(context, message: "Something went wrong!");
-            }
+    apiClient.getMeetingJoinDetail(token, body).then((response) {
+      if (response.success == 1) {
+        if (response.data == null) {
+          if (mounted) {
+            Utils.showSnackBar(context, message: "Something went wrong!");
+          }
+          return;
+        }
+        var it = response.data!;
+        if (!widget.isHost) {
+          if (it.isRejected == true) {
+            isRejected = true;
+            stopLoading.call();
+            setState(() {
+              alertMessage = response.message ?? "";
+              Utils.showSnackBar(context, message: alertMessage);
+            });
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                Navigator.of(context).pop();
+              }
+            });
             return;
           }
-          var it = response!.data!;
-          if (!widget.isHost) {
-            if (it.isRejected == true) {
-              isRejected = true;
-              stopLoading.call();
-              setState(() {
-                alertMessage = response.message ?? "";
-                Utils.showSnackBar(context, message: alertMessage);
-              });
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  Navigator.of(context).pop();
-                }
-              });
-              return;
-            }
 
-            if (it.accessToken == null ||
-                it.livekitServerURL == null ||
-                it.accessToken?.isEmpty == true ||
-                it.livekitServerURL?.isEmpty == true) {
-              setState(() {
-                alertMessage = response.message ?? "";
-              });
-              if (it.meetingStarted == true ||
-                  widget.basicMeetingDetails?.isLobbyMode == true) {
-                return;
-              }
-              meetingNotStarted(stopLoading);
+          if (it.accessToken == null ||
+              it.livekitServerURL == null ||
+              it.accessToken?.isEmpty == true ||
+              it.livekitServerURL?.isEmpty == true) {
+            setState(() {
+              alertMessage = response.message ?? "";
+            });
+            if (it.meetingStarted == true ||
+                widget.basicMeetingDetails?.isLobbyMode == true) {
               return;
             }
+            meetingNotStarted(stopLoading);
+            return;
+          }
 
-            if (it.participantCanJoin == true) {
-              widget.basicMeetingDetails?.currentSessionUid =
-                  it.currentSessionUid;
-              if (!mounted) return;
-              isUserCanJoin = true;
-              _join(context, stopLoading,
-                  livekitUrl: response.data?.livekitServerURL ?? "",
-                  livekitToken: response.data?.accessToken ?? "");
-            }
-          } else {
-            if (it.accessToken == null ||
-                it.livekitServerURL == null ||
-                it.accessToken?.isEmpty == true ||
-                it.livekitServerURL?.isEmpty == true) {
-              setState(() {
-                alertMessage = response.message ?? "";
-              });
-              meetingNotStarted(stopLoading);
-              return;
-            }
+          if (it.participantCanJoin == true) {
             widget.basicMeetingDetails?.currentSessionUid =
                 it.currentSessionUid;
             if (!mounted) return;
+            isUserCanJoin = true;
             _join(context, stopLoading,
                 livekitUrl: response.data?.livekitServerURL ?? "",
                 livekitToken: response.data?.accessToken ?? "");
           }
-        },
-        onError: (message) {
-          setState(() {
-            isLoading = false;
-            isNeedToCancelApiCall = true;
-            stopLoading.call();
-          });
-          if (mounted) {
-            Utils.showSnackBar(context, message: message);
+        } else {
+          if (it.accessToken == null ||
+              it.livekitServerURL == null ||
+              it.accessToken?.isEmpty == true ||
+              it.livekitServerURL?.isEmpty == true) {
+            setState(() {
+              alertMessage = response.message ?? "";
+            });
+            meetingNotStarted(stopLoading);
+            return;
           }
+          widget.basicMeetingDetails?.currentSessionUid = it.currentSessionUid;
+          if (!mounted) return;
+          _join(context, stopLoading,
+              livekitUrl: response.data?.livekitServerURL ?? "",
+              livekitToken: response.data?.accessToken ?? "");
+        }
+      } else {
+        setState(() {
+          isLoading = false;
+          isNeedToCancelApiCall = true;
+          stopLoading.call();
         });
+        if (mounted) {
+          Utils.showSnackBar(context,
+              message: response.message ?? "Something went wrong!");
+        }
+      }
+    }).onError((handleError, stackStress) {
+      setState(() {
+        isLoading = false;
+        isNeedToCancelApiCall = true;
+        stopLoading.call();
+      });
+      if (mounted) {
+        Utils.showSnackBar(context, message: "Something went wrong!");
+      }
+    });
   }
 
   Future<void> meetingNotStarted(Function stopLoading) async {
@@ -307,14 +315,14 @@ class _PreJoinState extends State<PreJoinScreen> {
           });
         },
         onError: (message) {
+          if (mounted) {
+            Utils.showSnackBar(context, message: message);
+          }
           setState(() {
             isLoading = false;
             isNeedToCancelApiCall = true;
             stopLoading.call();
           });
-          if (mounted) {
-            Utils.showSnackBar(context, message: message);
-          }
         });
   }
 
