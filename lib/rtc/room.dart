@@ -26,7 +26,6 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../model/emoji_message.dart';
 import '../model/remote_activity_data.dart';
 import '../presentation/pages/transcription_screen.dart';
-import '../utils/constants.dart';
 import '../utils/meeting_actions.dart';
 import '../utils/utils.dart';
 import 'meeting_manager.dart';
@@ -347,9 +346,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           viewModel?.setCoHost(true);
           viewModel?.meetingDetails.authorization_token = remoteData.token ?? "";
           var metadata = viewModel?.room.localParticipant?.metadata;
-          StorageHelper().saveData(Constant.MEETING_UID, viewModel?.meetingDetails.meeting_uid ?? "");
-          StorageHelper().saveData(Constant.SESSION_UID, Utils.getMetadataSessionUid(metadata));
-          StorageHelper().saveData(Constant.ATTENDANCE_ID, Utils.getMetadataAttendanceId(metadata));
+          final storageHelper = StorageHelper();
+          storageHelper.setMeetingUid(viewModel?.meetingDetails.meeting_uid ?? "");
+          storageHelper.setSessionUid(Utils.getMetadataSessionUid(metadata));
+          storageHelper.setAttendanceId(Utils.getMetadataAttendanceId(metadata));
         } else {
           viewModel?.setCoHost(false);
           StorageHelper().clearAllData();

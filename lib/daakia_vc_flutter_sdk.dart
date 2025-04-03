@@ -53,7 +53,7 @@ class _DaakiaVideoConferenceState extends State<DaakiaVideoConferenceWidget> {
             if (_verified) {
               _getMeetingDetails();
             } else {
-              _licenseMessage = "License key not verified.";
+              _licenseMessage = "License key not verified!";
             }
             _isLoading = false;
           });
