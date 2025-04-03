@@ -1,3 +1,4 @@
+import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
 import 'package:dio/dio.dart';
 
 import '../model/base_response.dart';
@@ -19,7 +20,7 @@ Future<void> networkRequestHandler<T>({
 }) async {
   try {
     final response = await apiCall();
-    if (response.success == 1) {
+    if (response.success == Constant.SUCCESS_RES_CHECK_VALUE) {
       onSuccess?.call(response.data);
     } else {
       onError?.call(response.message ?? "Unknown error occurred.");
@@ -41,7 +42,7 @@ Future<void> networkRequestHandlerWithMessage<T>({
 }) async {
   try {
     final response = await apiCall();
-    if (response.success == 1) {
+    if (response.success == Constant.SUCCESS_RES_CHECK_VALUE) {
       onSuccess?.call(response); // Pass full response
     } else {
       onError?.call(response.message ?? "Unknown error occurred.");

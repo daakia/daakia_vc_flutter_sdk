@@ -12,6 +12,9 @@ class Constant {
 
   static const int MAX_MESSAGE_SIZE = 16384; // 16 KB limit
 
+
+  static const int SUCCESS_RES_CHECK_VALUE = 1;
+
   static String getPlatform() {
     if (Platform.isAndroid) {
       return "android";
