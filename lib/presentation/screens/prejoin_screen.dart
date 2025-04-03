@@ -170,7 +170,10 @@ class _PreJoinState extends State<PreJoinScreen> {
   bool isUserCanJoin = false;
 
   void joinMeeting(Function stopLoading, {bool isParticipant = false}) async {
-    if (isNeedToCancelApiCall) return;
+    if (isNeedToCancelApiCall) {
+      stopLoading.call();
+      return;
+    }
 
     isLoading = true;
 
@@ -199,13 +202,13 @@ class _PreJoinState extends State<PreJoinScreen> {
     networkRequestHandlerWithMessage(
         apiCall: () => apiClient.getMeetingJoinDetail(token, body),
         onSuccess: (response) {
-          if (response?.data == null) {
+          if (response == null || response.data == null) {
             if (mounted) {
               Utils.showSnackBar(context, message: "Something went wrong!");
             }
             return;
           }
-          var it = response!.data!;
+          var it = response.data!;
           if (!widget.isHost) {
             if (it.isRejected == true) {
               isRejected = true;
@@ -266,14 +269,14 @@ class _PreJoinState extends State<PreJoinScreen> {
           }
         },
         onError: (message) {
+          if (mounted) {
+            Utils.showSnackBar(context, message: message);
+          }
           setState(() {
             isLoading = false;
             isNeedToCancelApiCall = true;
             stopLoading.call();
           });
-          if (mounted) {
-            Utils.showSnackBar(context, message: message);
-          }
         });
   }
 
@@ -299,6 +302,7 @@ class _PreJoinState extends State<PreJoinScreen> {
           }
           isHostVerified = true;
           hostToken = response?.data?.token ?? "";
+          isNeedToCancelApiCall = response?.data?.token == "";
           getFeaturesAndJoinMeeting(stopLoading);
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
@@ -307,19 +311,22 @@ class _PreJoinState extends State<PreJoinScreen> {
           });
         },
         onError: (message) {
+          if (mounted) {
+            Utils.showSnackBar(context, message: message);
+          }
           setState(() {
             isLoading = false;
             isNeedToCancelApiCall = true;
             stopLoading.call();
           });
-          if (mounted) {
-            Utils.showSnackBar(context, message: message);
-          }
         });
   }
 
   void addParticipantToLobby(Function stopLoading) {
-    if (isNeedToCancelApiCall) return;
+    if (isNeedToCancelApiCall) {
+      stopLoading.call();
+      return;
+    }
     Map<String, dynamic> body = {
       "meeting_uid": widget.meetingId,
       "display_name": name,
@@ -349,6 +356,7 @@ class _PreJoinState extends State<PreJoinScreen> {
     // Set up a timer to repeat every 10 seconds
     _participantTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       if (isNeedToCancelApiCall) {
+        stopLoading.call();
         timer.cancel();
         return;
       }
@@ -838,12 +846,16 @@ class _PreJoinState extends State<PreJoinScreen> {
   @override
   void dispose() {
     _subscription?.cancel();
+    _participantTimer?.cancel();
     super.dispose();
   }
 
   void getFeaturesAndJoinMeeting(Function stopLoading,
       {bool isLobby = false, bool isParticipant = false}) {
-    if (isNeedToCancelApiCall) return;
+    if (isNeedToCancelApiCall) {
+      stopLoading.call();
+      return;
+    }
     isLoading = true;
 
     networkRequestHandler(
