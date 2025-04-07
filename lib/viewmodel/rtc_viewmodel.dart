@@ -453,7 +453,7 @@ class RtcViewmodel extends ChangeNotifier {
     };
     networkRequestHandler(
       apiCall: () =>
-          apiClient.startRecording(meetingDetails.authorization_token, body),
+          apiClient.stopRecording(meetingDetails.authorization_token, body),
       onSuccess: (_) {
         setRecording(false);
         sendMessageToUI("Recording Stop");
