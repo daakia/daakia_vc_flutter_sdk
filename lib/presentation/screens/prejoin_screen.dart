@@ -257,6 +257,7 @@ class _PreJoinState extends State<PreJoinScreen> {
 
   void _handleJoin(RtcData it, Function stopLoading) {
     widget.basicMeetingDetails?.currentSessionUid = it.currentSessionUid;
+    isNeedToCancelApiCall = true;
     _join(context, stopLoading,
         livekitUrl: it.livekitServerURL ?? "",
         livekitToken: it.accessToken ?? "");
