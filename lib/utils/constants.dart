@@ -1,0 +1,51 @@
+import 'dart:io';
+
+class Constant {
+  static final String PLATFORM = getPlatform();
+
+  static const String MEETING_UID = "MEETING_UID";
+  static const String SESSION_UID = "SESSION_UID";
+  static const String ATTENDANCE_ID = "ATTENDANCE_ID";
+
+  static const int MEETING_EXTEND_TIME = 10;
+  static const int MEETING_ENDING_SOON_TIME = 10;
+
+  static const int MAX_MESSAGE_SIZE = 16384; // 16 KB limit
+
+
+  static const int SUCCESS_RES_CHECK_VALUE = 1;
+
+  static String getPlatform() {
+    if (Platform.isAndroid) {
+      return "android";
+    } else if (Platform.isIOS) {
+      return "iOS";
+    } else {
+      return "unknown";
+    }
+  }
+
+  static List<String>? allowedExtensions(){
+    //TODO:: Need to add AMR Audio file in future
+    return [
+      // Allowed extensions for each media type
+      'mp3', 'aac', 'mpeg', 'ogg', // Audio
+      'txt', 'pdf', 'ppt', 'doc', 'xls', 'docx', 'pptx', 'xlsx', // Documents
+      'jpg', 'jpeg', 'png', 'webp', // Images
+      'mp4', '3gp', // Videos
+    ];
+  }
+
+  static List<String> documentFileTypes() {
+    return [
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // Word
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PowerPoint
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // Excel
+      'application/vnd.ms-excel', // Older Excel format
+      'application/msword', // Older Word format
+      'application/vnd.ms-powerpoint', // Older PowerPoint format
+      'application/pdf', // PDF
+      'text/' // Text files
+    ];
+  }
+}
