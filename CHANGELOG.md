@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## v3.0.1 (2025-03)
+## v3.0.1 (2025-04)
 
 ### 🚀 New Features
 - **Live Transcription:** Automatically transcribe meetings in real time.
@@ -19,7 +19,7 @@
 - Upgraded dependencies for better performance and compatibility.
 
 
-## 2.1.3 (2025-01)
+## 2.1.3 (2025-01) _(Internal Release)_
 
 **Enhancements:**
 
@@ -27,13 +27,14 @@
 * **Web-View:** Added support for displaying web content directly within the chat interface for chat links.
 * **Improved UI:** Enhanced the user interface for different media types (images, videos, etc.) for a better visual experience.
 
-## 2.0.1 (2024-12)
+## 2.0.1 (2024-12) _(Internal Release)_
 
 - **Bug Fixes**:
   - Null-Safety for participant.
   - Lobby mode bug fixes.
   - Navigation bug fixes.
-## 2.0.0 (2024-12)
+
+## 2.0.0 (2024-12) _(Internal Release)_
 
 - **New Features**:
   - Added raise hand feature.
@@ -48,7 +49,7 @@
   - Connection bug fixes.
   - Permission issue fixed in iOs.
 
-## 1.0.0 (2024-11)
+## 1.0.0 (2024-11) _(Internal Release)_
 
 - **Initial Release**:
   - Implemented Web-RTC integration for real-time video and audio calls.
