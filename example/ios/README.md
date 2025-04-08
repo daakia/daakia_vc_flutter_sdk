@@ -130,4 +130,4 @@ Follow these steps to set up the Broadcast Extension for screen sharing on iOS.
 4. Do not modify the channel names.
 
 ### Special Note:
-> ⚠️ **This screen will not work on the iOS Simulator. To test its functionality, you must use a real device.**
+> ⚠️ **This screen share will not work on the iOS Simulator. To test its functionality, you must use a real device.**
