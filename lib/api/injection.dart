@@ -20,7 +20,7 @@ Future<void> networkRequestHandler<T>({
 }) async {
   try {
     final response = await apiCall();
-    if (response.success == Constant.SUCCESS_RES_CHECK_VALUE) {
+    if (response.success == Constant.successResCheckValue) {
       onSuccess?.call(response.data);
     } else {
       onError?.call(response.message ?? "Unknown error occurred.");
@@ -42,7 +42,7 @@ Future<void> networkRequestHandlerWithMessage<T>({
 }) async {
   try {
     final response = await apiCall();
-    if (response.success == Constant.SUCCESS_RES_CHECK_VALUE) {
+    if (response.success == Constant.successResCheckValue) {
       onSuccess?.call(response); // Pass full response
     } else {
       onError?.call(response.message ?? "Unknown error occurred.");

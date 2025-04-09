@@ -391,11 +391,11 @@ class RtcViewmodel extends ChangeNotifier {
   void removeFromCall(String identity) {
     Map<String, dynamic> body = {
       "participant_id": identity,
-      "meeting_uid": meetingDetails.meeting_uid
+      "meeting_uid": meetingDetails.meetingUid
     };
     networkRequestHandler(
       apiCall: () =>
-          apiClient.removeParticipant(meetingDetails.authorization_token, body),
+          apiClient.removeParticipant(meetingDetails.authorizationToken, body),
       onSuccess: (_) => sendMessageToUI("Participant Removed"),
       onError: (message) => sendMessageToUI(message),
     );
@@ -404,18 +404,18 @@ class RtcViewmodel extends ChangeNotifier {
   void makeCoHost(String identity, bool isCoHost) {
     Map<String, dynamic> body = {
       "participant_identity": identity,
-      "meeting_uid": meetingDetails.meeting_uid,
+      "meeting_uid": meetingDetails.meetingUid,
       "is_co_host": isCoHost
     };
     networkRequestHandler(
       apiCall: () =>
-          apiClient.makeCoHost(meetingDetails.authorization_token, body),
+          apiClient.makeCoHost(meetingDetails.authorizationToken, body),
       onSuccess: (_) => sendPrivateAction(
           ActionModel(
               action: !isCoHost
                   ? MeetingActions.removeCoHost
                   : MeetingActions.makeCoHost,
-              token: !isCoHost ? "" : meetingDetails.authorization_token),
+              token: !isCoHost ? "" : meetingDetails.authorizationToken),
           identity),
       onError: (message) => sendMessageToUI(message),
     );
@@ -430,11 +430,11 @@ class RtcViewmodel extends ChangeNotifier {
 
   void startRecording({bool isNeedToShowError = true}) {
     Map<String, dynamic> body = {
-      "meeting_uid": meetingDetails.meeting_uid,
+      "meeting_uid": meetingDetails.meetingUid,
     };
     networkRequestHandler(
       apiCall: () =>
-          apiClient.startRecording(meetingDetails.authorization_token, body),
+          apiClient.startRecording(meetingDetails.authorizationToken, body),
       onSuccess: (_) {
         setRecording(true);
         sendMessageToUI("Recording Starting");
@@ -449,11 +449,11 @@ class RtcViewmodel extends ChangeNotifier {
 
   void stopRecording() {
     Map<String, dynamic> body = {
-      "meeting_uid": meetingDetails.meeting_uid,
+      "meeting_uid": meetingDetails.meetingUid,
     };
     networkRequestHandler(
       apiCall: () =>
-          apiClient.stopRecording(meetingDetails.authorization_token, body),
+          apiClient.stopRecording(meetingDetails.authorizationToken, body),
       onSuccess: (_) {
         setRecording(false);
         sendMessageToUI("Recording Stop");
@@ -562,7 +562,7 @@ class RtcViewmodel extends ChangeNotifier {
       bool acceptAll = false}) {
     if (request == null) return;
     Map<String, dynamic> body = {
-      "meeting_uid": meetingDetails.meeting_uid,
+      "meeting_uid": meetingDetails.meetingUid,
     };
     if (!acceptAll) {
       body["request_id"] = request.requestId;
@@ -881,14 +881,14 @@ class RtcViewmodel extends ChangeNotifier {
   void setTranscriptionLanguage(
       LanguageModel selectedLanguage, Function transcriptionEnabled) {
     Map<String, dynamic> body = {
-      "meeting_uid": meetingDetails.meeting_uid,
+      "meeting_uid": meetingDetails.meetingUid,
       "transcription_enable": true,
       "transcription_lang_iso": selectedLanguage.code,
       "transcription_lang_title": selectedLanguage.code
     };
     networkRequestHandler(
         apiCall: () => apiClient.setTranscriptionLanguage(
-            meetingDetails.authorization_token, body),
+            meetingDetails.authorizationToken, body),
         onSuccess: (data) {
           isTranscriptionLanguageSelected = true;
           sendAction(ActionModel(
@@ -905,7 +905,7 @@ class RtcViewmodel extends ChangeNotifier {
 
   void startTranscription() {
     Map<String, dynamic> body = {
-      "meeting_uid": meetingDetails.meeting_uid,
+      "meeting_uid": meetingDetails.meetingUid,
     };
     networkRequestHandler(apiCall: () => apiClient.startTranscription(body));
   }
@@ -1097,7 +1097,7 @@ class RtcViewmodel extends ChangeNotifier {
   void translateText(TranscriptionModel transcriptionData,
       {Function? callBack}) {
     Map<String, dynamic> body = {
-      "meeting_uid": meetingDetails.meeting_uid,
+      "meeting_uid": meetingDetails.meetingUid,
       "source_language": transcriptionData.sourceLang,
       "target_language": translationLanguage?.code,
       "text": transcriptionData.transcription,
@@ -1119,7 +1119,7 @@ class RtcViewmodel extends ChangeNotifier {
 
   void endMeetingForAll() {
     Map<String, dynamic> body = {
-      "meeting_uid": meetingDetails.meeting_uid,
+      "meeting_uid": meetingDetails.meetingUid,
     };
     networkRequestHandler(
       apiCall: () => apiClient.endMeeting(body),
@@ -1131,7 +1131,7 @@ class RtcViewmodel extends ChangeNotifier {
   void updateParticipantName({String? participant, required String newName}) {
     if (participant == null) return;
     Map<String, dynamic> body = {
-      "meeting_uid": meetingDetails.meeting_uid,
+      "meeting_uid": meetingDetails.meetingUid,
       "participant_identity": participant,
       "new_name": newName,
     };
@@ -1156,12 +1156,12 @@ class RtcViewmodel extends ChangeNotifier {
 
   void meetingTimeExtend() {
     Map<String, dynamic> body = {
-      "meeting_uid": meetingDetails.meeting_uid,
+      "meeting_uid": meetingDetails.meetingUid,
       "is_extend_time": true,
     };
     networkRequestHandler(
         apiCall: () => apiClient.meetingTimeExtend(
-            meetingDetails.authorization_token, body),
+            meetingDetails.authorizationToken, body),
         onSuccess: (_) => sendAction(
             ActionModel(action: MeetingActions.extendMeetingEndTime)));
   }

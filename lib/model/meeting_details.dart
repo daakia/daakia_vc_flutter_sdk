@@ -2,14 +2,14 @@ import 'package:daakia_vc_flutter_sdk/model/features.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details_model.dart';
 
 class MeetingDetails {
-  final String meeting_uid;
+  final String meetingUid;
   final Features? features;
-  String authorization_token;
+  String authorizationToken;
   MeetingDetailsModel? meetingBasicDetails;
 
   MeetingDetails(
-      {required this.meeting_uid,
+      {required this.meetingUid,
       this.features,
-      required this.authorization_token,
+      required this.authorizationToken,
       required this.meetingBasicDetails});
 }

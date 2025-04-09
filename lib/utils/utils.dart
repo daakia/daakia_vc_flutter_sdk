@@ -377,6 +377,6 @@ class Utils {
 
   static bool isMessageSizeValid(String message) {
     final encodedMessage = utf8.encode(jsonEncode(message));
-    return encodedMessage.length <= Constant.MAX_MESSAGE_SIZE;
+    return encodedMessage.length <= Constant.maxMessageSize;
   }
 }

@@ -42,7 +42,7 @@ class MeetingManager {
     }
 
     // Schedule popup MEETING_ENDING_SOON_TIME minutes before the end time
-    final Duration popupDuration = timeDifference - const Duration(minutes: Constant.MEETING_ENDING_SOON_TIME);
+    final Duration popupDuration = timeDifference - const Duration(minutes: Constant.meetingEndSoonTime);
     if (popupDuration > Duration.zero) {
       popupTimer?.cancel();
       popupTimer = Timer(popupDuration, () {
@@ -69,8 +69,8 @@ class MeetingManager {
         title: const Text("Meeting Ending Soon"),
         content: Text(
           _canExtendMeeting()
-              ? "The meeting will end in ${Constant.MEETING_ENDING_SOON_TIME} minutes. You can extend it by ${Constant.MEETING_EXTEND_TIME} minutes."
-              : "The meeting will end in ${Constant.MEETING_ENDING_SOON_TIME} minutes.",
+              ? "The meeting will end in ${Constant.meetingEndSoonTime} minutes. You can extend it by ${Constant.meetingExtendTime} minutes."
+              : "The meeting will end in ${Constant.meetingEndSoonTime} minutes.",
         ),
         actions: [
           if (_canExtendMeeting())
@@ -97,8 +97,8 @@ class MeetingManager {
       return;
     }
 
-    endDateTime = endDateTime!.add(const Duration(minutes: Constant.MEETING_EXTEND_TIME));
-    debugPrint("Meeting extended by ${Constant.MEETING_EXTEND_TIME} minutes. New end time: $endDateTime");
+    endDateTime = endDateTime!.add(const Duration(minutes: Constant.meetingExtendTime));
+    debugPrint("Meeting extended by ${Constant.meetingExtendTime} minutes. New end time: $endDateTime");
     _scheduleTimers();
   }
 
