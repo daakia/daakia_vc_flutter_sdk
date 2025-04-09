@@ -40,6 +40,9 @@ dependencies:
   file_picker: ^8.1.7
   flutter_svg: ^2.0.17
   shared_preferences: ^2.4.0
+  flutter_chat_types: ^3.6.2
+  webview_flutter_android: ^4.3.0
+  webview_flutter_wkwebview: ^3.18.5
 
 dev_dependencies:
   flutter_test:
