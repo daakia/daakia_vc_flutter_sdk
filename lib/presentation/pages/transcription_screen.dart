@@ -91,7 +91,7 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
     String formattedTranscript =
         Utils.getTranscriptFormattedToSave(widget.viewModel.transcriptionList);
     var result = await Utils.saveDataToFile(formattedTranscript,
-        "caption_${widget.viewModel.meetingDetails.meeting_uid}_${DateTime.now().millisecondsSinceEpoch}");
+        "caption_${widget.viewModel.meetingDetails.meetingUid}_${DateTime.now().millisecondsSinceEpoch}");
     setState(() {
       _isLoading = false;
     });

@@ -515,8 +515,8 @@ class _PreJoinState extends State<PreJoinScreen> {
       );
 
       meetingDetails = MeetingDetails(
-          meeting_uid: widget.meetingId,
-          authorization_token: hostToken,
+          meetingUid: widget.meetingId,
+          authorizationToken: hostToken,
           features: features,
           meetingBasicDetails: widget.basicMeetingDetails);
       if (context.mounted) {

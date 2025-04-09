@@ -17,14 +17,14 @@ class StorageHelper {
     await prefs.clear();
   }
 
-  Future<void> setMeetingUid(String value) async => await saveData(Constant.MEETING_UID, value);
-  Future<String?> getMeetingUid() async => await getData(Constant.MEETING_UID);
+  Future<void> setMeetingUid(String value) async => await saveData(Constant.meetingUid, value);
+  Future<String?> getMeetingUid() async => await getData(Constant.meetingUid);
 
 
-  Future<void> setSessionUid(String value) async => await saveData(Constant.SESSION_UID, value);
-  Future<String?> getSessionUid() async => await getData(Constant.SESSION_UID);
+  Future<void> setSessionUid(String value) async => await saveData(Constant.sessionUid, value);
+  Future<String?> getSessionUid() async => await getData(Constant.sessionUid);
 
 
-  Future<void> setAttendanceId(String value) async => await saveData(Constant.ATTENDANCE_ID, value);
-  Future<String?> getAttendanceId() async => await getData(Constant.ATTENDANCE_ID);
+  Future<void> setAttendanceId(String value) async => await saveData(Constant.attendanceId, value);
+  Future<String?> getAttendanceId() async => await getData(Constant.attendanceId);
 }

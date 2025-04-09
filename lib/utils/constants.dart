@@ -1,19 +1,19 @@
 import 'dart:io';
 
 class Constant {
-  static final String PLATFORM = getPlatform();
+  static final String platform = getPlatform();
 
-  static const String MEETING_UID = "MEETING_UID";
-  static const String SESSION_UID = "SESSION_UID";
-  static const String ATTENDANCE_ID = "ATTENDANCE_ID";
+  static const String meetingUid = "MEETING_UID";
+  static const String sessionUid = "SESSION_UID";
+  static const String attendanceId = "ATTENDANCE_ID";
 
-  static const int MEETING_EXTEND_TIME = 10;
-  static const int MEETING_ENDING_SOON_TIME = 10;
+  static const int meetingExtendTime = 10;
+  static const int meetingEndSoonTime = 10;
 
-  static const int MAX_MESSAGE_SIZE = 16384; // 16 KB limit
+  static const int maxMessageSize = 16384; // 16 KB limit
 
 
-  static const int SUCCESS_RES_CHECK_VALUE = 1;
+  static const int successResCheckValue = 1;
 
   static String getPlatform() {
     if (Platform.isAndroid) {

@@ -7,27 +7,35 @@ import '../../events/rtc_events.dart';
 
 class LocalFilePreview extends StatefulWidget {
   final File file;
-  double progress = 0.0;
+  final double progress;
   final RtcViewmodel viewModel;
 
-  LocalFilePreview(
-      {super.key,
-      required this.file,
-      this.progress = 0.0,
-      required this.viewModel});
+  const LocalFilePreview({
+    super.key,
+    required this.file,
+    this.progress = 0.0,
+    required this.viewModel,
+  });
 
   @override
   State<LocalFilePreview> createState() => _LocalFilePreviewState();
 }
 
 class _LocalFilePreviewState extends State<LocalFilePreview> {
+  late double _progress;
+
+  @override
+  void initState() {
+    super.initState();
+    _progress = widget.progress;
+    collectLobbyEvents(widget.viewModel);
+  }
+
   @override
   Widget build(BuildContext context) {
-    collectLobbyEvents(widget.viewModel);
     final fileName = widget.file.path.split('/').last;
     final fileExtension = fileName.split('.').last.toLowerCase();
 
-    // Determine file type icon
     IconData getFileIcon() {
       switch (fileExtension) {
         case 'jpg':
@@ -61,14 +69,8 @@ class _LocalFilePreviewState extends State<LocalFilePreview> {
       ),
       child: Row(
         children: [
-          // File type icon
-          Icon(
-            getFileIcon(),
-            size: 32,
-            color: Colors.blueAccent,
-          ),
+          Icon(getFileIcon(), size: 32, color: Colors.blueAccent),
           const SizedBox(width: 10),
-          // File name
           Expanded(
             child: Text(
               fileName,
@@ -82,14 +84,12 @@ class _LocalFilePreviewState extends State<LocalFilePreview> {
             ),
           ),
           const SizedBox(width: 10),
-          // Placeholder for upload progress
-          if (widget.progress != -1)
-            Container(
+          if (_progress != -1)
+            SizedBox(
               width: 20,
               height: 20,
-              alignment: Alignment.center,
               child: CircularProgressIndicator(
-                value: widget.progress, // Progress value
+                value: _progress,
                 strokeWidth: 2.0,
                 color: Colors.green,
                 backgroundColor: Colors.grey,
@@ -97,7 +97,7 @@ class _LocalFilePreviewState extends State<LocalFilePreview> {
             )
           else
             const Icon(
-              Icons.upload, // Icon shown when progress is -1
+              Icons.upload,
               size: 20,
               color: Colors.white54,
             ),
@@ -108,20 +108,16 @@ class _LocalFilePreviewState extends State<LocalFilePreview> {
 
   bool isEventAdded = false;
 
-  void collectLobbyEvents(RtcViewmodel? viewModel) {
+  void collectLobbyEvents(RtcViewmodel viewModel) {
     if (isEventAdded) return;
     isEventAdded = true;
-    viewModel?.uploadAttachmentController.listen((event) {
-      if (event is UpdateView) {
-        if (mounted) {
-          setState(() {});
-        }
-      } else if (event is ShowProgress) {
-        if (mounted) {
-          setState(() {
-            widget.progress = event.progress;
-          });
-        }
+    viewModel.uploadAttachmentController.listen((event) {
+      if (event is UpdateView && mounted) {
+        setState(() {});
+      } else if (event is ShowProgress && mounted) {
+        setState(() {
+          _progress = event.progress;
+        });
       }
     });
   }

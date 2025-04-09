@@ -3,7 +3,7 @@ import 'package:livekit_client/livekit_client.dart';
 
 class ParticipantSorter {
 
-  static const Duration DEBOUNCE_DURATION = Duration(milliseconds: 300);
+  static const Duration debounceDuration = Duration(milliseconds: 300);
 
   static List<ParticipantTrack> sortTrack(Room room, bool flagStartedReplayKit) {
     List<ParticipantTrack> userMediaTracks = [];
