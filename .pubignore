@@ -1,0 +1,14 @@
+example/android/app/.cxx
+example/ios/Podfile.lock
+
+example/pubspec.lock
+
+# Linux
+example/linux/flutter/generated_plugin_registrant.cc
+example/linux/flutter/generated_plugin_registrant.h
+example/linux/flutter/generated_plugins.cmake
+
+# Windows
+example/windows/flutter/generated_plugin_registrant.cc
+example/windows/flutter/generated_plugin_registrant.h
+example/windows/flutter/generated_plugins.cmake
