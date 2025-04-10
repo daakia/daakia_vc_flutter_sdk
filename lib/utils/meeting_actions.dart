@@ -30,7 +30,7 @@ class MeetingActions {
   static const String blush = "blush";
   static const String clap = "clap";
   static const String smile = "smile";
-  static const String thumbsUp = "thumbs_up";
+  static const String thumbsUp = "thumbsUp";
 
   static const String muteCamera = "mute_camera";
   static const String muteMic = "mute_mic";
