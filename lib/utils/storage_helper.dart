@@ -27,4 +27,7 @@ class StorageHelper {
 
   Future<void> setAttendanceId(String value) async => await saveData(Constant.attendanceId, value);
   Future<String?> getAttendanceId() async => await getData(Constant.attendanceId);
+
+  Future<void> setHostToken(String? value) async => await saveData(Constant.hostToken, value ?? "");
+  Future<String?> getHostToken() async => await getData(Constant.hostToken);
 }

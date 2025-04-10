@@ -193,6 +193,9 @@ class _PreJoinState extends State<PreJoinScreen> {
             widget.basicMeetingDetails?.currentSessionUid) {
           if (await cacheData.getAttendanceId() != "") {
             body["meeting_attendance_uid"] = await cacheData.getAttendanceId();
+            if(hostToken.isEmpty){
+              hostToken = await cacheData.getHostToken() ?? "";
+            }
           }
         }
       }
