@@ -8,7 +8,7 @@ final apiClient = RestClient(setDio());
 
 Dio setDio() {
   final dio = Dio();
-  dio.options.baseUrl = 'https://api.daakia.co.in/v2.0/';
+  dio.options.baseUrl = Constant.baseUrl;
   return dio;
 }
 

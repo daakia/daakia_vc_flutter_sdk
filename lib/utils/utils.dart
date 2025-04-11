@@ -379,4 +379,10 @@ class Utils {
     final encodedMessage = utf8.encode(jsonEncode(message));
     return encodedMessage.length <= Constant.maxMessageSize;
   }
+
+  static String generateWhiteboardUrl({required String meetingId,
+    required String livekitToken,
+  }) {
+    return '${Constant.whiteboardDomain}/whiteboard/$meetingId?token=$livekitToken';
+  }
 }
