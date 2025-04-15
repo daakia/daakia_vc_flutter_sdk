@@ -143,7 +143,7 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          if (!widget.viewModel.isHost() &&
+          if ((!widget.viewModel.isHost() && !widget.viewModel.isCoHost()) &&
               widget.viewModel.meetingDetails.features!
                   .isVoiceTextTranslationAllowed())
             IconButton(
@@ -171,7 +171,7 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
       body: Stack(
         children: [
           // Main UI
-          if (widget.viewModel.isHost() &&
+          if ((widget.viewModel.isHost() || widget.viewModel.isCoHost()) &&
               !widget.viewModel.isTranscriptionLanguageSelected)
             Column(
               children: [

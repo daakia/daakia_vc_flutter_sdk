@@ -124,7 +124,7 @@ class RemoteActivityData {
       displayName: displayName ?? this.displayName,
       participantLobbyStatus:
       participantLobbyStatus ?? this.participantLobbyStatus,
-      token: token ?? token,
+      token: token ?? this.token,
       value: value ?? this.value,
       userIdentity: userIdentity ?? this.userIdentity,
       userName: userName ?? this.userName,

@@ -83,6 +83,7 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                   isVisible: viewModel.meetingDetails.features!
                           .isVoiceTranscriptionAllowed() &&
                       (viewModel.isHost() ||
+                          viewModel.isCoHost() ||
                           viewModel.isTranscriptionLanguageSelected),
                   onTap: () async {
                 Navigator.pop(context);

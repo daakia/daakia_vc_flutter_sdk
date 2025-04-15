@@ -82,12 +82,15 @@ class _PreJoinState extends State<PreJoinScreen> {
     _subscription =
         Hardware.instance.onDeviceChange.stream.listen(_loadDevices);
     Hardware.instance.enumerateDevices().then(_loadDevices);
-    meetingManager = MeetingManager(
-        endDate: getMeetingEndDate(),
-        endMeetingCallBack: (event) {},
-        context: context);
+    // Schedule verifyCoHost after widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      verifyCoHost();
+      meetingManager = MeetingManager(
+          endDate: getMeetingEndDate(),
+          endMeetingCallBack: (event) {},
+          context: context);
+    });
     super.initState();
-    verifyCoHost();
   }
 
   String? getMeetingEndDate() {
@@ -193,6 +196,9 @@ class _PreJoinState extends State<PreJoinScreen> {
             widget.basicMeetingDetails?.currentSessionUid) {
           if (await cacheData.getAttendanceId() != "") {
             body["meeting_attendance_uid"] = await cacheData.getAttendanceId();
+            if(hostToken.isEmpty){
+              hostToken = await cacheData.getHostToken() ?? "";
+            }
           }
         }
       }
