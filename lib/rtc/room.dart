@@ -350,6 +350,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           storageHelper.setMeetingUid(viewModel?.meetingDetails.meetingUid ?? "");
           storageHelper.setSessionUid(Utils.getMetadataSessionUid(metadata));
           storageHelper.setAttendanceId(Utils.getMetadataAttendanceId(metadata));
+          storageHelper.setHostToken(remoteData.token ?? "");
         } else {
           viewModel?.setCoHost(false);
           StorageHelper().clearAllData();
