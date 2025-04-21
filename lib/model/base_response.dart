@@ -6,14 +6,16 @@ class BaseResponse<T> {
   BaseResponse({this.success, this.message, this.data});
 
   BaseResponse.fromJson(
-      Map<String, dynamic> json, T Function(Map<String, dynamic>) fromJsonT) {
+      Map<String, dynamic> json,
+      T Function(dynamic json) fromJsonT,
+      ) {
     success = json['success'];
     message = json['message'];
 
     if (json['data'] != null) {
-      // Handle empty array or non-object data
-      if (json['data'] is List && (json['data'] as List).isEmpty) {
-        data = null; // Assign null if data is an empty array
+      if (json['data'] is List) {
+        // T must be List<SomeModel>
+        data = (json['data'] as List).map((item) => fromJsonT(item)).toList() as T;
       } else {
         data = fromJsonT(json['data']);
       }
@@ -21,6 +23,7 @@ class BaseResponse<T> {
       data = null;
     }
   }
+
 
   Map<String, dynamic> toJson(Map<String, dynamic> Function(T) toJsonT) {
     final Map<String, dynamic> json = {};

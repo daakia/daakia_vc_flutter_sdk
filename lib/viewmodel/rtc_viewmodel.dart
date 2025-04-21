@@ -1180,4 +1180,14 @@ class RtcViewmodel extends ChangeNotifier {
             .meetingBasicDetails?.meetingConfig?.autoMeetingEndSchedule ??
         meetingDetails.meetingBasicDetails?.endDate;
   }
+
+  void getWhiteboardData() {
+    networkListRequestHandler(
+      apiCall: ()=> apiClient.getWhiteBoardData(meetingDetails.meetingBasicDetails?.meetingId.toString() ?? ""),
+      onSuccess: (data) {
+        final whiteboard = data!.first;
+        sendEvent(WhiteboardStatus(status: whiteboard.status == 'open'));
+      }
+    );
+  }
 }

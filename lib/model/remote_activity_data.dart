@@ -17,9 +17,10 @@ class RemoteActivityData {
   final String? userIdentity;
   final String? userName;
   final TranscriptionActionModel? liveCaptionsData;
-  final String? partialTranscription;  // New field
-  final String? finalTranscription;  // New field
-  final String? participantIdentity;  // New field
+  final String? partialTranscription;
+  final String? finalTranscription;
+  final String? participantIdentity;
+  final int? whiteboardId; // ✅ ADD NEW FIELD
 
   RemoteActivityData({
     this.identity,
@@ -37,15 +38,15 @@ class RemoteActivityData {
     this.userIdentity = "",
     this.userName = "",
     this.liveCaptionsData,
-    this.partialTranscription,  // New field
-    this.finalTranscription,  // New field
-    this.participantIdentity,  // New field
+    this.partialTranscription,
+    this.finalTranscription,
+    this.participantIdentity,
+    this.whiteboardId, // ✅ ADD NEW FIELD
   });
 
-  // Factory constructor to create an instance from JSON
   factory RemoteActivityData.fromJson(Map<String, dynamic> json) {
     return RemoteActivityData(
-      identity: json['identity'], // Handle RemoteParticipant parsing if needed
+      identity: json['identity'], // Optional: parse if needed
       id: json['id'] as String?,
       message: json['message'] as String?,
       timestamp: json['timestamp'] as int?,
@@ -62,9 +63,10 @@ class RemoteActivityData {
       liveCaptionsData: json['liveCaptionsData'] != null
           ? TranscriptionActionModel.fromJson(json['liveCaptionsData'] as Map<String, dynamic>)
           : null,
-      partialTranscription: json['partial'] as String?,  // New field
-      finalTranscription: json['final'] as String?,  // New field
-      participantIdentity: json['participant_identity'] as String?,  // New field
+      partialTranscription: json['partial'] as String?,
+      finalTranscription: json['final'] as String?,
+      participantIdentity: json['participant_identity'] as String?,
+      whiteboardId: json['whiteboardId'] as int?, // ✅ ADD NEW FIELD
     );
   }
 
@@ -86,32 +88,34 @@ class RemoteActivityData {
       'user_identity': userIdentity,
       'user_name': userName,
       'liveCaptionsData': liveCaptionsData,
-      'partial': partialTranscription,  // New field
-      'final': finalTranscription,  // New field
-      'participant_identity': participantIdentity,  // New field
+      'partial': partialTranscription,
+      'final': finalTranscription,
+      'participant_identity': participantIdentity,
+      'whiteboardId': whiteboardId, // ✅ ADD NEW FIELD
     };
   }
 
-  copyWith(
-      {RemoteParticipant? identity,
-        String? id,
-        String? message,
-        int? timestamp,
-        String? action,
-        String? requestId,
-        bool? isSender,
-        String? meetingUid,
-        String? displayName,
-        String? participantLobbyStatus,
-        String? token,
-        bool? value,
-        String? userIdentity,
-        String? userName,
-        TranscriptionActionModel? liveCaptionsData,
-        String? partialTranscription,  // New field
-        String? finalTranscription, // New field
-        String? participantIdentity, // New field
-      }) {
+  copyWith({
+    RemoteParticipant? identity,
+    String? id,
+    String? message,
+    int? timestamp,
+    String? action,
+    bool? isSender,
+    String? requestId,
+    String? meetingUid,
+    String? displayName,
+    String? participantLobbyStatus,
+    String? token,
+    bool? value,
+    String? userIdentity,
+    String? userName,
+    TranscriptionActionModel? liveCaptionsData,
+    String? partialTranscription,
+    String? finalTranscription,
+    String? participantIdentity,
+    int? whiteboardId, // ✅ ADD NEW FIELD
+  }) {
     return RemoteActivityData(
       identity: identity ?? this.identity,
       id: id ?? this.id,
@@ -129,9 +133,10 @@ class RemoteActivityData {
       userIdentity: userIdentity ?? this.userIdentity,
       userName: userName ?? this.userName,
       liveCaptionsData: liveCaptionsData ?? this.liveCaptionsData,
-      partialTranscription: partialTranscription ?? this.partialTranscription,  // New field
-      finalTranscription: finalTranscription ?? this.finalTranscription,  // New field
-      participantIdentity: participantIdentity ?? this.participantIdentity,  // New field
+      partialTranscription: partialTranscription ?? this.partialTranscription,
+      finalTranscription: finalTranscription ?? this.finalTranscription,
+      participantIdentity: participantIdentity ?? this.participantIdentity,
+      whiteboardId: whiteboardId ?? this.whiteboardId, // ✅ ADD NEW FIELD
     );
   }
 }

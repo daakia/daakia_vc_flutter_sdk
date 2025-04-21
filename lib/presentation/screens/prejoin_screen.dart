@@ -523,6 +523,7 @@ class _PreJoinState extends State<PreJoinScreen> {
       meetingDetails = MeetingDetails(
           meetingUid: widget.meetingId,
           authorizationToken: hostToken,
+          livekitToken: livekitToken,
           features: features,
           meetingBasicDetails: widget.basicMeetingDetails);
       if (context.mounted) {

@@ -5,11 +5,13 @@ class MeetingDetails {
   final String meetingUid;
   final Features? features;
   String authorizationToken;
+  String livekitToken;
   MeetingDetailsModel? meetingBasicDetails;
 
   MeetingDetails(
       {required this.meetingUid,
       this.features,
       required this.authorizationToken,
+        required this.livekitToken,
       required this.meetingBasicDetails});
 }
