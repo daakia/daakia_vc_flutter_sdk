@@ -397,8 +397,9 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       case MeetingActions.showLiveCaption:
         if (remoteData.liveCaptionsData != null) {
           if (viewModel == null) return;
-          if (!viewModel.meetingDetails.features!.isVoiceTranscriptionAllowed())
+          if (!viewModel.meetingDetails.features!.isVoiceTranscriptionAllowed()) {
             return;
+          }
           viewModel.saveTranscriptionLanguage(remoteData.liveCaptionsData);
           if (remoteData.liveCaptionsData?.isLanguageSelected == true) {
             showSnackBar(
