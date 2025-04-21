@@ -43,7 +43,7 @@ class _RestClient implements RestClient {
     try {
       _value = BaseResponse<RtcData>.fromJson(
         _result.data!,
-        (json) => RtcData.fromJson(json),
+        (json) => RtcData.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -107,7 +107,7 @@ class _RestClient implements RestClient {
     try {
       _value = BaseResponse<HostTokenModel>.fromJson(
         _result.data!,
-        (json) => HostTokenModel.fromJson(json),
+        (json) => HostTokenModel.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -140,7 +140,7 @@ class _RestClient implements RestClient {
     try {
       _value = BaseResponse<LicenceVerifyModel>.fromJson(
         _result.data!,
-        (json) => LicenceVerifyModel.fromJson(json),
+        (json) => LicenceVerifyModel.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -174,7 +174,7 @@ class _RestClient implements RestClient {
     try {
       _value = BaseResponse<MeetingDetailsModel>.fromJson(
         _result.data!,
-        (json) => MeetingDetailsModel.fromJson(json),
+        (json) => MeetingDetailsModel.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -207,7 +207,8 @@ class _RestClient implements RestClient {
     try {
       _value = BaseResponse<EventPasswordProtectedData>.fromJson(
         _result.data!,
-        (json) => EventPasswordProtectedData.fromJson(json),
+        (json) =>
+            EventPasswordProtectedData.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -240,7 +241,8 @@ class _RestClient implements RestClient {
     try {
       _value = BaseResponse<EventPasswordProtectedData>.fromJson(
         _result.data!,
-        (json) => EventPasswordProtectedData.fromJson(json),
+        (json) =>
+            EventPasswordProtectedData.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -270,7 +272,7 @@ class _RestClient implements RestClient {
     try {
       _value = BaseResponse<FeatureData>.fromJson(
         _result.data!,
-        (json) => FeatureData.fromJson(json),
+        (json) => FeatureData.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -443,7 +445,7 @@ class _RestClient implements RestClient {
     try {
       _value = BaseResponse<RtcData>.fromJson(
         _result.data!,
-        (json) => RtcData.fromJson(json),
+        (json) => RtcData.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -476,7 +478,7 @@ class _RestClient implements RestClient {
     try {
       _value = BaseResponse<RtcData>.fromJson(
         _result.data!,
-        (json) => RtcData.fromJson(json),
+        (json) => RtcData.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -525,7 +527,7 @@ class _RestClient implements RestClient {
     try {
       _value = BaseResponse<UploadData>.fromJson(
         _result.data!,
-        (json) => UploadData.fromJson(json),
+        (json) => UploadData.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -626,7 +628,7 @@ class _RestClient implements RestClient {
     try {
       _value = BaseResponse<TranslationData>.fromJson(
         _result.data!,
-        (json) => TranslationData.fromJson(json),
+        (json) => TranslationData.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -695,6 +697,38 @@ class _RestClient implements RestClient {
       _value = BaseResponse<dynamic>.fromJson(
         _result.data!,
         (json) => json as dynamic,
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<BaseListResponse<WhiteboardData>> getWhiteBoardData(
+    String meetingId,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'meeting_id': meetingId};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<BaseListResponse<WhiteboardData>>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            'rtc/meeting/whiteboard/get',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late BaseListResponse<WhiteboardData> _value;
+    try {
+      _value = BaseListResponse<WhiteboardData>.fromJson(
+        _result.data!,
+        (json) => WhiteboardData.fromJson(json),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);

@@ -6,12 +6,14 @@ import 'package:daakia_vc_flutter_sdk/model/translation_data.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
+import '../model/base_list_response.dart';
 import '../model/base_response.dart';
 import '../model/event_password_protected_data.dart';
 import '../model/host_token_model.dart';
 import '../model/meeting_details_model.dart';
 import '../model/rtc_data.dart';
 import '../model/upload_data.dart';
+import '../model/white_board_data.dart';
 
 part 'api_client.g.dart';
 
@@ -120,7 +122,12 @@ abstract class RestClient {
 
   @POST("rtc/meeting/time/extend")
   Future<BaseResponse> meetingTimeExtend(
-      @Header("Authorization") String token,
-      @Body() Map<String, dynamic> body,
+    @Header("Authorization") String token,
+    @Body() Map<String, dynamic> body,
+  );
+
+  @GET("rtc/meeting/whiteboard/get")
+  Future<BaseListResponse<WhiteboardData>> getWhiteBoardData(
+    @Query("meeting_id") String meetingId,
   );
 }
