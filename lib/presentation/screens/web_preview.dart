@@ -38,17 +38,9 @@ class _WebPreviewState extends State<WebPreview> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onProgress: (int progress) {
-            debugPrint('Loading progress: $progress%');
-          },
-          onPageStarted: (String url) {
-            debugPrint('Started loading: $url');
-          },
-          onPageFinished: (String url) {
-            debugPrint('Finished loading: $url');
+            debugPrint('Loading: $progress%');
           },
           onNavigationRequest: (NavigationRequest request) {
-            debugPrint('Navigating to: ${request.url}');
-            // For other URLs, allow the WebView to load them
             return NavigationDecision.navigate;
           },
         ),

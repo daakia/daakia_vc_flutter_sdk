@@ -595,12 +595,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
-          onProgress: (progress) => debugPrint("Progress: $progress%"),
-          onPageStarted: (url) => debugPrint("Started: $url"),
-          onPageFinished: (url) => debugPrint("Finished: $url"),
           onNavigationRequest: (NavigationRequest request) {
-            debugPrint('Navigating Request: ${request.url}');
-            // For other URLs, allow the WebView to load them
             return NavigationDecision.navigate;
           },
         ),
