@@ -48,6 +48,8 @@ class MeetingActions {
 
   static const String extendMeetingEndTime = "extend-meeting-end-time";
 
+  static const String whiteboardState = "whiteboard-state";
+
   // ✅ Method to check if an action is valid
   static bool isValidAction(String? action) {
     if (action == null) return false; // Ensures action is not null
@@ -85,5 +87,6 @@ class MeetingActions {
     liveCaption,
     requestLiveCaptionDrawerState,
     extendMeetingEndTime,
+    whiteboardState
   };
 }

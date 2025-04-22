@@ -6,12 +6,13 @@ import 'package:animated_emoji/emojis.g.dart';
 import 'package:daakia_vc_flutter_sdk/events/meeting_end_events.dart';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/emoji_reaction_widget.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/lobby_request_manager.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant_info.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/pip_screen.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/rtc_controls.dart';
-import 'package:daakia_vc_flutter_sdk/presentation/widgets/emoji_reaction_widget.dart';
+import 'package:daakia_vc_flutter_sdk/rtc/widgets/white_board_widget.dart';
 import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
 import 'package:daakia_vc_flutter_sdk/utils/storage_helper.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_provider.dart';
@@ -22,6 +23,8 @@ import 'package:flutter/services.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:simple_pip_mode/simple_pip.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../model/emoji_message.dart';
 import '../model/remote_activity_data.dart';
@@ -98,14 +101,20 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       if (!fastConnection) {
         _askPublish();
       }
-      meetingManager = MeetingManager(endDate: viewModel?.getMeetingEndDate(), isAutoMeetingEnd: viewModel?.isAutoMeetingEndEnable(), endMeetingCallBack: (event) {
-        if(event is MeetingEnd) {
-          _meetingEndLogic(viewModel);
-        } else if(event is MeetingExtends){
-          viewModel?.meetingTimeExtend();
-        }
-      }, context: context);
+      meetingManager = MeetingManager(
+          endDate: viewModel?.getMeetingEndDate(),
+          isAutoMeetingEnd: viewModel?.isAutoMeetingEndEnable(),
+          endMeetingCallBack: (event) {
+            if (event is MeetingEnd) {
+              _meetingEndLogic(viewModel);
+            } else if (event is MeetingExtends) {
+              viewModel?.meetingTimeExtend();
+            }
+          },
+          context: context);
       meetingManager.startMeetingEndScheduler();
+      _initializeWebViewController();
+      viewModel?.getWhiteboardData();
     });
 
     if (lkPlatformIs(PlatformType.android)) {
@@ -252,8 +261,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     ..on<ParticipantNameUpdatedEvent>((event) {
       _sortParticipants();
     })
-    ..on<ParticipantMetadataUpdatedEvent>((event) {
-    })
+    ..on<ParticipantMetadataUpdatedEvent>((event) {})
     ..on<RoomMetadataChangedEvent>((event) {})
     ..on<DataReceivedEvent>((event) {
       _handleDataChannel(event);
@@ -280,7 +288,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
   Future<void> _checkReceivedDataType(RemoteActivityData remoteData) async {
     var viewModel = _livekitProviderKey.currentState?.viewModel;
-    if(!MeetingActions.isValidAction(remoteData.action)) return;
+    if (!MeetingActions.isValidAction(remoteData.action)) return;
     switch (remoteData.action) {
       case MeetingActions.raiseHand:
         viewModel?.setHandRaised(remoteData);
@@ -332,12 +340,14 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         break;
 
       case MeetingActions.askToUnmuteMic:
-        final result = await context.showPermissionAskDialog("Host is asking you to turn on your mic");
+        final result = await context
+            .showPermissionAskDialog("Host is asking you to turn on your mic");
         if (result == true) viewModel?.enableAudio();
         break;
 
       case MeetingActions.askToUnmuteCamera:
-        final result = await context.showPermissionAskDialog("Host is asking you to turn on your camera");
+        final result = await context.showPermissionAskDialog(
+            "Host is asking you to turn on your camera");
         if (result == true) viewModel?.enableVideo();
         break;
 
@@ -347,9 +357,12 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           viewModel?.meetingDetails.authorizationToken = remoteData.token ?? "";
           var metadata = viewModel?.room.localParticipant?.metadata;
           final storageHelper = StorageHelper();
-          storageHelper.setMeetingUid(viewModel?.meetingDetails.meetingUid ?? "");
+          storageHelper
+              .setMeetingUid(viewModel?.meetingDetails.meetingUid ?? "");
           storageHelper.setSessionUid(Utils.getMetadataSessionUid(metadata));
-          storageHelper.setAttendanceId(Utils.getMetadataAttendanceId(metadata));
+          storageHelper
+              .setAttendanceId(Utils.getMetadataAttendanceId(metadata));
+          storageHelper.setHostToken(remoteData.token ?? "");
         } else {
           viewModel?.setCoHost(false);
           StorageHelper().clearAllData();
@@ -384,7 +397,9 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       case MeetingActions.showLiveCaption:
         if (remoteData.liveCaptionsData != null) {
           if (viewModel == null) return;
-          if (!viewModel.meetingDetails.features!.isVoiceTranscriptionAllowed()) return;
+          if (!viewModel.meetingDetails.features!.isVoiceTranscriptionAllowed()) {
+            return;
+          }
           viewModel.saveTranscriptionLanguage(remoteData.liveCaptionsData);
           if (remoteData.liveCaptionsData?.isLanguageSelected == true) {
             showSnackBar(
@@ -414,15 +429,29 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         meetingManager.extendMeetingBy10Minutes();
         break;
 
+      case MeetingActions.whiteboardState:
+        if (remoteData.value) {
+          setState(() {
+            _isWhiteBoardEnabled = true;
+            loadWhiteboardUrl(Utils.generateWhiteboardUrl(
+                meetingId: widget.meetingDetails.meetingUid,
+                livekitToken: widget.meetingDetails.livekitToken));
+          });
+        } else {
+          setState(() {
+            _isWhiteBoardEnabled = false;
+          });
+        }
+        break;
+
       case "":
-      // Handle empty action case if needed
+        // Handle empty action case if needed
         break;
 
       default:
-      // Handle null or unknown action
+        // Handle null or unknown action
         break;
     }
-
   }
 
   RemoteActivityData parseJsonData(List<int> jsonData) {
@@ -549,6 +578,38 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
       GlobalKey<ScaffoldMessengerState>();
 
+  late final WebViewController _webViewController;
+  bool _webViewInitialized = false;
+
+  bool _isWhiteBoardEnabled = false;
+
+  void _initializeWebViewController() {
+    final params = WebViewPlatform.instance is WebKitWebViewPlatform
+        ? WebKitWebViewControllerCreationParams(
+            allowsInlineMediaPlayback: true,
+            mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
+          )
+        : const PlatformWebViewControllerCreationParams();
+
+    _webViewController = WebViewController.fromPlatformCreationParams(params)
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onNavigationRequest: (NavigationRequest request) {
+            return NavigationDecision.navigate;
+          },
+        ),
+      );
+  }
+
+  /// 👇 Call this function from your event listener to load the URL
+  void loadWhiteboardUrl(String url) {
+    if (!_webViewInitialized) {
+      _webViewInitialized = true;
+      _webViewController.loadRequest(Uri.parse(url));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
@@ -613,32 +674,48 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
                                   Column(
                                     children: [
                                       Expanded(
-                                        child: participantTracks.isNotEmpty
-                                            ? ParticipantWidget.widgetFor(
-                                                participantTracks.first,
-                                                showStatsLayer: true,
+                                        child: _isWhiteBoardEnabled
+                                            ? WhiteBoardWidget(
+                                                key: const ValueKey(
+                                                    'whiteboard'),
+                                                controller: _webViewController,
                                               )
-                                            : Container(),
+                                            : participantTracks.isNotEmpty
+                                                ? ParticipantWidget.widgetFor(
+                                                    participantTracks.first,
+                                                    showStatsLayer: true,
+                                                  )
+                                                : Container(),
                                       ),
-                                      // Horizontal list of participants positioned above LivekitControls
-                                      if (participantTracks.length > 1)
+
+                                      // Show participant list below (adjusted based on whiteboard status)
+                                      if (participantTracks.length > 1 ||
+                                          _isWhiteBoardEnabled)
                                         SizedBox(
                                           height: 120,
-                                          // Fixed height for the participant list
                                           child: ListView.builder(
                                             scrollDirection: Axis.horizontal,
-                                            itemCount:
-                                                participantTracks.length - 1,
+                                            itemCount: _isWhiteBoardEnabled
+                                                ? participantTracks
+                                                    .length // show all
+                                                : participantTracks.length - 1,
+                                            // skip first
                                             itemBuilder: (BuildContext context,
-                                                    int index) =>
-                                                SizedBox(
-                                              width: 180,
-                                              height: 120,
-                                              child:
-                                                  ParticipantWidget.widgetFor(
-                                                participantTracks[index + 1],
-                                              ),
-                                            ),
+                                                int index) {
+                                              final track = _isWhiteBoardEnabled
+                                                  ? participantTracks[
+                                                      index] // show all participants
+                                                  : participantTracks[
+                                                      index + 1]; // skip first
+
+                                              return SizedBox(
+                                                width: 180,
+                                                height: 120,
+                                                child:
+                                                    ParticipantWidget.widgetFor(
+                                                        track),
+                                              );
+                                            },
                                           ),
                                         ),
                                     ],
@@ -733,10 +810,13 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       if (event is ShowSnackBar) {
         showSnackBar(message: event.message);
       } else if (event is ShowTranscriptionDownload) {
-        showSnackBar(message: event.message, actionText: (event.path == null) ? "" : "Open", actionCallBack: () {
-          Utils.openMediaFile(event.path??"", context);
-        });
-      }else if (event is ShowReaction) {
+        showSnackBar(
+            message: event.message,
+            actionText: (event.path == null) ? "" : "Open",
+            actionCallBack: () {
+              Utils.openMediaFile(event.path ?? "", context);
+            });
+      } else if (event is ShowReaction) {
         showReaction(event.emoji, viewModel);
       } else if (event is UpdateView) {
         if (mounted) {
@@ -749,6 +829,14 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
             widget.room.disconnect();
           });
         }
+      } else if (event is WhiteboardStatus) {
+        setState(() {
+          _isWhiteBoardEnabled = event.status;
+        });
+        if (!_isWhiteBoardEnabled) return;
+        loadWhiteboardUrl(Utils.generateWhiteboardUrl(
+            meetingId: widget.meetingDetails.meetingUid,
+            livekitToken: widget.meetingDetails.livekitToken));
       }
     });
   }
@@ -795,9 +883,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     Navigator.popUntil(context, (route) => route.isFirst); // Close all routes
   }
 
-  void _meetingEndLogic(RtcViewmodel? viewModel){
+  void _meetingEndLogic(RtcViewmodel? viewModel) {
     //TODO NEED TO UPDATE LOGIC
-    if(viewModel?.meetingDetails.meetingBasicDetails?.meetingConfig?.autoMeetingEnd == 1){
+    if (viewModel?.meetingDetails.meetingBasicDetails?.meetingConfig
+            ?.autoMeetingEnd ==
+        1) {
       showSnackBar(message: "Meeting ended");
       Timer(const Duration(seconds: 3), () {
         if (mounted) {
@@ -808,7 +898,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       });
       return;
     }
-    if(viewModel?.meetingDetails.features?.isBasicPlan() == true){
+    if (viewModel?.meetingDetails.features?.isBasicPlan() == true) {
       showSnackBar(message: "Meeting ended");
       Timer(const Duration(seconds: 3), () {
         if (mounted) {

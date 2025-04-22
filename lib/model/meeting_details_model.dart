@@ -24,6 +24,7 @@ class MeetingDetailsModel {
   TranscriptionDetail? transcriptionDetail;
   MeetingConfig? meetingConfig;
   String? currentSessionUid;
+  int? meetingId;
 
   MeetingDetailsModel(
       {this.eventMode,
@@ -51,6 +52,7 @@ class MeetingDetailsModel {
         this.transcriptionDetail,
         this.meetingConfig,
         this.currentSessionUid,
+        this.meetingId
       });
 
   MeetingDetailsModel.fromJson(Map<String, dynamic> json) {
@@ -85,6 +87,7 @@ class MeetingDetailsModel {
     meetingConfig = json['meeting_config'] != null
         ? MeetingConfig.fromJson(json['meeting_config'])
         : null;
+    meetingId = json['meeting_id'];
   }
 
   Map<String, dynamic> toJson() {
@@ -120,6 +123,7 @@ class MeetingDetailsModel {
     if (meetingConfig != null) {
       data['meeting_config'] = meetingConfig!.toJson();
     }
+    data['meeting_id'] = meetingId;
     return data;
   }
 }

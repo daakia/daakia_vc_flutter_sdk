@@ -48,13 +48,14 @@ class _DaakiaVideoConferenceState extends State<DaakiaVideoConferenceWidget> {
     networkRequestHandler(
         apiCall: () => apiClient.licenceVerify(body),
         onSuccess: (data) {
+          _verified = data?.userVerified ?? false;
+          if (_verified) {
+            _getMeetingDetails();
+            return;
+          } else {
+            _licenseMessage = "License key not verified!";
+          }
           setState(() {
-            _verified = data?.userVerified ?? false;
-            if (_verified) {
-              _getMeetingDetails();
-            } else {
-              _licenseMessage = "License key not verified!";
-            }
             _isLoading = false;
           });
         },
@@ -68,10 +69,6 @@ class _DaakiaVideoConferenceState extends State<DaakiaVideoConferenceWidget> {
   }
 
   void _getMeetingDetails() {
-    setState(() {
-      _isLoading = true;
-    });
-
     networkRequestHandler(
       apiCall: () =>
           apiClient.getMeetingDetails(widget.meetingId, widget.secretKey),

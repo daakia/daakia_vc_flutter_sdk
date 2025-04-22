@@ -3,9 +3,13 @@ import 'dart:io';
 class Constant {
   static final String platform = getPlatform();
 
+  static const String baseUrl = "https://api.daakia.co.in/v2.0/";
+  static const String whiteboardDomain = "https://www.daakia.co.in/";
+
   static const String meetingUid = "MEETING_UID";
   static const String sessionUid = "SESSION_UID";
   static const String attendanceId = "ATTENDANCE_ID";
+  static const String hostToken = "HOST_TOKEN";
 
   static const int meetingExtendTime = 10;
   static const int meetingEndSoonTime = 10;

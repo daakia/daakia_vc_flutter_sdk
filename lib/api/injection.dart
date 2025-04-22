@@ -1,6 +1,6 @@
 import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
 import 'package:dio/dio.dart';
-
+import '../model/base_list_response.dart';
 import '../model/base_response.dart';
 import 'api_client.dart';
 
@@ -8,7 +8,7 @@ final apiClient = RestClient(setDio());
 
 Dio setDio() {
   final dio = Dio();
-  dio.options.baseUrl = 'https://api.daakia.co.in/v2.0/';
+  dio.options.baseUrl = Constant.baseUrl;
   return dio;
 }
 
@@ -52,6 +52,24 @@ Future<void> networkRequestHandlerWithMessage<T>({
   }
 }
 
+Future<void> networkListRequestHandler<T>({
+  required Future<BaseListResponse<T>> Function() apiCall,
+  Function(List<T>? data)? onSuccess,
+  Function(String)? onError,
+}) async {
+  try {
+    final response = await apiCall();
+    if (response.success == Constant.successResCheckValue) {
+      onSuccess?.call(response.data);
+    } else {
+      onError?.call(response.message ?? "Unknown error occurred.");
+    }
+  } on DioException catch (dioError) {
+    onError?.call(_getDioErrorMessage(dioError));
+  } catch (e) {
+    onError?.call("Unexpected error: ${e.toString()}");
+  }
+}
 
 /// Parses Dio errors into readable messages
 String _getDioErrorMessage(DioException dioError) {

@@ -27,6 +27,11 @@ class ShowProgress extends RTCEvents{
   ShowProgress(this.progress);
 }
 
+class WhiteboardStatus extends RTCEvents{
+  final bool status;
+  WhiteboardStatus({required this.status});
+}
+
 class ShowLoading extends RTCEvents{}
 
 class StopLoading extends RTCEvents{}
