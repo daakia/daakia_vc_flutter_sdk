@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v3.1.2 (2025-04)
+
+### 🚀 New Features
+- **Whiteboard (Preview):** Introduced collaborative whiteboard functionality for real-time visual collaboration during meetings.
+
+### 🛠 Bug Fixes & Improvements
+- Various bug fixes and performance enhancements.
+- Minor UI adjustments for a smoother experience.
+
 ## v3.0.1 (2025-04)
 
 ### 🚀 New Features

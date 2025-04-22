@@ -383,6 +383,6 @@ class Utils {
   static String generateWhiteboardUrl({required String meetingId,
     required String livekitToken,
   }) {
-    return '${Constant.whiteboardDomain}/whiteboard/$meetingId?token=$livekitToken';
+    return '${Constant.whiteboardDomain}whiteboard/$meetingId?token=$livekitToken';
   }
 }
