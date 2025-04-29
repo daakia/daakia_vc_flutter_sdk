@@ -90,9 +90,7 @@ class ParticipantDialogState extends State<ParticipantDialogControls> {
                     widget.viewModel.makeCoHost(widget.participant.identity,
                         !Utils.isCoHost(widget.participant.metadata));
                   },
-                  isVisible: (widget.isForIndividual &&
-                      Utils.isHost(myRoleMataData) &&
-                      !Utils.isHost(targetRoleMataData))),
+                  isVisible: (widget.isForIndividual && isCoHostButtonEnable())),
               CustomTextItem(
                 text: "Remove From Call",
                 onTap: () {
@@ -153,6 +151,31 @@ class ParticipantDialogState extends State<ParticipantDialogControls> {
         ),
       ),
     );
+  }
+
+  bool isCoHostButtonEnable() {
+    String? myRoleMataData = widget.viewModel.room.localParticipant?.metadata;
+    String? targetRoleMataData = widget.participant.metadata;
+
+    bool isHostUser = Utils.isHost(myRoleMataData);
+    bool isTargetNotHost = !Utils.isHost(targetRoleMataData);
+    bool isTargetCoHost = Utils.isCoHost(targetRoleMataData);
+
+    // Host can always remove Co-Host
+    if (isHostUser && isTargetCoHost) {
+      return true;
+    }
+
+    // Host can make someone co-host
+    if (isHostUser && isTargetNotHost) {
+      if (widget.viewModel.meetingDetails.features?.isAllowMultipleCoHost() == true) {
+        return true;
+      } else {
+        return widget.viewModel.coHostCount < 1;
+      }
+    }
+
+    return false;
   }
 
   void showChatBottomSheet(
