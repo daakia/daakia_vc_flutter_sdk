@@ -401,6 +401,17 @@ class RtcViewmodel extends ChangeNotifier {
     );
   }
 
+  int _coHostCount = 0;
+
+  // Getter
+  int get coHostCount => _coHostCount;
+
+// Setter
+  set coHostCount(int value) {
+    _coHostCount = value;
+    notifyListeners();
+  }
+
   void makeCoHost(String identity, bool isCoHost) {
     Map<String, dynamic> body = {
       "participant_identity": identity,
@@ -410,13 +421,22 @@ class RtcViewmodel extends ChangeNotifier {
     networkRequestHandler(
       apiCall: () =>
           apiClient.makeCoHost(meetingDetails.authorizationToken, body),
-      onSuccess: (_) => sendPrivateAction(
-          ActionModel(
-              action: !isCoHost
-                  ? MeetingActions.removeCoHost
-                  : MeetingActions.makeCoHost,
-              token: !isCoHost ? "" : meetingDetails.authorizationToken),
-          identity),
+      onSuccess: (_) => {
+        sendPrivateAction(
+            ActionModel(
+                action: !isCoHost
+                    ? MeetingActions.removeCoHost
+                    : MeetingActions.makeCoHost,
+                token: !isCoHost ? "" : meetingDetails.authorizationToken),
+            identity),
+        if (!meetingDetails.features!.isAllowMultipleCoHost()){
+          if(isCoHost){
+            coHostCount ++
+          } else {
+            coHostCount --
+          }
+        }
+      },
       onError: (message) => sendMessageToUI(message),
     );
   }
@@ -1183,11 +1203,11 @@ class RtcViewmodel extends ChangeNotifier {
 
   void getWhiteboardData() {
     networkListRequestHandler(
-      apiCall: ()=> apiClient.getWhiteBoardData(meetingDetails.meetingBasicDetails?.meetingId.toString() ?? ""),
-      onSuccess: (data) {
-        final whiteboard = data!.first;
-        sendEvent(WhiteboardStatus(status: whiteboard.status == 'open'));
-      }
-    );
+        apiCall: () => apiClient.getWhiteBoardData(
+            meetingDetails.meetingBasicDetails?.meetingId.toString() ?? ""),
+        onSuccess: (data) {
+          final whiteboard = data!.first;
+          sendEvent(WhiteboardStatus(status: whiteboard.status == 'open'));
+        });
   }
 }
