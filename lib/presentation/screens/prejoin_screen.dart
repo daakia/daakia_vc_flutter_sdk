@@ -196,7 +196,7 @@ class _PreJoinState extends State<PreJoinScreen> {
             widget.basicMeetingDetails?.currentSessionUid) {
           if (await cacheData.getAttendanceId() != "") {
             body["meeting_attendance_uid"] = await cacheData.getAttendanceId();
-            if(hostToken.isEmpty){
+            if (hostToken.isEmpty) {
               hostToken = await cacheData.getHostToken() ?? "";
             }
           }
@@ -283,6 +283,29 @@ class _PreJoinState extends State<PreJoinScreen> {
   Future<void> meetingNotStarted(Function stopLoading) async {
     await Future.delayed(const Duration(seconds: 10));
     joinMeeting(stopLoading);
+  }
+
+  void _getHostToken(Function stopLoading) {
+    isLoading = true;
+    networkRequestHandler(
+      apiCall: () => apiClient.getHostToken(widget.meetingId),
+      onSuccess: (data) {
+        isHostVerified = true;
+        hostToken = data?.token ?? "";
+        isNeedToCancelApiCall = data?.token == "";
+        getFeaturesAndJoinMeeting(stopLoading);
+      },
+      onError: (message) {
+        if (mounted) {
+          Utils.showSnackBar(context, message: message);
+        }
+        setState(() {
+          isLoading = false;
+          isNeedToCancelApiCall = true;
+          stopLoading.call();
+        });
+      }
+    );
   }
 
   void verifyHost(String email, String pin, Function stopLoading) async {
@@ -821,7 +844,11 @@ class _PreJoinState extends State<PreJoinScreen> {
                           isNeedToCancelApiCall = false;
                           if (widget.isHost && !isHostVerified) {
                             if (!context.mounted) return;
-                            _showVerificationDialog(context, stopLoading);
+                            if(meetingDetails.meetingBasicDetails?.hostPinVerificationRequired == 1) {
+                              _showVerificationDialog(context, stopLoading);
+                            } else {
+                              _getHostToken(stopLoading);
+                            }
                           } else {
                             checkMeetingType(stopLoading);
                           }

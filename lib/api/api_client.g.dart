@@ -117,6 +117,36 @@ class _RestClient implements RestClient {
   }
 
   @override
+  Future<BaseResponse<HostTokenModel>> getHostToken(String meetingUid) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'meeting_uid': meetingUid};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<BaseResponse<HostTokenModel>>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            'saas/host/token',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late BaseResponse<HostTokenModel> _value;
+    try {
+      _value = BaseResponse<HostTokenModel>.fromJson(
+        _result.data!,
+        (json) => HostTokenModel.fromJson(json as Map<String, dynamic>),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<BaseResponse<LicenceVerifyModel>> licenceVerify(
     Map<String, dynamic> body,
   ) async {
@@ -728,7 +758,7 @@ class _RestClient implements RestClient {
     try {
       _value = BaseListResponse<WhiteboardData>.fromJson(
         _result.data!,
-        (json) => WhiteboardData.fromJson(json),
+        (json) => WhiteboardData.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
