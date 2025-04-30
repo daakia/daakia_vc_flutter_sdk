@@ -37,6 +37,11 @@ abstract class RestClient {
     @Body() Map<String, dynamic> body,
   );
 
+  @GET("saas/host/token")
+  Future<BaseResponse<HostTokenModel>> getHostToken(
+    @Query("meeting_uid") String meetingUid,
+  );
+
   @POST("saas/sdk/verify/key")
   Future<BaseResponse<LicenceVerifyModel>> licenceVerify(
     @Body() Map<String, dynamic> body,
