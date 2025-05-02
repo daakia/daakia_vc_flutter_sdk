@@ -844,7 +844,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                           isNeedToCancelApiCall = false;
                           if (widget.isHost && !isHostVerified) {
                             if (!context.mounted) return;
-                            if(meetingDetails.meetingBasicDetails?.hostPinVerificationRequired == 1) {
+                            if(widget.basicMeetingDetails?.hostPinVerificationRequired == 1) {
                               _showVerificationDialog(context, stopLoading);
                             } else {
                               _getHostToken(stopLoading);
