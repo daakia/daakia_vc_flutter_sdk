@@ -107,6 +107,7 @@ class _DaakiaVideoConferenceState extends State<DaakiaVideoConferenceWidget> {
         secretKey: widget.secretKey,
         isHost: widget.isHost,
         basicMeetingDetails: meetingDetails,
+        configuration: widget.configuration,
       );
     } else {
       screen = LicenseExpiredScreen(_licenseMessage);
