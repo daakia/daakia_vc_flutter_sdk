@@ -1223,24 +1223,26 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Timer? _attendanceDebounceTimer;
+
   void getAttendanceListForParticipant() {
-    networkListRequestHandler(
-        apiCall: () => apiClient.getAttendanceListForParticipant(
-            meetingDetails.meetingBasicDetails?.meetingId.toString() ?? ""),
-        onSuccess: (data) {
-          collectInactiveParticipant(data);
-        }
-    );
-  }
-
-  Timer? _debounceTimer;
-
-  void collectInactiveParticipant(List<ParticipantAttendanceData>? data) {
+    if(!isHost() || !isCoHost()) {return;}
     // Cancel any existing timer
-    _debounceTimer?.cancel();
+    _attendanceDebounceTimer?.cancel();
 
     // Start a new debounce timer
-    _debounceTimer = Timer(const Duration(seconds: 1), () {
+    _attendanceDebounceTimer = Timer(const Duration(seconds: 1), () {
+      networkListRequestHandler(
+          apiCall: () => apiClient.getAttendanceListForParticipant(
+              meetingDetails.meetingUid),
+          onSuccess: (data) {
+            collectInactiveParticipant(data);
+          }
+      );
+    });
+  }
+
+  void collectInactiveParticipant(List<ParticipantAttendanceData>? data) {
       List<ParticipantAttendanceData> tempList = [];
       if (data != null) {
         for (var participant in data) {
@@ -1250,6 +1252,5 @@ class RtcViewmodel extends ChangeNotifier {
         }
       }
       pendingParticipantList = tempList;
-    });
   }
 }
