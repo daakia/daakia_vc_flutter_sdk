@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:daakia_vc_flutter_sdk/api/injection.dart';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
+import 'package:daakia_vc_flutter_sdk/model/participant_attendance_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/transcription_action_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/transcription_model.dart';
@@ -1209,5 +1210,47 @@ class RtcViewmodel extends ChangeNotifier {
           final whiteboard = data!.first;
           sendEvent(WhiteboardStatus(status: whiteboard.status == 'open'));
         });
+  }
+
+  List<ParticipantAttendanceData> _pendingParticipantList = [];
+
+  // Getter
+  List<ParticipantAttendanceData> get pendingParticipantList => _pendingParticipantList;
+
+  // Setter
+  set pendingParticipantList(List<ParticipantAttendanceData> newList) {
+    _pendingParticipantList = newList;
+    notifyListeners();
+  }
+
+  Timer? _attendanceDebounceTimer;
+
+  void getAttendanceListForParticipant() {
+    if(!isHost() && !isCoHost()) {return;}
+    // Cancel any existing timer
+    _attendanceDebounceTimer?.cancel();
+
+    // Start a new debounce timer
+    _attendanceDebounceTimer = Timer(const Duration(seconds: 1), () {
+      networkListRequestHandler(
+          apiCall: () => apiClient.getAttendanceListForParticipant(
+              meetingDetails.meetingUid),
+          onSuccess: (data) {
+            collectInactiveParticipant(data);
+          }
+      );
+    });
+  }
+
+  void collectInactiveParticipant(List<ParticipantAttendanceData>? data) {
+      List<ParticipantAttendanceData> tempList = [];
+      if (data != null) {
+        for (var participant in data) {
+          if (participant.participantStatus?.toLowerCase() != 'joined') {
+            tempList.add(participant);
+          }
+        }
+      }
+      pendingParticipantList = tempList;
   }
 }

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:daakia_vc_flutter_sdk/model/feature_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/licence_verify_model.dart';
+import 'package:daakia_vc_flutter_sdk/model/participant_attendance_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/translation_data.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
@@ -134,5 +135,11 @@ abstract class RestClient {
   @GET("rtc/meeting/whiteboard/get")
   Future<BaseListResponse<WhiteboardData>> getWhiteBoardData(
     @Query("meeting_id") String meetingId,
+  );
+
+  @GET("rtc/meeting/invitee/participantsList")
+  Future<BaseListResponse<ParticipantAttendanceData>>
+      getAttendanceListForParticipant(
+    @Query("meeting_uid") String meetingId,
   );
 }

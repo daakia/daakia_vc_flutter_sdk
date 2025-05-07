@@ -14,6 +14,7 @@ import 'package:loading_btn/loading_btn.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../api/injection.dart';
+import '../../model/daakia_meeting_configuration.dart';
 import '../../resources/colors/color.dart';
 import '../../rtc/room.dart';
 import '../../utils/utils.dart';
@@ -25,12 +26,16 @@ class PreJoinScreen extends StatefulWidget {
       required this.secretKey,
       this.isHost = false,
       required this.basicMeetingDetails,
+      this.configuration,
       super.key});
 
   final String meetingId;
   final String secretKey;
   final bool isHost;
   final MeetingDetailsModel? basicMeetingDetails;
+
+  /// Optional advanced configuration
+  final DaakiaMeetingConfiguration? configuration;
 
   @override
   State<StatefulWidget> createState() {
@@ -189,6 +194,10 @@ class _PreJoinState extends State<PreJoinScreen> {
     if (isParticipant) {
       body["lobby_request_id"] = lobbyRequestId;
     }
+    // Add custom_metadata only if metadata is provided
+    if (widget.configuration?.metadata != null) {
+      body["custom_metadata"] = widget.configuration?.metadata;
+    }
     final cacheData = StorageHelper();
     if (!widget.isHost) {
       if (await cacheData.getMeetingUid() == widget.meetingId) {
@@ -288,24 +297,23 @@ class _PreJoinState extends State<PreJoinScreen> {
   void _getHostToken(Function stopLoading) {
     isLoading = true;
     networkRequestHandler(
-      apiCall: () => apiClient.getHostToken(widget.meetingId),
-      onSuccess: (data) {
-        isHostVerified = true;
-        hostToken = data?.token ?? "";
-        isNeedToCancelApiCall = data?.token == "";
-        getFeaturesAndJoinMeeting(stopLoading);
-      },
-      onError: (message) {
-        if (mounted) {
-          Utils.showSnackBar(context, message: message);
-        }
-        setState(() {
-          isLoading = false;
-          isNeedToCancelApiCall = true;
-          stopLoading.call();
+        apiCall: () => apiClient.getHostToken(widget.meetingId),
+        onSuccess: (data) {
+          isHostVerified = true;
+          hostToken = data?.token ?? "";
+          isNeedToCancelApiCall = data?.token == "";
+          getFeaturesAndJoinMeeting(stopLoading);
+        },
+        onError: (message) {
+          if (mounted) {
+            Utils.showSnackBar(context, message: message);
+          }
+          setState(() {
+            isLoading = false;
+            isNeedToCancelApiCall = true;
+            stopLoading.call();
+          });
         });
-      }
-    );
   }
 
   void verifyHost(String email, String pin, Function stopLoading) async {
@@ -844,7 +852,9 @@ class _PreJoinState extends State<PreJoinScreen> {
                           isNeedToCancelApiCall = false;
                           if (widget.isHost && !isHostVerified) {
                             if (!context.mounted) return;
-                            if(widget.basicMeetingDetails?.hostPinVerificationRequired == 1) {
+                            if (widget.basicMeetingDetails
+                                    ?.hostPinVerificationRequired ==
+                                1) {
                               _showVerificationDialog(context, stopLoading);
                             } else {
                               _getHostToken(stopLoading);
