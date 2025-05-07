@@ -1226,7 +1226,7 @@ class RtcViewmodel extends ChangeNotifier {
   Timer? _attendanceDebounceTimer;
 
   void getAttendanceListForParticipant() {
-    if(!isHost() || !isCoHost()) {return;}
+    if(!isHost() && !isCoHost()) {return;}
     // Cancel any existing timer
     _attendanceDebounceTimer?.cancel();
 
