@@ -758,7 +758,7 @@ class _RestClient implements RestClient {
     try {
       _value = BaseListResponse<WhiteboardData>.fromJson(
         _result.data!,
-        (json) => WhiteboardData.fromJson(json),
+        (json) => WhiteboardData.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -771,7 +771,7 @@ class _RestClient implements RestClient {
   Future<BaseListResponse<ParticipantAttendanceData>>
       getAttendanceListForParticipant(String meetingId) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'meeting_id': meetingId};
+    final queryParameters = <String, dynamic>{r'meeting_uid': meetingId};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options =
@@ -793,7 +793,7 @@ class _RestClient implements RestClient {
       _value = BaseListResponse<ParticipantAttendanceData>.fromJson(
         _result.data!,
         (json) =>
-            ParticipantAttendanceData.fromJson(json),
+            ParticipantAttendanceData.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);

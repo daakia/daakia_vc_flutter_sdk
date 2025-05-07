@@ -140,6 +140,6 @@ abstract class RestClient {
   @GET("rtc/meeting/invitee/participantsList")
   Future<BaseListResponse<ParticipantAttendanceData>>
       getAttendanceListForParticipant(
-    @Query("meeting_id") String meetingId,
+    @Query("meeting_uid") String meetingId,
   );
 }
