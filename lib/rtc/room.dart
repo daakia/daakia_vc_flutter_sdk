@@ -115,6 +115,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       meetingManager.startMeetingEndScheduler();
       _initializeWebViewController();
       viewModel?.getWhiteboardData();
+      viewModel?.getAttendanceListForParticipant();
     });
 
     if (lkPlatformIs(PlatformType.android)) {
@@ -231,9 +232,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       });
     })
     ..on<ParticipantConnectedEvent>((event) {
+      _livekitProviderKey.currentState?.viewModel.getAttendanceListForParticipant();
       _sortParticipants();
     })
     ..on<ParticipantDisconnectedEvent>((event) {
+      _livekitProviderKey.currentState?.viewModel.getAttendanceListForParticipant();
       _sortParticipants();
     })
     ..on<RoomRecordingStatusChanged>((event) {
