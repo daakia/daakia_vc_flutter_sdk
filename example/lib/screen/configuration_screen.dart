@@ -11,14 +11,17 @@ class ConfigurationScreen extends StatefulWidget {
 
 class _ConfigurationScreenState extends State<ConfigurationScreen> {
   bool _includeMetadata = false;
-  final List<MapEntry<TextEditingController, TextEditingController>> _metadataControllers = [];
+  final List<MapEntry<TextEditingController, TextEditingController>>
+      _metadataControllers = [];
 
   void _addMetadataField() {
     if (_metadataControllers.isNotEmpty) {
       final last = _metadataControllers.last;
       if (last.key.text.trim().isEmpty || last.value.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please fill in the current key-value before adding a new one.")),
+          const SnackBar(
+              content: Text(
+                  "Please fill in the current key-value before adding a new one.")),
         );
         return;
       }
@@ -136,7 +139,8 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () => _removeMetadataField(index),
                               ),
                             ],
@@ -150,7 +154,8 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                         label: const Text("Add Metadata Field"),
                       ),
                     ],
-                    const SizedBox(height: 80), // Give room for the button at bottom
+                    const SizedBox(height: 80),
+                    // Give room for the button at bottom
                   ],
                 ),
               ),
@@ -183,4 +188,3 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
     );
   }
 }
-
