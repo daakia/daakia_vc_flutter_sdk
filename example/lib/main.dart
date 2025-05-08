@@ -1,5 +1,9 @@
 import 'package:daakia_vc_flutter_sdk/daakia_vc_flutter_sdk.dart';
+import 'package:daakia_vc_flutter_sdk/model/daakia_meeting_configuration.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
+import 'package:example/screen/configuration_screen.dart';
+import 'package:example/utils/animate_logo.dart';
+import 'package:example/utils/theme_color.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -9,19 +13,12 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Daakia VC Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const Scaffold(
-        body: SafeArea(child: DataEntryScreen()),
-      ),
+      home: DataEntryScreen(), // << this is enough
     );
   }
 }
@@ -30,90 +27,152 @@ class DataEntryScreen extends StatefulWidget {
   const DataEntryScreen({super.key});
 
   @override
-  State<StatefulWidget> createState() {
-    return _DataEntryState();
-  }
+  State<StatefulWidget> createState() => _DataEntryState();
 }
 
 class _DataEntryState extends State<DataEntryScreen> {
   var licenseKey = "";
   var meetingUID = "";
   var isHost = false;
+  DaakiaMeetingConfiguration? _customConfig;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'License Key*',
-                border: OutlineInputBorder(),
-              ),
-              style: const TextStyle(
-                color: Colors.black,
-              ),
-              enabled: true,
-              onChanged: (String? value) {
-                setState(() {
-                  licenseKey = value ?? "";
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Meeting UID*',
-                border: OutlineInputBorder(),
-              ),
-              style: const TextStyle(
-                color: Colors.black,
-              ),
-              enabled: true,
-              onChanged: (String? value) {
-                setState(() {
-                  meetingUID = value ?? "";
-                });
-              },
-            ),
-            const SizedBox(height: 30),
-            Row(
-              mainAxisSize: MainAxisSize.max,
+    return Theme(
+      data: ThemeData().copyWith(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: ThemeColor.primaryThemeColor,
+          brightness: Brightness.dark,
+        ),
+        scaffoldBackgroundColor: const Color(0xFF121212),
+        inputDecorationTheme: const InputDecorationTheme(
+          labelStyle: TextStyle(color: Colors.white70),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.white30),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: ThemeColor.primaryThemeColor),
+          ),
+        ),
+      ),
+      child: Scaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
               children: [
-                const Text("Host"),
-                Switch(
-                  value: isHost,
-                  onChanged: (isSelected) {
-                    setState(() {
-                      isHost = isSelected;
-                    });
-                  },
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(top: 40, bottom: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const AnimatedLogo(),
+                        const SizedBox(height: 25),
+                        const Text(
+                          'Daakia VC Flutter SDK',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: ThemeColor.primaryThemeColor,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        TextFormField(
+                          decoration:
+                              const InputDecoration(labelText: 'License Key*'),
+                          onChanged: (value) =>
+                              setState(() => licenseKey = value),
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          decoration:
+                              const InputDecoration(labelText: 'Meeting UID*'),
+                          onChanged: (value) =>
+                              setState(() => meetingUID = value),
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            const Text("Join as Host",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white70)),
+                            const Spacer(),
+                            Switch(
+                              value: isHost,
+                              activeColor: ThemeColor.primaryThemeColor,
+                              onChanged: (val) => setState(() => isHost = val),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 30),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              final result = await Navigator.push<
+                                  DaakiaMeetingConfiguration>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const ConfigurationScreen(),
+                                ),
+                              );
+                              if (result != null) {
+                                setState(() {
+                                  _customConfig = result;
+                                });
+                              }
+                            },
+                            icon: const Icon(Icons.tune),
+                            label: const Text("Custom Configuration"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: ThemeColor.primaryThemeColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              textStyle: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 50),
-            ElevatedButton(
-                onPressed: () async {
-                  if (licenseKey.isEmpty || meetingUID.isEmpty) {
-                    Utils.showSnackBar(context,
-                        message: "Those fields are mandatory!");
-                    return;
-                  }
-                  await Navigator.push<void>(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => DaakiaVideoConferenceWidget(
-                              meetingId: meetingUID,
-                              secretKey: licenseKey,
-                              isHost: isHost,
-                            )),
-                  );
-                },
-                child: const Text("Test SDK"))
-          ],
+          ),
+        ),
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+          child: ElevatedButton.icon(
+            onPressed: () async {
+              if (licenseKey.isEmpty || meetingUID.isEmpty) {
+                Utils.showSnackBar(context,
+                    message: "License Key and Meeting UID are required!");
+                return;
+              }
+
+              await Navigator.push<void>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DaakiaVideoConferenceWidget(
+                    meetingId: meetingUID,
+                    secretKey: licenseKey,
+                    isHost: isHost,
+                    configuration: _customConfig,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.play_circle_fill),
+            label: const Text("Start Video Conference"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.greenAccent[400],
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              textStyle: const TextStyle(fontSize: 18),
+            ),
+          ),
         ),
       ),
     );
