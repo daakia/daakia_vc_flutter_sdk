@@ -34,7 +34,7 @@ class _DataEntryState extends State<DataEntryScreen> {
   var licenseKey = "";
   var meetingUID = "";
   var isHost = false;
-  DaakiaMeetingConfiguration? _customConfig;
+  DaakiaMeetingConfiguration? customConfig;
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +120,7 @@ class _DataEntryState extends State<DataEntryScreen> {
                               );
                               if (result != null) {
                                 setState(() {
-                                  _customConfig = result;
+                                  customConfig = result;
                                 });
                               }
                             },
@@ -159,7 +159,7 @@ class _DataEntryState extends State<DataEntryScreen> {
                     meetingId: meetingUID,
                     secretKey: licenseKey,
                     isHost: isHost,
-                    configuration: _customConfig,
+                    configuration: customConfig,
                   ),
                 ),
               );
