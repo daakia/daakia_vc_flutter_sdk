@@ -132,7 +132,8 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
               buildOption(context,
                   icon: Icons.emoji_emotions, // Replace with your reaction icon
                   text: 'Reaction',
-                  isVisible: true, onTap: () {
+                  isVisible: viewModel.meetingDetails.features!
+                      .isReactionAllowed(), onTap: () {
                 Navigator.pop(context);
                 showEmojiDialog(viewModel);
               }),

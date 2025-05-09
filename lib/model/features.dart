@@ -179,4 +179,6 @@ class Features {
 
   bool isAllowMultipleCoHost() => configurations?.allowMultipleCohost == 1;
 
+  bool isReactionAllowed() => configurations?.enableReaction == 1;
+
 }

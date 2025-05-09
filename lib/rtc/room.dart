@@ -854,6 +854,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
   void showReaction(String? emoji, RtcViewmodel? viewModel,
       {String name = "You"}) {
+    if(viewModel?.meetingDetails.features!.isReactionAllowed() == false) {return;}
     switch (emoji) {
       case "heart":
         emojiAsset = AnimatedEmojis.redHeart;
