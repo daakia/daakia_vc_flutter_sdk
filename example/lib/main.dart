@@ -54,6 +54,9 @@ class _DataEntryState extends State<DataEntryScreen> {
             borderSide: BorderSide(color: ThemeColor.primaryThemeColor),
           ),
         ),
+        textTheme: const TextTheme(
+          bodyMedium: TextStyle(color: Colors.white),
+        ),
       ),
       child: Scaffold(
         body: SafeArea(
