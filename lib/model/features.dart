@@ -185,4 +185,8 @@ class Features {
 
   bool isPrivateChatAllowed() => configurations?.enablePrivateChat == 1;
 
+  bool isProfileEditByHostAllowed() => configurations?.allowProfileEditByHost == 1;
+
+  bool isProfileEditBySelfAllowed() => configurations?.allowProfileEditBySelf == 1;
+
 }
