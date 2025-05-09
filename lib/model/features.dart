@@ -181,4 +181,8 @@ class Features {
 
   bool isReactionAllowed() => configurations?.enableReaction == 1;
 
+  bool isPublicChatAllowed() => configurations?.enableChat == 1;
+
+  bool isPrivateChatAllowed() => configurations?.enablePrivateChat == 1;
+
 }
