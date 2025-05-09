@@ -97,7 +97,7 @@ class LobbyRequestDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text("Someone wants to join!", style: TextStyle(color: Colors.white, fontSize: 20)),
+            const Text("New participant wants to join", style: TextStyle(color: Colors.white, fontSize: 20)),
             const SizedBox(height: 10,),
             Row(
               children: [
