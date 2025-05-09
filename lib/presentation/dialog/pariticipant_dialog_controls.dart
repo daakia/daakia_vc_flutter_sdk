@@ -115,7 +115,7 @@ class ParticipantDialogState extends State<ParticipantDialogControls> {
                   showChatBottomSheet(widget.viewModel,
                       widget.participant.identity, widget.participant.name);
                 },
-                isVisible: widget.isForIndividual,
+                isVisible: widget.isForIndividual && (widget.viewModel.meetingDetails.features?.isPrivateChatAllowed() == true),
               ),
               CustomTextItem(
                 text: "Mute All",
