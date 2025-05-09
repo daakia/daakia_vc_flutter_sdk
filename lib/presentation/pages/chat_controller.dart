@@ -24,51 +24,68 @@ class _ChatControllerState extends State<ChatController> {
 
   @override
   Widget build(BuildContext context) {
-    collectLobbyEvents(widget.viewModel);
+    collectChatEvents(widget.viewModel);
     SystemChrome.setSystemUIOverlayStyle(
-        const SystemUiOverlayStyle(statusBarColor: Colors.black));
+      const SystemUiOverlayStyle(statusBarColor: Colors.black),
+    );
+
+    final isPublicChatAllowed =
+        widget.viewModel.meetingDetails.features!.isPublicChatAllowed();
+    final isPrivateChatAllowed =
+        widget.viewModel.meetingDetails.features!.isPrivateChatAllowed();
+
+    final tabs = <Tab>[];
+    final views = <Widget>[];
+
+    if (isPublicChatAllowed) {
+      tabs.add(const Tab(text: "All Chat"));
+      views.add(ChatPage(viewModel: widget.viewModel));
+    }
+    if (isPrivateChatAllowed) {
+      tabs.add(const Tab(text: "Private Chat"));
+      views.add(PrivateChatPage(
+        viewModel: widget.viewModel,
+        identity: widget.identity,
+        name: widget.name,
+      ));
+    }
+
+    if (tabs.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text("Chats", style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.black,
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
+        body: const Center(
+          child: Text(
+            "Chat is disabled",
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+        backgroundColor: Colors.black,
+      );
+    }
+
     return DefaultTabController(
-      initialIndex: widget.identity.isEmpty ? 0 : 1,
-      length: 2,
+      length: tabs.length,
+      initialIndex: (widget.identity.isEmpty || tabs.length == 1) ? 0 : 1,
       child: Scaffold(
         backgroundColor: const Color(0xFF000000),
         appBar: AppBar(
-          title: const Text(
-            "Chats",
-            style: TextStyle(color: Colors.white),
-          ),
+          title: const Text("Chats", style: TextStyle(color: Colors.white)),
           backgroundColor: Colors.black,
-          iconTheme: const IconThemeData(
-            color: Colors.white,
+          iconTheme: const IconThemeData(color: Colors.white),
+          bottom: TabBar(
+            indicatorColor: Colors.white,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.grey,
+            tabs: tabs,
           ),
         ),
         body: Stack(
           children: [
-            Column(
-              children: [
-                const TabBar(
-                  indicatorColor: Colors.white,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.grey,
-                  tabs: [
-                    Tab(text: "All Chat"),
-                    Tab(text: "Private Chat"),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      ChatPage(viewModel: widget.viewModel),
-                      PrivateChatPage(
-                        viewModel: widget.viewModel,
-                        identity: widget.identity,
-                        name: widget.name,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+            TabBarView(children: views),
             if (_isLoading) const CustomLoader(),
           ],
         ),
@@ -84,7 +101,7 @@ class _ChatControllerState extends State<ChatController> {
 
   bool isEventAdded = false;
 
-  void collectLobbyEvents(RtcViewmodel? viewModel) {
+  void collectChatEvents(RtcViewmodel? viewModel) {
     if (isEventAdded) return;
     isEventAdded = true;
     viewModel?.mainChatController.listen((event) {
