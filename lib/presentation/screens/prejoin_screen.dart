@@ -65,6 +65,9 @@ class _PreJoinState extends State<PreJoinScreen> {
 
   var _isCoHostVerified = false;
 
+  late TextEditingController _nameController;
+  late bool _isNameEditable;
+
   //============== RTC ===============
   StreamSubscription? _subscription;
   List<MediaDevice> _audioInputs = [];
@@ -87,6 +90,11 @@ class _PreJoinState extends State<PreJoinScreen> {
     _subscription =
         Hardware.instance.onDeviceChange.stream.listen(_loadDevices);
     Hardware.instance.enumerateDevices().then(_loadDevices);
+    final initialName = widget.configuration?.participantNameConfig?.name ?? "";
+    _nameController = TextEditingController(text: initialName);
+
+    _isNameEditable = initialName.isEmpty ||
+        (widget.configuration?.participantNameConfig?.isEditable ?? false);
     // Schedule verifyCoHost after widget is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       verifyCoHost();
@@ -720,6 +728,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                         horizontal: 20, vertical: 10),
                     // Equivalent to marginHorizontal="20dp" and marginTop="10dp"
                     child: TextFormField(
+                      controller: _nameController,
                       decoration: const InputDecoration(
                         labelText: 'Name*', // Equivalent to hint="Name*"
                         border: OutlineInputBorder(),
@@ -728,7 +737,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                         color: Colors
                             .black, // Equivalent to textColor="@color/black"
                       ),
-                      enabled: true, // Equivalent to android:enabled="false"
+                      enabled: _isNameEditable, // Equivalent to android:enabled="false"
                       onChanged: (String? value) {
                         setState(() {
                           name = value ?? "";
@@ -885,6 +894,7 @@ class _PreJoinState extends State<PreJoinScreen> {
   void dispose() {
     _subscription?.cancel();
     _participantTimer?.cancel();
+    _nameController.dispose();
     super.dispose();
   }
 
