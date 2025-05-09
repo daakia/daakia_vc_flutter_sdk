@@ -1,4 +1,5 @@
 import 'package:daakia_vc_flutter_sdk/model/daakia_meeting_configuration.dart';
+import 'package:daakia_vc_flutter_sdk/model/participant_config.dart';
 import 'package:example/utils/theme_color.dart';
 import 'package:flutter/material.dart';
 
@@ -13,6 +14,10 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
   bool _includeMetadata = false;
   final List<MapEntry<TextEditingController, TextEditingController>>
       _metadataControllers = [];
+
+  bool _customizeConfigName = false;
+  bool _isNameEditable = true;
+  final TextEditingController _configNameController = TextEditingController();
 
   void _addMetadataField() {
     if (_metadataControllers.isNotEmpty) {
@@ -57,11 +62,20 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
 
     return DaakiaMeetingConfiguration(
       metadata: metadata,
+      participantNameConfig: ParticipantNameConfig(
+        name: _customizeConfigName ? _configNameController.text.trim() : null,
+        isEditable: _customizeConfigName
+            ? (_configNameController.text.trim().isEmpty
+                ? true
+                : _isNameEditable)
+            : true,
+      ),
     );
   }
 
   @override
   void dispose() {
+    _configNameController.dispose();
     for (var entry in _metadataControllers) {
       entry.key.dispose();
       entry.value.dispose();
@@ -87,6 +101,9 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
             borderSide: BorderSide(color: ThemeColor.primaryThemeColor),
           ),
         ),
+        textTheme: const TextTheme(
+          bodyMedium: TextStyle(color: Colors.white),
+        ),
       ),
       child: Scaffold(
         appBar: AppBar(title: const Text("Custom Configuration")),
@@ -98,6 +115,38 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    SwitchListTile(
+                      title: const Text("Customize Config Name"),
+                      value: _customizeConfigName,
+                      onChanged: (value) {
+                        setState(() {
+                          _customizeConfigName = value;
+                          if (!value) {
+                            _configNameController.clear();
+                            _isNameEditable = false;
+                          }
+                        });
+                      },
+                    ),
+                    if (_customizeConfigName) ...[
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: _configNameController,
+                        decoration: const InputDecoration(
+                          labelText: "Participant Name",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SwitchListTile(
+                        title: const Text("Is Name Editable"),
+                        value: _isNameEditable,
+                        onChanged: (value) {
+                          setState(() {
+                            _isNameEditable = value;
+                          });
+                        },
+                      ),
+                    ],
                     SwitchListTile(
                       title: const Text("Include Metadata"),
                       value: _includeMetadata,
