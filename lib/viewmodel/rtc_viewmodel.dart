@@ -430,13 +430,10 @@ class RtcViewmodel extends ChangeNotifier {
                     : MeetingActions.makeCoHost,
                 token: !isCoHost ? "" : meetingDetails.authorizationToken),
             identity),
-        if (!meetingDetails.features!.isAllowMultipleCoHost()){
-          if(isCoHost){
-            coHostCount ++
-          } else {
-            coHostCount --
+        if (!meetingDetails.features!.isAllowMultipleCoHost())
+          {
+            if (isCoHost) {coHostCount++} else {coHostCount--}
           }
-        }
       },
       onError: (message) => sendMessageToUI(message),
     );
@@ -1215,7 +1212,8 @@ class RtcViewmodel extends ChangeNotifier {
   List<ParticipantAttendanceData> _pendingParticipantList = [];
 
   // Getter
-  List<ParticipantAttendanceData> get pendingParticipantList => _pendingParticipantList;
+  List<ParticipantAttendanceData> get pendingParticipantList =>
+      _pendingParticipantList;
 
   // Setter
   set pendingParticipantList(List<ParticipantAttendanceData> newList) {
@@ -1226,31 +1224,55 @@ class RtcViewmodel extends ChangeNotifier {
   Timer? _attendanceDebounceTimer;
 
   void getAttendanceListForParticipant() {
-    if(!isHost() && !isCoHost()) {return;}
+    if (!isHost() && !isCoHost()) {
+      return;
+    }
     // Cancel any existing timer
     _attendanceDebounceTimer?.cancel();
 
     // Start a new debounce timer
     _attendanceDebounceTimer = Timer(const Duration(seconds: 1), () {
       networkListRequestHandler(
-          apiCall: () => apiClient.getAttendanceListForParticipant(
-              meetingDetails.meetingUid),
+          apiCall: () => apiClient
+              .getAttendanceListForParticipant(meetingDetails.meetingUid),
           onSuccess: (data) {
             collectInactiveParticipant(data);
-          }
-      );
+          });
     });
   }
 
   void collectInactiveParticipant(List<ParticipantAttendanceData>? data) {
-      List<ParticipantAttendanceData> tempList = [];
-      if (data != null) {
-        for (var participant in data) {
-          if (participant.participantStatus?.toLowerCase() != 'joined') {
-            tempList.add(participant);
-          }
+    List<ParticipantAttendanceData> tempList = [];
+    if (data != null) {
+      for (var participant in data) {
+        if (participant.participantStatus?.toLowerCase() != 'joined') {
+          tempList.add(participant);
         }
       }
-      pendingParticipantList = tempList;
+    }
+    pendingParticipantList = tempList;
+  }
+
+  //Recording Consent Flow
+  void updateRecordingConsentStatus(bool status) {
+    var metadata = room.localParticipant?.metadata;
+    Map<String, dynamic> body = {
+      "meeting_uid": meetingDetails.meetingUid,
+      "session_id": Utils.getMetadataSessionUid(metadata),
+      "is_accepted": status,
+      "attendance_id": Utils.getMetadataAttendanceId(metadata),
+    };
+
+    networkRequestHandler(
+        apiCall: () => apiClient.updateRecordingConsent(body),
+        onSuccess: (_) {
+          sendAction(ActionModel(
+          action: MeetingActions.recordingConsentStatus,
+          consent: status ? "accept" : "reject"
+        ));
+          },
+        onError: (message) {
+          sendMessageToUI(message);
+        });
   }
 }

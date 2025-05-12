@@ -232,11 +232,13 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       });
     })
     ..on<ParticipantConnectedEvent>((event) {
-      _livekitProviderKey.currentState?.viewModel.getAttendanceListForParticipant();
+      _livekitProviderKey.currentState?.viewModel
+          .getAttendanceListForParticipant();
       _sortParticipants();
     })
     ..on<ParticipantDisconnectedEvent>((event) {
-      _livekitProviderKey.currentState?.viewModel.getAttendanceListForParticipant();
+      _livekitProviderKey.currentState?.viewModel
+          .getAttendanceListForParticipant();
       _sortParticipants();
     })
     ..on<RoomRecordingStatusChanged>((event) {
@@ -400,7 +402,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       case MeetingActions.showLiveCaption:
         if (remoteData.liveCaptionsData != null) {
           if (viewModel == null) return;
-          if (!viewModel.meetingDetails.features!.isVoiceTranscriptionAllowed()) {
+          if (!viewModel.meetingDetails.features!
+              .isVoiceTranscriptionAllowed()) {
             return;
           }
           viewModel.saveTranscriptionLanguage(remoteData.liveCaptionsData);
@@ -444,6 +447,12 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           setState(() {
             _isWhiteBoardEnabled = false;
           });
+        }
+        break;
+
+      case MeetingActions.recordingConsentModal:
+        if (remoteData.value && !_isConsentDialogOpen && !_isConsentRejectedDialogOpen) {
+          showRecordingConsentDialog(viewModel);
         }
         break;
 
@@ -510,8 +519,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     for (var participant in widget.room.remoteParticipants.values) {
       bool hasVideoTrack = false;
 
-      if(Utils.isCoHost(participant.metadata)){
-        coHostCount ++;
+      if (Utils.isCoHost(participant.metadata)) {
+        coHostCount++;
       }
 
       for (var t in participant.videoTrackPublications) {
@@ -854,7 +863,9 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
   void showReaction(String? emoji, RtcViewmodel? viewModel,
       {String name = "You"}) {
-    if(viewModel?.meetingDetails.features!.isReactionAllowed() == false) {return;}
+    if (viewModel?.meetingDetails.features!.isReactionAllowed() == false) {
+      return;
+    }
     switch (emoji) {
       case "heart":
         emojiAsset = AnimatedEmojis.redHeart;
@@ -932,5 +943,148 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         ),
       );
     }
+  }
+
+  var _isConsentDialogOpen = false;
+  var _isConsentRejectedDialogOpen = false;
+
+  void showRecordingConsentDialog(RtcViewmodel? viewModel) {
+    if (_isConsentDialogOpen) return; // Prevent duplicate dialogs
+    _isConsentDialogOpen = true;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text(
+            'Recording Consent',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            'The host is requesting your consent to record this meeting. Please choose whether you agree or reject.',
+            style: TextStyle(fontSize: 16),
+          ),
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          actions: [
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                viewModel?.updateRecordingConsentStatus(false);
+                showRejectWarningDialog(viewModel);
+              },
+              icon: const Icon(Icons.close, color: Colors.red),
+              label: const Text(
+                'Reject',
+                style:
+                    TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.red),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                viewModel?.updateRecordingConsentStatus(true);
+              },
+              icon: const Icon(Icons.check_circle_outline),
+              label: const Text(
+                'Agree',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+            ),
+          ],
+        );
+      },
+    ).then((_) {
+      _isConsentDialogOpen = false; // Reset when dialog is dismissed
+    });
+  }
+
+  void showRejectWarningDialog(RtcViewmodel? viewModel) {
+    if (_isConsentRejectedDialogOpen) return; // Prevent duplicate dialogs
+    _isConsentRejectedDialogOpen = true;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Column(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+              SizedBox(width: 8),
+              Text(
+                'Recording Rejected',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: const Text(
+            'You rejected the recording request. Would you like to change your response and allow recording?',
+            style: TextStyle(fontSize: 16),
+          ),
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          actions: [
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              icon: const Icon(Icons.cancel, color: Colors.grey),
+              label: const Text(
+                'Dismiss',
+                style:
+                    TextStyle(color: Colors.blue, fontWeight: FontWeight.w600),
+              ),
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                side: const BorderSide(color: Colors.blue),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                viewModel?.updateRecordingConsentStatus(true);
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text(
+                'Change to Agree',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+            ),
+          ],
+        );
+      },
+    ).then((_) {
+      _isConsentRejectedDialogOpen = false; // Reset when dialog is dismissed
+    });
   }
 }
