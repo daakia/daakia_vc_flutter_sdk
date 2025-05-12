@@ -20,7 +20,8 @@ class RemoteActivityData {
   final String? partialTranscription;
   final String? finalTranscription;
   final String? participantIdentity;
-  final int? whiteboardId; // ✅ ADD NEW FIELD
+  final int? whiteboardId;
+  final String? consent; // ✅ ADD NEW FIELD
 
   RemoteActivityData({
     this.identity,
@@ -41,7 +42,8 @@ class RemoteActivityData {
     this.partialTranscription,
     this.finalTranscription,
     this.participantIdentity,
-    this.whiteboardId, // ✅ ADD NEW FIELD
+    this.whiteboardId,
+    this.consent // ✅ ADD NEW FIELD
   });
 
   factory RemoteActivityData.fromJson(Map<String, dynamic> json) {
@@ -66,7 +68,8 @@ class RemoteActivityData {
       partialTranscription: json['partial'] as String?,
       finalTranscription: json['final'] as String?,
       participantIdentity: json['participant_identity'] as String?,
-      whiteboardId: json['whiteboardId'] as int?, // ✅ ADD NEW FIELD
+      whiteboardId: json['whiteboardId'] as int?,
+      consent: json['whiteboardId'] as String? // ✅ ADD NEW FIELD
     );
   }
 
@@ -91,7 +94,8 @@ class RemoteActivityData {
       'partial': partialTranscription,
       'final': finalTranscription,
       'participant_identity': participantIdentity,
-      'whiteboardId': whiteboardId, // ✅ ADD NEW FIELD
+      'whiteboardId': whiteboardId,
+      'consent': consent, // ✅ ADD NEW FIELD
     };
   }
 
@@ -114,6 +118,7 @@ class RemoteActivityData {
     String? partialTranscription,
     String? finalTranscription,
     String? participantIdentity,
+    String? consent,
     int? whiteboardId, // ✅ ADD NEW FIELD
   }) {
     return RemoteActivityData(
@@ -136,6 +141,7 @@ class RemoteActivityData {
       partialTranscription: partialTranscription ?? this.partialTranscription,
       finalTranscription: finalTranscription ?? this.finalTranscription,
       participantIdentity: participantIdentity ?? this.participantIdentity,
+      consent: consent ?? this.consent,
       whiteboardId: whiteboardId ?? this.whiteboardId, // ✅ ADD NEW FIELD
     );
   }

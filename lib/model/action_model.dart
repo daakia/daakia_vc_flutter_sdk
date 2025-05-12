@@ -6,6 +6,7 @@ class ActionModel {
   final String? token;
   final bool value;
   final TranscriptionActionModel? liveCaptionsData;
+  final String? consent;
 
   ActionModel({
     this.action,
@@ -13,6 +14,7 @@ class ActionModel {
     this.token = "",
     this.value = true,
     this.liveCaptionsData,
+    this.consent,
   });
 
   // Converts ActionModel to JSON
@@ -26,6 +28,9 @@ class ActionModel {
     if (liveCaptionsData != null) {
       data['liveCaptionsData'] = liveCaptionsData;
     }
+    if (consent != null) {
+      data['consent'] = consent;
+    }
     return data;
   }
 
@@ -37,6 +42,7 @@ class ActionModel {
       token: json['token'] as String? ?? "",
       value: json['value'] as bool? ?? true,
       liveCaptionsData: json['liveCaptionsData'] as TranscriptionActionModel?,
+      consent: json['consent'] as String?,
     );
   }
 }
