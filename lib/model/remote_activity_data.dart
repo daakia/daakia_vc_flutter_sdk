@@ -69,7 +69,7 @@ class RemoteActivityData {
       finalTranscription: json['final'] as String?,
       participantIdentity: json['participant_identity'] as String?,
       whiteboardId: json['whiteboardId'] as int?,
-      consent: json['whiteboardId'] as String? // ✅ ADD NEW FIELD
+      consent: json['consent'] as String? // ✅ ADD NEW FIELD
     );
   }
 
@@ -118,8 +118,8 @@ class RemoteActivityData {
     String? partialTranscription,
     String? finalTranscription,
     String? participantIdentity,
-    String? consent,
-    int? whiteboardId, // ✅ ADD NEW FIELD
+    int? whiteboardId,
+    String? consent, // ✅ ADD NEW FIELD
   }) {
     return RemoteActivityData(
       identity: identity ?? this.identity,
@@ -141,8 +141,8 @@ class RemoteActivityData {
       partialTranscription: partialTranscription ?? this.partialTranscription,
       finalTranscription: finalTranscription ?? this.finalTranscription,
       participantIdentity: participantIdentity ?? this.participantIdentity,
-      consent: consent ?? this.consent,
-      whiteboardId: whiteboardId ?? this.whiteboardId, // ✅ ADD NEW FIELD
+      whiteboardId: whiteboardId ?? this.whiteboardId,
+      consent: consent ?? this.consent, // ✅ ADD NEW FIELD
     );
   }
 }
