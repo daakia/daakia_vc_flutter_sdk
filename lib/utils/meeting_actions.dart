@@ -50,6 +50,14 @@ class MeetingActions {
 
   static const String whiteboardState = "whiteboard-state";
 
+  static const String recordingConsentStatus = "recording-consent-status";
+
+  static const String recordingConsentModal = "recording-consent-modal";
+
+  static const String startedRecordingConsent = "started-recording-consent";
+
+  // ✅ Add new fields here
+
   // ✅ Method to check if an action is valid
   static bool isValidAction(String? action) {
     if (action == null) return false; // Ensures action is not null
@@ -87,6 +95,10 @@ class MeetingActions {
     liveCaption,
     requestLiveCaptionDrawerState,
     extendMeetingEndTime,
-    whiteboardState
+    whiteboardState,
+    recordingConsentStatus,
+    recordingConsentModal,
+    startedRecordingConsent,
+    // ✅ Add new fields here
   };
 }
