@@ -189,4 +189,6 @@ class Features {
 
   bool isProfileEditBySelfAllowed() => configurations?.allowProfileEditBySelf == 1;
 
+  bool isRecordingConsentAllowed() => configurations?.askRecordingRequest == "all";
+
 }
