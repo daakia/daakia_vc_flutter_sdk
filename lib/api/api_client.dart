@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:daakia_vc_flutter_sdk/model/consent_status_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/feature_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/licence_verify_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/participant_attendance_data.dart';
@@ -141,5 +142,10 @@ abstract class RestClient {
   Future<BaseListResponse<ParticipantAttendanceData>>
       getAttendanceListForParticipant(
     @Query("meeting_uid") String meetingId,
+  );
+
+  @PUT("rtc/meeting/updateRecording/consentStatus")
+  Future<BaseResponse<ConsentStatusData>> updateRecordingConsent(
+    @Body() Map<String, dynamic> body,
   );
 }
