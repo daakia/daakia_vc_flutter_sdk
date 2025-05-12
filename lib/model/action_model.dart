@@ -1,5 +1,7 @@
 import 'package:daakia_vc_flutter_sdk/model/transcription_action_model.dart';
 
+import 'consent_participant.dart';
+
 class ActionModel {
   final String? action;
   final String? message;
@@ -7,6 +9,7 @@ class ActionModel {
   final bool value;
   final TranscriptionActionModel? liveCaptionsData;
   final String? consent;
+  final List<ConsentParticipant>? participants;
 
   ActionModel({
     this.action,
@@ -15,6 +18,7 @@ class ActionModel {
     this.value = true,
     this.liveCaptionsData,
     this.consent,
+    this.participants,
   });
 
   // Converts ActionModel to JSON
@@ -31,6 +35,9 @@ class ActionModel {
     if (consent != null) {
       data['consent'] = consent;
     }
+    if (participants != null) {
+      data['participants'] = participants!.map((p) => p.toJson()).toList();
+    }
     return data;
   }
 
@@ -43,6 +50,9 @@ class ActionModel {
       value: json['value'] as bool? ?? true,
       liveCaptionsData: json['liveCaptionsData'] as TranscriptionActionModel?,
       consent: json['consent'] as String?,
+      participants: (json['participants'] as List<dynamic>?)
+          ?.map((e) => ConsentParticipant.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

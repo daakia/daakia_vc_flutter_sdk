@@ -1,5 +1,6 @@
 import 'package:daakia_vc_flutter_sdk/model/transcription_action_model.dart';
 import 'package:livekit_client/livekit_client.dart';
+import 'consent_participant.dart';
 
 class RemoteActivityData {
   final RemoteParticipant? identity;
@@ -21,7 +22,9 @@ class RemoteActivityData {
   final String? finalTranscription;
   final String? participantIdentity;
   final int? whiteboardId;
-  final String? consent; // ✅ ADD NEW FIELD
+  final String? consent;
+  final List<ConsentParticipant>? participants;
+  // ✅ ADD NEW FIELD
 
   RemoteActivityData({
     this.identity,
@@ -43,12 +46,14 @@ class RemoteActivityData {
     this.finalTranscription,
     this.participantIdentity,
     this.whiteboardId,
-    this.consent // ✅ ADD NEW FIELD
+    this.consent,
+    this.participants,
+    // ✅ ADD NEW FIELD
   });
 
   factory RemoteActivityData.fromJson(Map<String, dynamic> json) {
     return RemoteActivityData(
-      identity: json['identity'], // Optional: parse if needed
+      identity: json['identity'], // If needed, parse manually
       id: json['id'] as String?,
       message: json['message'] as String?,
       timestamp: json['timestamp'] as int?,
@@ -69,11 +74,14 @@ class RemoteActivityData {
       finalTranscription: json['final'] as String?,
       participantIdentity: json['participant_identity'] as String?,
       whiteboardId: json['whiteboardId'] as int?,
-      consent: json['consent'] as String? // ✅ ADD NEW FIELD
+      consent: json['consent'] as String?,
+      participants: (json['participants'] as List<dynamic>?)
+          ?.map((e) => ConsentParticipant.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
+    // ✅ ADD NEW FIELD
   }
 
-  // Method to convert instance to JSON
   Map<String, dynamic> toJson() {
     return {
       'identity': identity,
@@ -90,16 +98,18 @@ class RemoteActivityData {
       'value': value,
       'user_identity': userIdentity,
       'user_name': userName,
-      'liveCaptionsData': liveCaptionsData,
+      'liveCaptionsData': liveCaptionsData?.toJson(),
       'partial': partialTranscription,
       'final': finalTranscription,
       'participant_identity': participantIdentity,
       'whiteboardId': whiteboardId,
-      'consent': consent, // ✅ ADD NEW FIELD
+      'consent': consent,
+      'participants': participants?.map((e) => e.toJson()).toList(),
+      // ✅ ADD NEW FIELD
     };
   }
 
-  copyWith({
+  RemoteActivityData copyWith({
     RemoteParticipant? identity,
     String? id,
     String? message,
@@ -119,7 +129,9 @@ class RemoteActivityData {
     String? finalTranscription,
     String? participantIdentity,
     int? whiteboardId,
-    String? consent, // ✅ ADD NEW FIELD
+    String? consent,
+    List<ConsentParticipant>? participants,
+    // ✅ ADD NEW FIELD
   }) {
     return RemoteActivityData(
       identity: identity ?? this.identity,
@@ -127,12 +139,11 @@ class RemoteActivityData {
       message: message ?? this.message,
       timestamp: timestamp ?? this.timestamp,
       action: action ?? this.action,
-      requestId: requestId ?? this.requestId,
       isSender: isSender ?? this.isSender,
+      requestId: requestId ?? this.requestId,
       meetingUid: meetingUid ?? this.meetingUid,
       displayName: displayName ?? this.displayName,
-      participantLobbyStatus:
-      participantLobbyStatus ?? this.participantLobbyStatus,
+      participantLobbyStatus: participantLobbyStatus ?? this.participantLobbyStatus,
       token: token ?? this.token,
       value: value ?? this.value,
       userIdentity: userIdentity ?? this.userIdentity,
@@ -142,7 +153,9 @@ class RemoteActivityData {
       finalTranscription: finalTranscription ?? this.finalTranscription,
       participantIdentity: participantIdentity ?? this.participantIdentity,
       whiteboardId: whiteboardId ?? this.whiteboardId,
-      consent: consent ?? this.consent, // ✅ ADD NEW FIELD
+      consent: consent ?? this.consent,
+      participants: participants ?? this.participants,
+      // ✅ ADD NEW FIELD
     );
   }
 }
