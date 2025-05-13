@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:daakia_vc_flutter_sdk/api/injection.dart';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
+import 'package:daakia_vc_flutter_sdk/model/consent_participant.dart';
 import 'package:daakia_vc_flutter_sdk/model/participant_attendance_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/transcription_action_model.dart';
@@ -1254,6 +1255,16 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
   //Recording Consent Flow
+
+  List<ConsentParticipant> _participantListForConsent = [];
+
+  List<ConsentParticipant> get participantListForConsent =>
+      _participantListForConsent;
+
+  set participantListForConsent(List<ConsentParticipant> list) {
+    _participantListForConsent = list;
+  }
+
   void updateRecordingConsentStatus(bool status) {
     var metadata = room.localParticipant?.metadata;
     Map<String, dynamic> body = {
@@ -1267,12 +1278,69 @@ class RtcViewmodel extends ChangeNotifier {
         apiCall: () => apiClient.updateRecordingConsent(body),
         onSuccess: (_) {
           sendAction(ActionModel(
-          action: MeetingActions.recordingConsentStatus,
-          consent: status ? "accept" : "reject"
-        ));
-          },
+              action: MeetingActions.recordingConsentStatus,
+              consent: status ? "accept" : "reject"));
+        },
         onError: (message) {
           sendMessageToUI(message);
+        });
+  }
+
+  void startRecordingConsentFlow() {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      checkSessionStatus();
+    }
+  }
+
+  void checkSessionStatus() {
+    networkRequestHandler(
+        apiCall: () => apiClient.getSessionDetails(meetingDetails.meetingUid),
+        onSuccess: (data) {
+          if (data?.recordingConsentActive == 1) {
+            getParticipantConsentList();
+          } else {
+            startRecordingConsent();
+          }
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+        });
+  }
+
+  void startRecordingConsent() {
+    var metadata = room.localParticipant?.metadata;
+    Map<String, dynamic> body = {
+      "meeting_uid": meetingDetails.meetingUid,
+      "session_id": Utils.getMetadataSessionUid(metadata),
+      "meeting_consent_start": true,
+      "attendance_id": Utils.getMetadataAttendanceId(metadata),
+    };
+    networkRequestHandler(
+        apiCall: () => apiClient.startRecordingConsent(body),
+        onSuccess: (_) {
+          sendAction(ActionModel(
+              action: MeetingActions.recordingConsentModal, value: true));
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+        });
+  }
+
+  void getParticipantConsentList() {
+    var metadata = room.localParticipant?.metadata;
+    networkListRequestHandler(
+        apiCall: () => apiClient.getParticipantConsentList(
+            meetingDetails.meetingUid, Utils.getMetadataSessionUid(metadata)),
+        onSuccess: (data) {
+          if (data != null) {
+            final localList = ConsentParticipant.fromRemoteList(data);
+            participantListForConsent = localList;
+            sendAction(ActionModel(
+                action: MeetingActions.startedRecordingConsent,
+                participants: localList));
+          }
         });
   }
 }

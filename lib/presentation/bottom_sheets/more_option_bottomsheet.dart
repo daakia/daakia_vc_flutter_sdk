@@ -70,10 +70,16 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                   isVisible: (viewModel.isHost() || viewModel.isCoHost()) &&
                       viewModel.meetingDetails.features!.isRecordingAllowed(),
                   onTap: () {
-                viewModel.isRecording
-                    ? viewModel.stopRecording()
-                    : viewModel.startRecording();
                 Navigator.pop(context);
+                if (viewModel.meetingDetails.features
+                        ?.isRecordingConsentAllowed() ==
+                    true) {
+                  viewModel.startRecordingConsentFlow();
+                } else {
+                  viewModel.isRecording
+                      ? viewModel.stopRecording()
+                      : viewModel.startRecording();
+                }
               }),
               // Live Caption
               buildOption(context,
