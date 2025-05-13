@@ -1,8 +1,12 @@
+import 'package:daakia_vc_flutter_sdk/model/remote_participant_consent_model.dart';
+
+import '../utils/utils.dart';
+
 class ConsentParticipant {
-  final String? participantId;
-  final String? participantName;
-  final String? participantAvatar;
-  final String? consent;
+  String? participantId;
+  String? participantName;
+  String? participantAvatar;
+  String? consent;
 
   ConsentParticipant({
     this.participantId,
@@ -13,10 +17,10 @@ class ConsentParticipant {
 
   factory ConsentParticipant.fromJson(Map<String, dynamic> json) {
     return ConsentParticipant(
-      participantId: json['participantId'] as String?,
-      participantName: json['participantName'] as String?,
-      participantAvatar: json['participantAvatar'] as String?,
-      consent: json['consent'] as String?,
+      participantId: json['participantId'],
+      participantName: json['participantName'],
+      participantAvatar: json['participantAvatar'],
+      consent: json['consent'],
     );
   }
 
@@ -27,5 +31,22 @@ class ConsentParticipant {
       'participantAvatar': participantAvatar,
       'consent': consent,
     };
+  }
+
+  factory ConsentParticipant.fromRemote(RemoteParticipantConsent remote) {
+    return ConsentParticipant(
+      participantName: remote.screenName,
+      participantId: remote.rtcParticipantUid,
+      participantAvatar: Utils.getInitials(remote.screenName),
+      // default or mapped
+      consent: remote.recordingConsentStatus ?? "pending",
+    );
+  }
+
+  static List<ConsentParticipant> fromRemoteList(
+      List<RemoteParticipantConsent> remoteList) {
+    return remoteList
+        .map((remote) => ConsentParticipant.fromRemote(remote))
+        .toList();
   }
 }
