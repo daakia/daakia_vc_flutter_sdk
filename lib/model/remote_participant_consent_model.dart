@@ -1,31 +1,31 @@
 class RemoteParticipantConsent {
-  String? participantId;
-  String? participantName;
-  String? participantAvatar;
-  String? consent;
+  String? screenName;
+  String? rtcParticipantUid;
+  String? role;
+  String? recordingConsentStatus;
 
   RemoteParticipantConsent({
-    this.participantId,
-    this.participantName,
-    this.participantAvatar,
-    this.consent,
+    this.screenName,
+    this.rtcParticipantUid,
+    this.role,
+    this.recordingConsentStatus,
   });
 
   factory RemoteParticipantConsent.fromJson(Map<String, dynamic> json) {
     return RemoteParticipantConsent(
-      participantId: json['participantId'],
-      participantName: json['participantName'],
-      participantAvatar: json['participantAvatar'],
-      consent: json['consent'],
+      screenName: json['screen_name'],
+      rtcParticipantUid: json['rtc_participant_uid'],
+      role: json['role'],
+      recordingConsentStatus: json['recording_consent_status'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'participantId': participantId,
-      'participantName': participantName,
-      'participantAvatar': participantAvatar,
-      'consent': consent,
+      'screen_name': screenName,
+      'rtc_participant_uid': rtcParticipantUid,
+      'role': role,
+      'recording_consent_status': recordingConsentStatus,
     };
   }
 }
