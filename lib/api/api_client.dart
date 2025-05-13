@@ -154,4 +154,9 @@ abstract class RestClient {
   Future<BaseResponse<SessionDetailsData>> getSessionDetails(
     @Query("meeting_uid") String meetingId,
   );
+
+  @POST("rtc/meeting/startRecording/consent")
+  Future<BaseResponse> startRecordingConsent(
+    @Body() Map<String, dynamic> body,
+  );
 }
