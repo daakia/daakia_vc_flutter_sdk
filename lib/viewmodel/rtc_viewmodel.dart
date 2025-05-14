@@ -1269,14 +1269,17 @@ class RtcViewmodel extends ChangeNotifier {
     var metadata = room.localParticipant?.metadata;
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meetingUid,
-      "session_id": Utils.getMetadataSessionUid(metadata),
+      "session_id": meetingDetails.meetingBasicDetails?.currentSessionUid,
       "is_accepted": status,
       "attendance_id": Utils.getMetadataAttendanceId(metadata),
     };
 
     networkRequestHandler(
         apiCall: () => apiClient.updateRecordingConsent(body),
-        onSuccess: (_) {
+        onSuccess: (data) {
+          if (data?.canStartRecording == true) {
+            startRecording();
+          }
           sendAction(ActionModel(
               action: MeetingActions.recordingConsentStatus,
               consent: status ? "accept" : "reject"));
@@ -1313,7 +1316,7 @@ class RtcViewmodel extends ChangeNotifier {
     var metadata = room.localParticipant?.metadata;
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meetingUid,
-      "session_id": Utils.getMetadataSessionUid(metadata),
+      "session_id": meetingDetails.meetingBasicDetails?.currentSessionUid,
       "meeting_consent_start": true,
       "attendance_id": Utils.getMetadataAttendanceId(metadata),
     };
@@ -1329,10 +1332,10 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
   void getParticipantConsentList() {
-    var metadata = room.localParticipant?.metadata;
     networkListRequestHandler(
         apiCall: () => apiClient.getParticipantConsentList(
-            meetingDetails.meetingUid, Utils.getMetadataSessionUid(metadata)),
+            meetingDetails.meetingUid,
+            meetingDetails.meetingBasicDetails?.currentSessionUid ?? ""),
         onSuccess: (data) {
           if (data != null) {
             final localList = ConsentParticipant.fromRemoteList(data);
