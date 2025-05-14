@@ -1415,4 +1415,32 @@ class RtcViewmodel extends ChangeNotifier {
         ActionModel(action: MeetingActions.recordingConsentModal, value: true),
         identity);
   }
+
+  void addParticipantToConsentList(RemoteParticipant participant) {
+    if ((!isHost() && !isCoHost()) && !meetingDetails.features!.isRecordingConsentAllowed()) {return;}
+
+    final participantId = participant.identity;
+
+    // Check for duplicates
+    final alreadyExists = participantListForConsent.any(
+          (p) => p.participantId == participantId,
+    );
+
+    if (alreadyExists) return;
+
+    // Add new participant to the list
+    final newConsentParticipant = ConsentParticipant.fromRemoteParticipant(participant);
+
+    participantListForConsent.add(newConsentParticipant);
+    notifyListeners();
+  }
+
+  void removeParticipantFromConsentList(String participantId) {
+    participantListForConsent.removeWhere(
+          (participant) => participant.participantId == participantId,
+    );
+    notifyListeners();
+  }
+
+
 }
