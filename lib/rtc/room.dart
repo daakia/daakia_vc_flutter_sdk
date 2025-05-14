@@ -29,6 +29,7 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import '../model/emoji_message.dart';
 import '../model/remote_activity_data.dart';
 import '../presentation/pages/transcription_screen.dart';
+import '../utils/consent_status_enum.dart';
 import '../utils/meeting_actions.dart';
 import '../utils/utils.dart';
 import 'meeting_manager.dart';
@@ -116,6 +117,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       _initializeWebViewController();
       viewModel?.getWhiteboardData();
       viewModel?.getAttendanceListForParticipant();
+      if (viewModel?.meetingDetails.features?.isRecordingConsentAllowed() == true) {
+        viewModel?.checkSessionStatus(asUser: true, callBack: () {
+          showRecordingConsentDialog(viewModel);
+        });
+      }
     });
 
     if (lkPlatformIs(PlatformType.android)) {
@@ -234,6 +240,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     ..on<ParticipantConnectedEvent>((event) {
       _livekitProviderKey.currentState?.viewModel
           .getAttendanceListForParticipant();
+      _livekitProviderKey.currentState?.viewModel.addParticipantToConsentList(event.participant);
       _sortParticipants();
     })
     ..on<ParticipantDisconnectedEvent>((event) {
@@ -451,9 +458,17 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         break;
 
       case MeetingActions.recordingConsentModal:
-        if (remoteData.value && !_isConsentDialogOpen && !_isConsentRejectedDialogOpen) {
+        if (remoteData.value && !_isConsentDialogOpen && !_isConsentRejectedDialogOpen && !viewModel!.hasAlreadyAcceptedConsent()) {
           showRecordingConsentDialog(viewModel);
         }
+        break;
+
+      case MeetingActions.recordingConsentStatus:
+        final status = parseConsentStatus(remoteData.consent);
+        if (status == ConsentStatus.reject) {
+          showSnackBar(message: "Some participant have rejected the recording consent");
+        }
+        viewModel?.verifyRecordingConsent(remoteData);
         break;
 
       case "":

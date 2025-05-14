@@ -1314,14 +1314,18 @@ class RtcViewmodel extends ChangeNotifier {
     return meetingDetails.meetingBasicDetails?.currentSessionUid;
   }
 
-  void checkSessionStatus() {
+  void checkSessionStatus({bool asUser = false, Function? callBack}) {
     networkRequestHandler(
         apiCall: () => apiClient.getSessionDetails(meetingDetails.meetingUid),
         onSuccess: (data) {
           if (data?.recordingConsentActive == 1) {
             if (data != null) {
               sessionId = data.id.toString();
-              getParticipantConsentList();
+              if(asUser){
+                callBack?.call();
+              } else {
+                getParticipantConsentList();
+              }
             } else {
               sendMessageToUI("Session not found!");
             }
@@ -1441,6 +1445,5 @@ class RtcViewmodel extends ChangeNotifier {
     );
     notifyListeners();
   }
-
 
 }
