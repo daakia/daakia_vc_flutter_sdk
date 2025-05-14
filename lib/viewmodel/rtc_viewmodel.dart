@@ -1346,4 +1346,29 @@ class RtcViewmodel extends ChangeNotifier {
           }
         });
   }
+
+  void verifyRecordingConsent(RemoteActivityData remoteData) {
+    if (!isHost() && !isCoHost()) return;
+
+    if (participantListForConsent.isEmpty) {
+      getParticipantConsentList();
+      return;
+    }
+
+    int index = participantListForConsent.indexWhere(
+      (participant) =>
+          participant.participantId == remoteData.identity?.identity,
+    );
+
+    if (index != -1) {
+      final existing = participantListForConsent[index];
+      participantListForConsent[index] = ConsentParticipant(
+        participantId: existing.participantId,
+        participantName: existing.participantName,
+        participantAvatar: existing.participantAvatar,
+        consent: remoteData.consent,
+      );
+    }
+    notifyListeners();
+  }
 }
