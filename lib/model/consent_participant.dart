@@ -1,4 +1,5 @@
 import 'package:daakia_vc_flutter_sdk/model/remote_participant_consent_model.dart';
+import 'package:livekit_client/livekit_client.dart';
 
 import '../utils/utils.dart';
 
@@ -48,5 +49,15 @@ class ConsentParticipant {
     return remoteList
         .map((remote) => ConsentParticipant.fromRemote(remote))
         .toList();
+  }
+
+  factory ConsentParticipant.fromRemoteParticipant(RemoteParticipant remote) {
+    return ConsentParticipant(
+      participantName: remote.name,
+      participantId: remote.identity,
+      participantAvatar: Utils.getInitials(remote.name),
+      // default or mapped
+      consent: "pending",
+    );
   }
 }
