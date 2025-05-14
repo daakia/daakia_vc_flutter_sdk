@@ -1318,16 +1318,14 @@ class RtcViewmodel extends ChangeNotifier {
     networkRequestHandler(
         apiCall: () => apiClient.getSessionDetails(meetingDetails.meetingUid),
         onSuccess: (data) {
+          if (data != null) {
+            sessionId = data.id.toString();
+          }
           if (data?.recordingConsentActive == 1) {
-            if (data != null) {
-              sessionId = data.id.toString();
-              if(asUser){
-                callBack?.call();
-              } else {
-                getParticipantConsentList();
-              }
+            if (asUser) {
+              callBack?.call();
             } else {
-              sendMessageToUI("Session not found!");
+              getParticipantConsentList();
             }
           } else {
             startRecordingConsent();
@@ -1421,19 +1419,23 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
   void addParticipantToConsentList(RemoteParticipant participant) {
-    if ((!isHost() && !isCoHost()) && !meetingDetails.features!.isRecordingConsentAllowed()) {return;}
+    if ((!isHost() && !isCoHost()) &&
+        !meetingDetails.features!.isRecordingConsentAllowed()) {
+      return;
+    }
 
     final participantId = participant.identity;
 
     // Check for duplicates
     final alreadyExists = participantListForConsent.any(
-          (p) => p.participantId == participantId,
+      (p) => p.participantId == participantId,
     );
 
     if (alreadyExists) return;
 
     // Add new participant to the list
-    final newConsentParticipant = ConsentParticipant.fromRemoteParticipant(participant);
+    final newConsentParticipant =
+        ConsentParticipant.fromRemoteParticipant(participant);
 
     participantListForConsent.add(newConsentParticipant);
     notifyListeners();
@@ -1441,9 +1443,8 @@ class RtcViewmodel extends ChangeNotifier {
 
   void removeParticipantFromConsentList(String participantId) {
     participantListForConsent.removeWhere(
-          (participant) => participant.participantId == participantId,
+      (participant) => participant.participantId == participantId,
     );
     notifyListeners();
   }
-
 }
