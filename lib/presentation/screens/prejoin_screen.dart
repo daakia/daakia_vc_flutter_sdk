@@ -91,6 +91,7 @@ class _PreJoinState extends State<PreJoinScreen> {
         Hardware.instance.onDeviceChange.stream.listen(_loadDevices);
     Hardware.instance.enumerateDevices().then(_loadDevices);
     final initialName = widget.configuration?.participantNameConfig?.name ?? "";
+    name = initialName;
     _nameController = TextEditingController(text: initialName);
 
     _isNameEditable = initialName.isEmpty ||
