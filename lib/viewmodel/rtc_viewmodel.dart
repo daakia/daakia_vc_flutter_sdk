@@ -1264,6 +1264,7 @@ class RtcViewmodel extends ChangeNotifier {
 
   set participantListForConsent(List<ConsentParticipant> list) {
     _participantListForConsent = list;
+    notifyListeners();
   }
 
   void updateRecordingConsentStatus(bool status) {
