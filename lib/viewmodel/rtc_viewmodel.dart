@@ -1371,4 +1371,10 @@ class RtcViewmodel extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  void resendRecordingConsent(String? identity) {
+    sendPrivateAction(
+        ActionModel(action: MeetingActions.recordingConsentModal, value: true),
+        identity);
+  }
 }
