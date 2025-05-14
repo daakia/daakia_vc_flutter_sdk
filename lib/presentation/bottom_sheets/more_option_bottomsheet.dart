@@ -1,4 +1,5 @@
 import 'package:daakia_vc_flutter_sdk/presentation/pages/chat_controller.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/pages/recording_consent_page.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/pages/webinar_controls.dart';
 import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
 import 'package:flutter/foundation.dart';
@@ -70,10 +71,17 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                   isVisible: (viewModel.isHost() || viewModel.isCoHost()) &&
                       viewModel.meetingDetails.features!.isRecordingAllowed(),
                   onTap: () {
-                viewModel.isRecording
-                    ? viewModel.stopRecording()
-                    : viewModel.startRecording();
                 Navigator.pop(context);
+                if (viewModel.meetingDetails.features
+                    ?.isRecordingConsentAllowed() ==
+                    true && !viewModel.isRecording) {
+                  showRecordingConsentPage();
+                  viewModel.startRecordingConsentFlow();
+                } else {
+                  viewModel.isRecording
+                      ? viewModel.stopRecording()
+                      : viewModel.startRecording();
+                }
               }),
               // Live Caption
               buildOption(context,
@@ -190,6 +198,14 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
           return ChatController(
             viewModel: viewModel,
           );
+        },
+        fullscreenDialog: true));
+  }
+
+  void showRecordingConsentPage() {
+    Navigator.of(context).push(MaterialPageRoute<Null>(
+        builder: (BuildContext context) {
+          return const RecordingConsentPage();
         },
         fullscreenDialog: true));
   }

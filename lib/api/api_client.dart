@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:daakia_vc_flutter_sdk/model/consent_status_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/feature_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/licence_verify_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/participant_attendance_data.dart';
+import 'package:daakia_vc_flutter_sdk/model/session_details_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/translation_data.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
@@ -12,6 +14,7 @@ import '../model/base_response.dart';
 import '../model/event_password_protected_data.dart';
 import '../model/host_token_model.dart';
 import '../model/meeting_details_model.dart';
+import '../model/remote_participant_consent_model.dart';
 import '../model/rtc_data.dart';
 import '../model/upload_data.dart';
 import '../model/white_board_data.dart';
@@ -141,5 +144,26 @@ abstract class RestClient {
   Future<BaseListResponse<ParticipantAttendanceData>>
       getAttendanceListForParticipant(
     @Query("meeting_uid") String meetingId,
+  );
+
+  @PUT("rtc/meeting/updateRecording/consentStatus")
+  Future<BaseResponse<ConsentStatusData>> updateRecordingConsent(
+    @Body() Map<String, dynamic> body,
+  );
+
+  @GET("rtc/meeting/session/detail")
+  Future<BaseResponse<SessionDetailsData>> getSessionDetails(
+    @Query("meeting_uid") String meetingId,
+  );
+
+  @POST("rtc/meeting/startRecording/consent")
+  Future<BaseResponse> startRecordingConsent(
+    @Body() Map<String, dynamic> body,
+  );
+
+  @GET("rtc/meeting/participant/consentList")
+  Future<BaseListResponse<RemoteParticipantConsent>> getParticipantConsentList(
+    @Query("meeting_uid") String meetingId,
+    @Query("session_id") String sessionId,
   );
 }
