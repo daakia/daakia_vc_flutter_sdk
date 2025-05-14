@@ -24,6 +24,7 @@ import '../model/meeting_details.dart';
 import '../model/private_chat_model.dart';
 import '../model/send_message_model.dart';
 import '../rtc/widgets/participant_info.dart';
+import '../utils/consent_status_enum.dart';
 import '../utils/meeting_actions.dart';
 
 class RtcViewmodel extends ChangeNotifier {
@@ -1269,7 +1270,7 @@ class RtcViewmodel extends ChangeNotifier {
     var metadata = room.localParticipant?.metadata;
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meetingUid,
-      "session_id": meetingDetails.meetingBasicDetails?.currentSessionUid,
+      "session_id": getSessionId(),
       "is_accepted": status,
       "attendance_id": Utils.getMetadataAttendanceId(metadata),
     };
@@ -1297,12 +1298,33 @@ class RtcViewmodel extends ChangeNotifier {
     }
   }
 
+  var sessionId = "";
+
+  String? getSessionId() {
+    if (sessionId.isNotEmpty) {
+      return sessionId;
+    }
+
+    final metadataSessionId =
+        Utils.getMetadataSessionUid(room.localParticipant?.metadata);
+    if (metadataSessionId.isNotEmpty && metadataSessionId != "null") {
+      return metadataSessionId;
+    }
+
+    return meetingDetails.meetingBasicDetails?.currentSessionUid;
+  }
+
   void checkSessionStatus() {
     networkRequestHandler(
         apiCall: () => apiClient.getSessionDetails(meetingDetails.meetingUid),
         onSuccess: (data) {
           if (data?.recordingConsentActive == 1) {
-            getParticipantConsentList();
+            if (data != null) {
+              sessionId = data.id.toString();
+              getParticipantConsentList();
+            } else {
+              sendMessageToUI("Session not found!");
+            }
           } else {
             startRecordingConsent();
           }
@@ -1316,7 +1338,7 @@ class RtcViewmodel extends ChangeNotifier {
     var metadata = room.localParticipant?.metadata;
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meetingUid,
-      "session_id": meetingDetails.meetingBasicDetails?.currentSessionUid,
+      "session_id": getSessionId(),
       "meeting_consent_start": true,
       "attendance_id": Utils.getMetadataAttendanceId(metadata),
     };
@@ -1325,6 +1347,7 @@ class RtcViewmodel extends ChangeNotifier {
         onSuccess: (_) {
           sendAction(ActionModel(
               action: MeetingActions.recordingConsentModal, value: true));
+          getParticipantConsentList();
         },
         onError: (message) {
           sendMessageToUI(message);
@@ -1334,8 +1357,7 @@ class RtcViewmodel extends ChangeNotifier {
   void getParticipantConsentList() {
     networkListRequestHandler(
         apiCall: () => apiClient.getParticipantConsentList(
-            meetingDetails.meetingUid,
-            meetingDetails.meetingBasicDetails?.currentSessionUid ?? ""),
+            meetingDetails.meetingUid, getSessionId() ?? ""),
         onSuccess: (data) {
           if (data != null) {
             final localList = ConsentParticipant.fromRemoteList(data);
@@ -1370,6 +1392,22 @@ class RtcViewmodel extends ChangeNotifier {
       );
     }
     notifyListeners();
+  }
+
+  bool hasAlreadyAcceptedConsent() {
+    final participant = room.localParticipant;
+    final localId = participant?.identity;
+    final existing = participantListForConsent.firstWhere(
+      (p) => p.participantId == localId,
+      orElse: () => ConsentParticipant(
+        participantId: localId ?? '',
+        participantName: participant?.name,
+        participantAvatar: Utils.getInitials(participant?.name),
+        consent: null,
+      ),
+    );
+
+    return parseConsentStatus(existing.consent) == ConsentStatus.accept;
   }
 
   void resendRecordingConsent(String? identity) {
