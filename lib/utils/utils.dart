@@ -319,6 +319,24 @@ class Utils {
     return contentBuffer.toString();
   }
 
+  static String getTranslatedTranscriptFormattedToSave(
+      List<TranscriptionModel> transcriptions) {
+    StringBuffer contentBuffer = StringBuffer();
+    for (var entry in transcriptions) {
+      final String textToUse = (entry.translatedTranscription != null &&
+          entry.translatedTranscription!.trim().isNotEmpty)
+          ? (entry.translatedTranscription ?? "")
+          : entry.transcription;
+
+      contentBuffer.writeln('${entry.name} ${entry.timestamp}');
+      contentBuffer.writeln(textToUse);
+      contentBuffer.writeln();
+      contentBuffer.writeln();
+    }
+    return contentBuffer.toString();
+  }
+
+
   static Future<SavedData> saveDataToFile(String data, String fileName) async {
     try {
       // Request storage permission for Android only
