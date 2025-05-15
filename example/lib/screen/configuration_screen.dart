@@ -4,7 +4,9 @@ import 'package:example/utils/theme_color.dart';
 import 'package:flutter/material.dart';
 
 class ConfigurationScreen extends StatefulWidget {
-  const ConfigurationScreen({super.key});
+  final DaakiaMeetingConfiguration? initialConfig;
+
+  const ConfigurationScreen({super.key, this.initialConfig});
 
   @override
   State<ConfigurationScreen> createState() => _ConfigurationScreenState();
@@ -72,6 +74,35 @@ class _ConfigurationScreenState extends State<ConfigurationScreen> {
       ),
     );
   }
+
+  @override
+  void initState() {
+    super.initState();
+
+    final config = widget.initialConfig;
+    if (config != null) {
+      // Participant Name Config
+      if (config.participantNameConfig?.name != null) {
+        _customizeConfigName = true;
+        _configNameController.text = config.participantNameConfig?.name ?? "";
+        _isNameEditable = config.participantNameConfig?.isEditable == true;
+      }
+
+      // Metadata
+      if (config.metadata != null && config.metadata!.isNotEmpty) {
+        _includeMetadata = true;
+        for (final entry in config.metadata!.entries) {
+          _metadataControllers.add(
+            MapEntry(
+              TextEditingController(text: entry.key),
+              TextEditingController(text: entry.value.toString()),
+            ),
+          );
+        }
+      }
+    }
+  }
+
 
   @override
   void dispose() {

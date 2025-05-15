@@ -118,7 +118,7 @@ class _DataEntryState extends State<DataEntryScreen> {
                                   DaakiaMeetingConfiguration>(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => const ConfigurationScreen(),
+                                  builder: (_) => ConfigurationScreen(initialConfig: customConfig),
                                 ),
                               );
                               if (result != null) {
