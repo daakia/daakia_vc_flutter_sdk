@@ -55,7 +55,7 @@ class AllParticipantPage extends StatelessWidget {
                     children: [
                       LobbyRequestWidget(viewModel: viewModel),
                       JoinedParticipantWidget(viewModel: viewModel),
-                      if (viewModel.pendingParticipantList.isNotEmpty)
+                      if (viewModel.pendingParticipantList.isNotEmpty && (viewModel.isHost() || viewModel.isCoHost()))
                         PendingAttendanceWidget(viewModel: viewModel)
                     ],
                   ),
