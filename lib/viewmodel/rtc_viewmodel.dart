@@ -1329,6 +1329,9 @@ class RtcViewmodel extends ChangeNotifier {
               getParticipantConsentList();
             }
           } else {
+            if (asUser) {
+              return;
+            }
             startRecordingConsent();
           }
         },
