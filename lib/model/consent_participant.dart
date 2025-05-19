@@ -46,9 +46,19 @@ class ConsentParticipant {
 
   static List<ConsentParticipant> fromRemoteList(
       List<RemoteParticipantConsent> remoteList) {
-    return remoteList
+    final Map<String, RemoteParticipantConsent> uidToParticipant = {};
+
+    for (var remote in remoteList) {
+      final uid = remote.rtcParticipantUid;
+      if (uid != null) {
+        // Always keep the latest one — this will overwrite any earlier entry
+        uidToParticipant[uid] = remote;
+      }
+    }
+
+    return uidToParticipant.values
         .map((remote) => ConsentParticipant.fromRemote(remote))
-        .toList();
+        .toList(); // final list will have latest entries at the end
   }
 
   factory ConsentParticipant.fromRemoteParticipant(RemoteParticipant remote) {
