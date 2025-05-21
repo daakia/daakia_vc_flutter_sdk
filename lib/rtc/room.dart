@@ -251,7 +251,9 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     ..on<RoomRecordingStatusChanged>((event) {
       var viewModel = _livekitProviderKey.currentState?.viewModel;
       viewModel?.setRecording(event.activeRecording);
-      // context.showRecordingStatusChangedDialog(event.activeRecording);
+      if(!event.activeRecording) {
+        clearConsentList(viewModel);
+      }
     })
     ..on<RoomAttemptReconnectEvent>((event) {
       if (kDebugMode) {
@@ -379,12 +381,14 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         } else {
           viewModel?.setCoHost(false);
           StorageHelper().clearAllData();
+          clearConsentList(viewModel);
         }
         break;
 
       case MeetingActions.removeCoHost:
         viewModel?.setCoHost(false);
         StorageHelper().clearAllData();
+        clearConsentList(viewModel);
         break;
 
       case MeetingActions.forceMuteAll:
@@ -1102,5 +1106,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     ).then((_) {
       _isConsentRejectedDialogOpen = false; // Reset when dialog is dismissed
     });
+  }
+
+  void clearConsentList(RtcViewmodel? viewModel) {
+    if (viewModel?.meetingDetails.features?.isRecordingConsentAllowed() == true){
+      viewModel?.participantListForConsent.clear();
+    }
   }
 }
