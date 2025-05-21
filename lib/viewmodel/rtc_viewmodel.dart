@@ -1322,22 +1322,28 @@ class RtcViewmodel extends ChangeNotifier {
           if (data != null) {
             sessionId = data.id.toString();
           }
+
           if (data?.recordingConsentActive == 1) {
             if (asUser) {
-              callBack?.call();
+              // Fetch consent list before checking consent
+              getParticipantConsentList(onLoaded: () {
+                if (!hasAlreadyAcceptedConsent()) {
+                  callBack?.call(); // Show dialog if not yet accepted
+                }
+              });
             } else {
               getParticipantConsentList();
             }
           } else {
-            if (asUser) {
-              return;
+            if (!asUser) {
+              startRecordingConsent();
             }
-            startRecordingConsent();
           }
         },
         onError: (message) {
           sendMessageToUI(message);
-        });
+        }
+    );
   }
 
   void startRecordingConsent() {
@@ -1360,7 +1366,7 @@ class RtcViewmodel extends ChangeNotifier {
         });
   }
 
-  void getParticipantConsentList() {
+  void getParticipantConsentList({VoidCallback? onLoaded}) {
     networkListRequestHandler(
         apiCall: () => apiClient.getParticipantConsentList(
             meetingDetails.meetingUid, getSessionId() ?? ""),
@@ -1368,12 +1374,21 @@ class RtcViewmodel extends ChangeNotifier {
           if (data != null) {
             final localList = ConsentParticipant.fromRemoteList(data);
             participantListForConsent = localList;
+
+            if(onLoaded != null){
+              onLoaded.call(); // <-- Trigger callback after loading list
+              return;
+            }
             sendAction(ActionModel(
-                action: MeetingActions.startedRecordingConsent,
-                participants: localList));
+              action: MeetingActions.startedRecordingConsent,
+              participants: localList,
+            ));
+
           }
-        });
+        }
+    );
   }
+
 
   void verifyRecordingConsent(RemoteActivityData remoteData) {
     if (!isHost() && !isCoHost()) return;
