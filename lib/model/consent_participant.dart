@@ -70,4 +70,19 @@ class ConsentParticipant {
       consent: "pending",
     );
   }
+
+  ConsentParticipant copyWith({
+    String? participantId,
+    String? participantName,
+    String? participantAvatar,
+    String? consent,
+  }) {
+    return ConsentParticipant(
+      participantId: participantId ?? this.participantId,
+      participantName: participantName ?? this.participantName,
+      participantAvatar: participantAvatar ?? this.participantAvatar,
+      consent: consent ?? this.consent,
+    );
+  }
+
 }
