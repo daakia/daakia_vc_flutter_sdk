@@ -1267,7 +1267,7 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateRecordingConsentStatus(bool status) {
+  void updateRecordingConsentStatus(bool status, {bool needToUpdateLocally = false}) {
     var metadata = room.localParticipant?.metadata;
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meetingUid,
@@ -1281,6 +1281,9 @@ class RtcViewmodel extends ChangeNotifier {
         onSuccess: (data) {
           if (data?.canStartRecording == true) {
             startRecording();
+          }
+          if(needToUpdateLocally) {
+            locallyUpdateRecordingConsentStatus(status);
           }
           sendAction(ActionModel(
               action: MeetingActions.recordingConsentStatus,
@@ -1466,4 +1469,20 @@ class RtcViewmodel extends ChangeNotifier {
     );
     notifyListeners();
   }
+
+  void locallyUpdateRecordingConsentStatus(bool status) {
+    final localId = room.localParticipant?.identity;
+
+    final index = participantListForConsent.indexWhere(
+          (p) => p.participantId == localId,
+    );
+    if (index != -1) {
+      participantListForConsent[index] =
+          participantListForConsent[index].copyWith(
+            consent: status ? "accept" : "reject",
+          );
+      notifyListeners();
+    }
+  }
+
 }

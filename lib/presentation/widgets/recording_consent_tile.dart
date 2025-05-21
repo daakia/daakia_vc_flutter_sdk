@@ -64,10 +64,23 @@ class RecordingConsentTile extends StatelessWidget {
           if (consentStatus.shouldShowResend)
             IconButton(
               onPressed: () {
-                viewModel.resendRecordingConsent(participant.participantId);
+                if (participant.participantId == viewModel.participant.identity) {
+                  viewModel.updateRecordingConsentStatus(true, needToUpdateLocally: true);
+                } else {
+                  viewModel.resendRecordingConsent(participant.participantId);
+                }
               },
-              icon: const Icon(Icons.refresh, color: Colors.blueAccent),
-              tooltip: "Resend",
+              icon: Icon(
+                participant.participantId == viewModel.participant.identity
+                    ? Icons.check_circle_outline
+                    : Icons.refresh,
+                color: participant.participantId == viewModel.participant.identity
+                    ? Colors.green
+                    : Colors.blueAccent,
+              ),
+              tooltip: participant.participantId == viewModel.participant.identity
+                  ? "Accept"
+                  : "Resend",
             ),
         ],
       ),
