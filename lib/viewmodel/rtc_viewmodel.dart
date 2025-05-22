@@ -911,13 +911,15 @@ class RtcViewmodel extends ChangeNotifier {
             meetingDetails.authorizationToken, body),
         onSuccess: (data) {
           isTranscriptionLanguageSelected = true;
+          var transcriptionData = TranscriptionActionModel(
+              showIcon: true,
+              isLanguageSelected: true,
+              langCode: selectedLanguage.code,
+              sourceLang: selectedLanguage.code);
+          saveTranscriptionLanguage(transcriptionData);
           sendAction(ActionModel(
               action: MeetingActions.showLiveCaption,
-              liveCaptionsData: TranscriptionActionModel(
-                  showIcon: true,
-                  isLanguageSelected: true,
-                  langCode: selectedLanguage.code,
-                  sourceLang: selectedLanguage.code)));
+              liveCaptionsData: transcriptionData));
           transcriptionEnabled.call();
         },
         onError: (message) => sendMessageToUI(message));
