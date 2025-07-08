@@ -862,6 +862,15 @@ class _PreJoinState extends State<PreJoinScreen> {
                           isNeedToCancelApiCall = false;
                           if (widget.isHost && !isHostVerified) {
                             if (!context.mounted) return;
+                            final token = widget.configuration?.vcConfig?.hostToken;
+
+                            if (token != null && token.isNotEmpty) {
+                              hostToken = token;
+                              isHostVerified == true;
+                              isNeedToCancelApiCall = false;
+                              getFeaturesAndJoinMeeting(stopLoading);
+                              return;
+                            }
                             if (widget.basicMeetingDetails
                                     ?.hostPinVerificationRequired ==
                                 1) {
@@ -910,7 +919,7 @@ class _PreJoinState extends State<PreJoinScreen> {
     networkRequestHandler(
         apiCall: () => apiClient.getFeatures(widget.meetingId),
         onSuccess: (data) {
-          features = data?.features;
+          features = getFeature(data?.features);
           if (meetingManager.isMeetingEnded() &&
               widget.basicMeetingDetails?.meetingConfig?.autoMeetingEnd == 1 &&
               mounted) {
@@ -1172,4 +1181,13 @@ class _PreJoinState extends State<PreJoinScreen> {
       getFeaturesAndJoinMeeting(stopLoading);
     }
   }
+
+  Features? getFeature(Features? features) {
+    final configFeature = widget.configuration?.vcConfig?.subscriptionFeature;
+    if (configFeature?.subscriptionId != null && configFeature?.features != null) {
+      return configFeature?.features;
+    }
+    return features;
+  }
+
 }

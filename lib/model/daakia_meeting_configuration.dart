@@ -1,4 +1,5 @@
 import 'package:daakia_vc_flutter_sdk/model/participant_config.dart';
+import 'package:daakia_vc_flutter_sdk/model/vc_config.dart';
 
 /// Configuration options for initializing the Daakia meeting.
 class DaakiaMeetingConfiguration {
@@ -41,8 +42,11 @@ class DaakiaMeetingConfiguration {
   /// ```
   ///
   /// All fields are optional and can be left null to use default behavior.
+  final VCConfig? vcConfig;
+
   const DaakiaMeetingConfiguration({
     this.metadata,
-    this.participantNameConfig
+    this.participantNameConfig,
+    this.vcConfig,
   });
 }
