@@ -1,5 +1,5 @@
 import 'features.dart';
-
+/// @nodoc
 class SubscriptionFeature {
   final int? subscriptionId;
   final Features? features;
