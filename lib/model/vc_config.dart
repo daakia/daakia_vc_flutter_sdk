@@ -1,0 +1,8 @@
+import 'package:daakia_vc_flutter_sdk/model/subscription_feature.dart';
+
+class VCConfig {
+  final String? hostToken;
+  final SubscriptionFeature? subscriptionFeature;
+
+  const VCConfig({this.hostToken, this.subscriptionFeature});
+}
