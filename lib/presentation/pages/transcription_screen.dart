@@ -94,7 +94,7 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
     if (isTranslationAllowed) {
       final choice = await showDialog<TranscriptDownloadChoice>(
         context: context,
-        builder: (context) => const TranscriptDownloadChoiceDialog(),
+        builder: (context) => TranscriptDownloadChoiceDialog(isEnabled: widget.viewModel.translationLanguage != null,),
       );
 
       if (choice == null) return;
