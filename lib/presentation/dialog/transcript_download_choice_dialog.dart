@@ -7,7 +7,8 @@ enum TranscriptDownloadChoice {
 }
 
 class TranscriptDownloadChoiceDialog extends StatelessWidget {
-  const TranscriptDownloadChoiceDialog({super.key});
+  final bool isEnabled;
+  const TranscriptDownloadChoiceDialog({required this.isEnabled, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -40,15 +41,15 @@ class TranscriptDownloadChoiceDialog extends StatelessWidget {
         ),
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
+            backgroundColor: isEnabled ? Colors.blue : Colors.blue.withValues(alpha: 0.5),
             foregroundColor: Colors.white,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
           icon: const Icon(Icons.translate),
           label: const Text("Translated"),
-          onPressed: () =>
-              Navigator.pop(context, TranscriptDownloadChoice.translated),
+          onPressed: isEnabled
+              ? () => Navigator.pop(context, TranscriptDownloadChoice.translated)
+              : null, // null disables the button
         ),
       ],
     );
