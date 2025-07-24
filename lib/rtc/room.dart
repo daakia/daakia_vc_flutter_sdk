@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:animated_emoji/emoji_data.dart';
 import 'package:animated_emoji/emojis.g.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:daakia_vc_flutter_sdk/events/meeting_end_events.dart';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
@@ -13,6 +14,7 @@ import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant_info.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/pip_screen.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/rtc_controls.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/white_board_widget.dart';
+import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
 import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
 import 'package:daakia_vc_flutter_sdk/utils/storage_helper.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_provider.dart';
@@ -90,6 +92,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         ..setAutoPipMode(
             aspectRatio: (1, 1), seamlessResize: true, autoEnter: true);
     }
+    isCheckedWhileJoining = false;
+    player = AudioPlayer();
     // add callback for a `RoomEvent` as opposed to a `ParticipantEvent`
     widget.room.addListener(_onRoomDidUpdate);
     // add callbacks for finer grained events
@@ -117,10 +121,13 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       _initializeWebViewController();
       viewModel?.getWhiteboardData();
       viewModel?.getAttendanceListForParticipant();
-      if (viewModel?.meetingDetails.features?.isRecordingConsentAllowed() == true) {
-        viewModel?.checkSessionStatus(asUser: true, callBack: () {
-          showRecordingConsentDialog(viewModel);
-        });
+      if (viewModel?.meetingDetails.features?.isRecordingConsentAllowed() ==
+          true) {
+        viewModel?.checkSessionStatus(
+            asUser: true,
+            callBack: () {
+              showRecordingConsentDialog(viewModel);
+            });
       }
     });
 
@@ -162,6 +169,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     onWindowShouldClose = null;
     WakelockPlus.disable();
     pip = null;
+    player.stop();
   }
 
   void _setUpListeners() => _listener
@@ -226,6 +234,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     ..on<ParticipantEvent>((event) {
       var viewModel = _livekitProviderKey.currentState?.viewModel;
       viewModel?.setRecording(widget.room.isRecording);
+
+      checkRecordingPlayer(widget.room.isRecording);
       // sort participants on many track events as noted in documentation linked above
       _sortParticipants();
 
@@ -240,7 +250,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     ..on<ParticipantConnectedEvent>((event) {
       _livekitProviderKey.currentState?.viewModel
           .getAttendanceListForParticipant();
-      _livekitProviderKey.currentState?.viewModel.addParticipantToConsentList(event.participant);
+      _livekitProviderKey.currentState?.viewModel
+          .addParticipantToConsentList(event.participant);
       _sortParticipants();
     })
     ..on<ParticipantDisconnectedEvent>((event) {
@@ -251,9 +262,14 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     ..on<RoomRecordingStatusChanged>((event) {
       var viewModel = _livekitProviderKey.currentState?.viewModel;
       viewModel?.setRecording(event.activeRecording);
-      if(!event.activeRecording) {
+      viewModel?.isRecordingActionInProgress = false;
+      if (!event.activeRecording) {
         clearConsentList(viewModel);
       }
+      var recordingAudioPath = event.activeRecording
+          ? Constant.startRecordingUrl
+          : Constant.stopRecordingUrl;
+      playAudio(recordingAudioPath);
     })
     ..on<RoomAttemptReconnectEvent>((event) {
       if (kDebugMode) {
@@ -463,7 +479,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         break;
 
       case MeetingActions.recordingConsentModal:
-        if (remoteData.value && !_isConsentDialogOpen && !_isConsentRejectedDialogOpen && !viewModel!.hasAlreadyAcceptedConsent()) {
+        if (remoteData.value &&
+            !_isConsentDialogOpen &&
+            !_isConsentRejectedDialogOpen &&
+            !viewModel!.hasAlreadyAcceptedConsent()) {
           showRecordingConsentDialog(viewModel);
         }
         break;
@@ -471,7 +490,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       case MeetingActions.recordingConsentStatus:
         final status = parseConsentStatus(remoteData.consent);
         if (status == ConsentStatus.reject) {
-          showSnackBar(message: "Some participant have rejected the recording consent");
+          showSnackBar(
+              message: "Some participant have rejected the recording consent");
         }
         viewModel?.verifyRecordingConsent(remoteData);
         break;
@@ -1109,8 +1129,24 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   }
 
   void clearConsentList(RtcViewmodel? viewModel) {
-    if (viewModel?.meetingDetails.features?.isRecordingConsentAllowed() == true){
+    if (viewModel?.meetingDetails.features?.isRecordingConsentAllowed() ==
+        true) {
       viewModel?.participantListForConsent.clear();
+    }
+  }
+
+  late final AudioPlayer player;
+
+  void playAudio(String link) {
+    player.play(UrlSource(link), mode: PlayerMode.lowLatency);
+  }
+
+  var isCheckedWhileJoining = false;
+
+  void checkRecordingPlayer(bool isRecording) {
+    if (isRecording && !isCheckedWhileJoining) {
+      playAudio(Constant.startRecordingUrl);
+      isCheckedWhileJoining = true;
     }
   }
 }

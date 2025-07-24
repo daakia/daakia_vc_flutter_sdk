@@ -448,6 +448,15 @@ class RtcViewmodel extends ChangeNotifier {
 
   bool get isRecording => _isRecording;
 
+  bool _isRecordingActionInProgress = false;
+
+  bool get isRecordingActionInProgress => _isRecordingActionInProgress;
+
+  set isRecordingActionInProgress(bool value) {
+    _isRecordingActionInProgress = value;
+    notifyListeners();
+  }
+
   void startRecording({bool isNeedToShowError = true}) {
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meetingUid,
@@ -456,10 +465,11 @@ class RtcViewmodel extends ChangeNotifier {
       apiCall: () =>
           apiClient.startRecording(meetingDetails.authorizationToken, body),
       onSuccess: (_) {
-        setRecording(true);
-        sendMessageToUI("Recording Starting");
+        resetRecordingActionInProgressAfterDelay();
+        sendMessageToUI("Recording is starting...");
       },
       onError: (message) {
+        isRecordingActionInProgress = false;
         if (isNeedToShowError) {
           sendMessageToUI(message);
         }
@@ -475,15 +485,25 @@ class RtcViewmodel extends ChangeNotifier {
       apiCall: () =>
           apiClient.stopRecording(meetingDetails.authorizationToken, body),
       onSuccess: (_) {
-        setRecording(false);
-        sendMessageToUI("Recording Stop");
+        resetRecordingActionInProgressAfterDelay();
+        sendMessageToUI("Recording is stopping...");
         try {
           meetingDetails
               .meetingBasicDetails?.meetingConfig?.recordingForceStopped = 1;
         } catch (_) {}
       },
-      onError: (message) => sendMessageToUI(message),
+      onError: (message) {
+        isRecordingActionInProgress = false;
+        sendMessageToUI(message);
+      },
     );
+  }
+
+  void resetRecordingActionInProgressAfterDelay([int seconds = 10]) {
+    isRecordingActionInProgress = true;
+    Future.delayed(Duration(seconds: seconds), () {
+      isRecordingActionInProgress = false;
+    });
   }
 
   bool isHost() {
