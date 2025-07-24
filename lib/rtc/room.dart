@@ -92,6 +92,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         ..setAutoPipMode(
             aspectRatio: (1, 1), seamlessResize: true, autoEnter: true);
     }
+    isCheckedWhileJoining = false;
     player = AudioPlayer();
     // add callback for a `RoomEvent` as opposed to a `ParticipantEvent`
     widget.room.addListener(_onRoomDidUpdate);
@@ -168,6 +169,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     onWindowShouldClose = null;
     WakelockPlus.disable();
     pip = null;
+    player.stop();
   }
 
   void _setUpListeners() => _listener
@@ -232,6 +234,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     ..on<ParticipantEvent>((event) {
       var viewModel = _livekitProviderKey.currentState?.viewModel;
       viewModel?.setRecording(widget.room.isRecording);
+
+      checkRecordingPlayer(widget.room.isRecording);
       // sort participants on many track events as noted in documentation linked above
       _sortParticipants();
 
@@ -1134,5 +1138,14 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
   void playAudio(String link) {
     player.play(UrlSource(link), mode: PlayerMode.lowLatency);
+  }
+
+  var isCheckedWhileJoining = false;
+
+  void checkRecordingPlayer(bool isRecording) {
+    if (isRecording && !isCheckedWhileJoining) {
+      playAudio(Constant.startRecordingUrl);
+      isCheckedWhileJoining = true;
+    }
   }
 }
