@@ -70,11 +70,12 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                   iconColor: viewModel.isRecording ? Colors.red : Colors.white,
                   isVisible: (viewModel.isHost() || viewModel.isCoHost()) &&
                       viewModel.meetingDetails.features!.isRecordingAllowed(),
-                  onTap: () {
+                  isEnabled: !viewModel.isRecordingActionInProgress, onTap: () {
                 Navigator.pop(context);
                 if (viewModel.meetingDetails.features
-                    ?.isRecordingConsentAllowed() ==
-                    true && !viewModel.isRecording) {
+                            ?.isRecordingConsentAllowed() ==
+                        true &&
+                    !viewModel.isRecording) {
                   showRecordingConsentPage();
                   viewModel.startRecordingConsentFlow();
                 } else {
@@ -342,46 +343,53 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
   }
 }
 
-Widget buildOption(BuildContext context,
-    {required IconData icon,
-    Color iconColor = Colors.white,
-    required String text,
-    bool isVisible = true,
-    Function? onTap,
-    BadgeData? setBadge}) {
+Widget buildOption(
+  BuildContext context, {
+  required IconData icon,
+  Color iconColor = Colors.white,
+  required String text,
+  bool isVisible = true,
+  bool isEnabled = true,
+  Function? onTap,
+  BadgeData? setBadge,
+}) {
   return Visibility(
     visible: isVisible,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-      child: GestureDetector(
-        onTap: () {
-          // Null-safe invocation of the callback
-          onTap?.call(); // callback will only be called if it's not null
-        },
-        child: Row(
-          children: [
-            if (setBadge == null)
-              Icon(icon, color: iconColor, size: 24)
-            else
-              Badge(
-                isLabelVisible: setBadge.unreadCount > 0,
-                label: Text(
-                  setBadge.unreadCount.toString(),
-                  style: const TextStyle(color: Colors.white),
+    child: Opacity(
+      opacity: isEnabled ? 1.0 : 0.5, // Fades out when disabled
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+        child: GestureDetector(
+          onTap: () {
+            if (isEnabled) {
+              onTap?.call();
+            }
+          },
+          child: Row(
+            children: [
+              if (setBadge == null)
+                Icon(icon, color: iconColor, size: 24)
+              else
+                Badge(
+                  isLabelVisible: setBadge.unreadCount > 0,
+                  label: Text(
+                    setBadge.unreadCount.toString(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  offset: const Offset(4, 4),
+                  backgroundColor: Colors.red,
+                  child: Icon(icon, color: iconColor, size: 24),
                 ),
-                offset: const Offset(4, 4),
-                backgroundColor: Colors.red,
-                child: Icon(icon, color: iconColor, size: 24),
-              ), // Icon size 24
-            const SizedBox(width: 10), // Space between icon and text
-            Text(
-              text,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+              const SizedBox(width: 10),
+              Text(
+                text,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     ),

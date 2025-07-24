@@ -262,6 +262,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     ..on<RoomRecordingStatusChanged>((event) {
       var viewModel = _livekitProviderKey.currentState?.viewModel;
       viewModel?.setRecording(event.activeRecording);
+      viewModel?.isRecordingActionInProgress = false;
       if (!event.activeRecording) {
         clearConsentList(viewModel);
       }
