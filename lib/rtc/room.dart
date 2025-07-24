@@ -968,21 +968,23 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           });
         }
       });
-    } else {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text("Meeting Ended"),
-          content: const Text("The meeting has ended."),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text("OK"),
-            ),
-          ],
-        ),
-      );
     }
+    // TODO: Uncomment the following alert if you want to show a "Meeting Ended" dialog to basic users. For basic users, this alert remains visible by default.
+    // else {
+    //   showDialog(
+    //     context: context,
+    //     builder: (context) => AlertDialog(
+    //       title: const Text("Meeting Ended"),
+    //       content: const Text("The meeting has ended."),
+    //       actions: [
+    //         TextButton(
+    //           onPressed: () => Navigator.of(context).pop(),
+    //           child: const Text("OK"),
+    //         ),
+    //       ],
+    //     ),
+    //   );
+    // }
   }
 
   var _isConsentDialogOpen = false;
