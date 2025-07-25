@@ -81,16 +81,14 @@ class _JoinedParticipantWidgetState extends State<JoinedParticipantWidget> {
           itemCount: filteredParticipants.length,
           itemBuilder: (context, index) {
             var participant = filteredParticipants[index];
-            return ListTile(
-              title: ParticipantTile(
-                participant: participant.participant,
-                isForLobby: false,
-                onDismissBottomSheet: () {
-                  if (Navigator.of(context).canPop()) {
-                    Navigator.of(context).pop();
-                  }
-                },
-              ),
+            return ParticipantTile(
+              participant: participant.participant,
+              isForLobby: false,
+              onDismissBottomSheet: () {
+                if (Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                }
+              },
             );
           },
         ),
