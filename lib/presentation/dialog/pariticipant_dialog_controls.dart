@@ -154,27 +154,33 @@ class ParticipantDialogState extends State<ParticipantDialogControls> {
   }
 
   bool isCoHostButtonEnable() {
-    String? myRoleMataData = widget.viewModel.room.localParticipant?.metadata;
-    String? targetRoleMataData = widget.participant.metadata;
+    final String? myMetadata = widget.viewModel.room.localParticipant?.metadata;
+    final String? targetMetadata = widget.participant.metadata;
 
-    bool isHostUser = Utils.isHost(myRoleMataData);
-    bool isTargetNotHost = !Utils.isHost(targetRoleMataData);
-    bool isTargetCoHost = Utils.isCoHost(targetRoleMataData);
+    final bool amIHost = Utils.isHost(myMetadata);
+    final bool amICoHost = Utils.isCoHost(myMetadata);
 
-    // Host can always remove Co-Host
-    if (isHostUser && isTargetCoHost) {
-      return true;
-    }
+    final bool isTargetHost = Utils.isHost(targetMetadata);
+    final bool isTargetCoHost = Utils.isCoHost(targetMetadata);
+    final bool isTargetGuest = !isTargetHost && !isTargetCoHost;
 
-    // Host can make someone co-host
-    if (isHostUser && isTargetNotHost) {
-      if (widget.viewModel.meetingDetails.features?.isAllowMultipleCoHost() == true) {
+    // ❌ Cannot modify the Host
+    if (isTargetHost) return false;
+
+    // ✅ Host or Co-Host can demote a Co-Host
+    if ((amIHost || amICoHost) && isTargetCoHost) return true;
+
+    // ✅ Host or Co-Host can promote a Guest to Co-Host
+    if ((amIHost || amICoHost) && isTargetGuest) {
+      final allowMultiple = widget.viewModel.meetingDetails.features?.isAllowMultipleCoHost() == true;
+      if (allowMultiple) {
         return true;
       } else {
         return widget.viewModel.coHostCount < 1;
       }
     }
 
+    // ❌ In all other cases
     return false;
   }
 
