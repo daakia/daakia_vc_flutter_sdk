@@ -77,6 +77,12 @@ class LobbyRequestManager {
       Navigator.of(_context).pop();
     }
   }
+
+  void dispose() {
+    _dismissDialog();
+    _lobbyRequestQueue.clear();
+    _isShowingDialog = false;
+  }
 }
 
 class LobbyRequestDialog extends StatelessWidget {
