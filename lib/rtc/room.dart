@@ -156,6 +156,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     viewModel?.stopLobbyCheck();
     viewModel?.cancelRoomEvents();
     meetingManager.cancelMeetingEndScheduler();
+    lobbyManager?.dispose();
     widget.room.disconnect();
     // always dispose listener
     (() async {
