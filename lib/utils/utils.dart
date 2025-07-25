@@ -72,15 +72,15 @@ class Utils {
   }
 
   static String getInitials(String? fullName) {
-    // Return "U" if the full name is null
-    if (fullName == null || fullName.isEmpty) return "U";
+    // Return "U" if the full name is null or empty
+    if (fullName == null || fullName.trim().isEmpty) return "U";
 
-    // Split the full name by spaces
-    List<String> nameParts = fullName.split(" ");
+    // Split the full name by spaces and filter out empty parts
+    List<String> nameParts = fullName.trim().split(" ").where((part) => part.isNotEmpty).toList();
 
-    // Filter out empty parts, get the first letter of each part, capitalize it, and join without spaces
+    // Get up to the first two initials, capitalize them, and join
     return nameParts
-        .where((part) => part.isNotEmpty)
+        .take(2)
         .map((part) => part[0].toUpperCase())
         .join();
   }
