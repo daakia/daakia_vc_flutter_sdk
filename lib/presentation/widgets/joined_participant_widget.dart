@@ -11,12 +11,20 @@ class JoinedParticipantWidget extends StatefulWidget {
   final RtcViewmodel viewModel;
 
   @override
-  State<JoinedParticipantWidget> createState() => _JoinedParticipantWidgetState();
+  State<JoinedParticipantWidget> createState() =>
+      _JoinedParticipantWidgetState();
 }
 
 class _JoinedParticipantWidgetState extends State<JoinedParticipantWidget> {
+  String _searchQuery = "";
+
   @override
   Widget build(BuildContext context) {
+    final allParticipants = widget.viewModel.getParticipantList();
+    final filteredParticipants = allParticipants.where((participant) {
+      final name = participant.participant.name.toLowerCase();
+      return name.contains(_searchQuery.toLowerCase());
+    }).toList();
     return Column(
       children: [
         Row(
@@ -29,8 +37,10 @@ class _JoinedParticipantWidgetState extends State<JoinedParticipantWidget> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            if (Utils.isHost(widget.viewModel.room.localParticipant?.metadata) ||
-                Utils.isCoHost(widget.viewModel.room.localParticipant?.metadata))
+            if (Utils.isHost(
+                    widget.viewModel.room.localParticipant?.metadata) ||
+                Utils.isCoHost(
+                    widget.viewModel.room.localParticipant?.metadata))
               IconButton(
                 onPressed: () {
                   showParticipantDialog(context, widget.viewModel);
@@ -42,22 +52,43 @@ class _JoinedParticipantWidgetState extends State<JoinedParticipantWidget> {
               ),
           ],
         ),
-        ListView.builder(
-          shrinkWrap: true, // Let the list take only the space it needs
-          physics: const NeverScrollableScrollPhysics(), // Disable inner scrolling
-          itemCount: widget.viewModel.getParticipantList().length,
-          itemBuilder: (context, index) {
-            var participant = widget.viewModel.getParticipantList()[index];
-            return ListTile(
-              title: ParticipantTile(
-                participant: participant.participant,
-                isForLobby: false,
-                onDismissBottomSheet: (){
-                  if (Navigator.of(context).canPop()) {
-                    Navigator.of(context).pop(); // This will dismiss the BottomSheet
-                  }
-                },
+        // 🔍 Search Field
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: TextField(
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Search participant...',
+              hintStyle: const TextStyle(color: Colors.white54),
+              prefixIcon: const Icon(Icons.search, color: Colors.white),
+              filled: true,
+              fillColor: Colors.white10,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
               ),
+            ),
+            onChanged: (query) {
+              setState(() {
+                _searchQuery = query;
+              });
+            },
+          ),
+        ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: filteredParticipants.length,
+          itemBuilder: (context, index) {
+            var participant = filteredParticipants[index];
+            return ParticipantTile(
+              participant: participant.participant,
+              isForLobby: false,
+              onDismissBottomSheet: () {
+                if (Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                }
+              },
             );
           },
         ),
@@ -69,8 +100,11 @@ class _JoinedParticipantWidgetState extends State<JoinedParticipantWidget> {
     showDialog(
         context: context,
         builder: (BuildContext context) {
-          return ParticipantDialogControls(participant: viewModel.participant, viewModel: viewModel, isForIndividual: false,);
+          return ParticipantDialogControls(
+            participant: viewModel.participant,
+            viewModel: viewModel,
+            isForIndividual: false,
+          );
         });
   }
-
 }

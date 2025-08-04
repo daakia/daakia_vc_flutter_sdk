@@ -34,12 +34,10 @@ class _LobbyRequestWidgetState extends State<LobbyRequestWidget> {
             itemCount: widget.viewModel.getLobbyRequestList().length,
             itemBuilder: (context, index) {
               var lobbyRequest = widget.viewModel.getLobbyRequestList()[index];
-              return ListTile(
-                title: ParticipantTile(
-                  participant: lobbyRequest.identity,
-                  isForLobby: true,
-                  lobbyRequest: lobbyRequest,
-                ),
+              return ParticipantTile(
+                participant: lobbyRequest.identity,
+                isForLobby: true,
+                lobbyRequest: lobbyRequest,
               );
             },
           ),

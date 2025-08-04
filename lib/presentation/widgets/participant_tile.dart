@@ -27,7 +27,7 @@ class ParticipantTile extends StatelessWidget {
     final viewModel = Provider.of<RtcViewmodel>(context);
     return Container(
       color: emptyVideoColor,
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
