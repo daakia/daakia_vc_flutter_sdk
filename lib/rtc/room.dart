@@ -399,14 +399,14 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           viewModel?.getAttendanceListForParticipant();
         } else {
           viewModel?.setCoHost(false);
-          StorageHelper().clearAllData();
+          StorageHelper().clearSdkData();
           clearConsentList(viewModel);
         }
         break;
 
       case MeetingActions.removeCoHost:
         viewModel?.setCoHost(false);
-        StorageHelper().clearAllData();
+        StorageHelper().clearSdkData();
         clearConsentList(viewModel);
         break;
 
