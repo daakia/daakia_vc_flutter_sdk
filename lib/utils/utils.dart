@@ -311,10 +311,12 @@ class Utils {
       List<TranscriptionModel> transcriptions) {
     StringBuffer contentBuffer = StringBuffer();
     for (var entry in transcriptions) {
-      contentBuffer.writeln('${entry.name} ${entry.timestamp}');
-      contentBuffer.writeln(entry.transcription);
-      contentBuffer.writeln();
-      contentBuffer.writeln();
+      if (entry.isFinal) {
+        contentBuffer.writeln('${entry.name} ${entry.timestamp}');
+        contentBuffer.writeln(entry.transcription);
+        contentBuffer.writeln();
+        contentBuffer.writeln();
+      }
     }
     return contentBuffer.toString();
   }
@@ -323,15 +325,17 @@ class Utils {
       List<TranscriptionModel> transcriptions) {
     StringBuffer contentBuffer = StringBuffer();
     for (var entry in transcriptions) {
-      final String textToUse = (entry.translatedTranscription != null &&
-          entry.translatedTranscription!.trim().isNotEmpty)
-          ? (entry.translatedTranscription ?? "")
-          : entry.transcription;
+      if (entry.isFinal) {
+        final String textToUse = (entry.translatedTranscription != null &&
+            entry.translatedTranscription!.trim().isNotEmpty)
+            ? (entry.translatedTranscription ?? "")
+            : entry.transcription;
 
-      contentBuffer.writeln('${entry.name} ${entry.timestamp}');
-      contentBuffer.writeln(textToUse);
-      contentBuffer.writeln();
-      contentBuffer.writeln();
+        contentBuffer.writeln('${entry.name} ${entry.timestamp}');
+        contentBuffer.writeln(textToUse);
+        contentBuffer.writeln();
+        contentBuffer.writeln();
+      }
     }
     return contentBuffer.toString();
   }
