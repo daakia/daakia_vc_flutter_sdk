@@ -76,13 +76,11 @@ class Utils {
     if (fullName == null || fullName.trim().isEmpty) return "U";
 
     // Split the full name by spaces and filter out empty parts
-    List<String> nameParts = fullName.trim().split(" ").where((part) => part.isNotEmpty).toList();
+    List<String> nameParts =
+        fullName.trim().split(" ").where((part) => part.isNotEmpty).toList();
 
     // Get up to the first two initials, capitalize them, and join
-    return nameParts
-        .take(2)
-        .map((part) => part[0].toUpperCase())
-        .join();
+    return nameParts.take(2).map((part) => part[0].toUpperCase()).join();
   }
 
   static Color generateUniqueColorFromInitials(String initials) {
@@ -327,7 +325,7 @@ class Utils {
     for (var entry in transcriptions) {
       if (entry.isFinal) {
         final String textToUse = (entry.translatedTranscription != null &&
-            entry.translatedTranscription!.trim().isNotEmpty)
+                entry.translatedTranscription!.trim().isNotEmpty)
             ? (entry.translatedTranscription ?? "")
             : entry.transcription;
 
@@ -339,7 +337,6 @@ class Utils {
     }
     return contentBuffer.toString();
   }
-
 
   static Future<SavedData> saveDataToFile(String data, String fileName) async {
     try {
@@ -402,9 +399,14 @@ class Utils {
     return encodedMessage.length <= Constant.maxMessageSize;
   }
 
-  static String generateWhiteboardUrl({required String meetingId,
+  static String generateWhiteboardUrl({
+    required String meetingId,
     required String livekitToken,
   }) {
     return '${Constant.whiteboardDomain}whiteboard/$meetingId?token=$livekitToken';
+  }
+
+  static void hideKeyboard(BuildContext context) {
+    FocusScope.of(context).unfocus();
   }
 }
