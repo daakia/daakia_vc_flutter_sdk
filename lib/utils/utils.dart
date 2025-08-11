@@ -75,12 +75,21 @@ class Utils {
     // Return "U" if the full name is null or empty
     if (fullName == null || fullName.trim().isEmpty) return "U";
 
-    // Split the full name by spaces and filter out empty parts
-    List<String> nameParts =
-        fullName.trim().split(" ").where((part) => part.isNotEmpty).toList();
+    // Split the name into parts, ignoring extra spaces
+    List<String> nameParts = fullName
+        .trim()
+        .split(RegExp(r'\s+')) // handles multiple spaces
+        .where((part) => part.isNotEmpty)
+        .toList();
 
-    // Get up to the first two initials, capitalize them, and join
-    return nameParts.take(2).map((part) => part[0].toUpperCase()).join();
+    // Take only the first alphabet of the first two words
+    String initials = nameParts
+        .take(2)
+        .map((part) => part[0].toUpperCase())
+        .join();
+
+    // Ensure it's restricted to 2 characters max
+    return initials.length > 2 ? initials.substring(0, 2) : initials;
   }
 
   static Color generateUniqueColorFromInitials(String initials) {
