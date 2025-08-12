@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:daakia_vc_flutter_sdk/model/features.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
@@ -668,11 +669,13 @@ class _PreJoinState extends State<PreJoinScreen> {
                                         color: Colors.white),
                                     iconSize: 30,
                                     onPressed: () async {
-                                      bool permissionsGranted =
-                                          await checkAndRequestPermissions(
-                                              context,
-                                              checkForAudio: false);
-                                      if (!permissionsGranted) return;
+                                      if (!Platform.isIOS) {
+                                        bool permissionsGranted =
+                                        await checkAndRequestPermissions(
+                                            context,
+                                            checkForAudio: false);
+                                        if (!permissionsGranted) return;
+                                      }
                                       setState(() {
                                         _enableVideo = !_enableVideo;
                                         _setEnableVideo(_enableVideo);
@@ -687,11 +690,13 @@ class _PreJoinState extends State<PreJoinScreen> {
                                         color: Colors.white),
                                     iconSize: 30,
                                     onPressed: () async {
-                                      bool permissionsGranted =
-                                          await checkAndRequestPermissions(
-                                              context,
-                                              checkForCamera: false);
-                                      if (!permissionsGranted) return;
+                                      if (!Platform.isIOS) {
+                                        bool permissionsGranted =
+                                        await checkAndRequestPermissions(
+                                            context,
+                                            checkForCamera: false);
+                                        if (!permissionsGranted) return;
+                                      }
                                       setState(() {
                                         _enableAudio = !_enableAudio;
                                         _setEnableAudio(_enableAudio);
