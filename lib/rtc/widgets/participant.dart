@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -160,7 +161,7 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
                       activeVideoTrack!,
                       fit: VideoViewFit.contain,
                     )
-                  : NoVideoWidget(name: widget.participant.name),
+                  : NoVideoWidget(name: widget.participant.name, userAvatar: Utils.extractUserAvatar(widget.participant.metadata),),
             ),
             // Bottom bar
             Align(
