@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 
 
 class NoVideoWidget extends StatelessWidget {
-  const NoVideoWidget({this.name, this.userAvatar, super.key});
+  const NoVideoWidget({this.name, this.userAvatar, this.isSpeaker = false, super.key});
 
   final String? name;
   final String? userAvatar;
+  final bool isSpeaker;
 
   @override
   Widget build(BuildContext context) {
@@ -24,8 +25,8 @@ class NoVideoWidget extends StatelessWidget {
         child: Image.network(
           userAvatar!,
           fit: BoxFit.cover,
-          width: 60,
-          height: 60,
+          width: getSize(isSpeaker),
+          height: getSize(isSpeaker),
           errorBuilder: (_, __, ___) => _buildInitials(initials, bgColor),
         ),
       )
@@ -37,6 +38,20 @@ class NoVideoWidget extends StatelessWidget {
     return InitialsCircle(
       initials: initials,
       backgroundColor: bgColor,
+      size: getSize(isSpeaker),
+      textStyle: getTextStyle(isSpeaker),
+    );
+  }
+  
+  double getSize(bool isSpeaker) {
+    return isSpeaker ? 90 : 50;
+  }
+
+  TextStyle getTextStyle(bool isSpeaker) {
+    return TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.bold,
+      fontSize: isSpeaker ? 25.0 : 15.0,
     );
   }
 }
