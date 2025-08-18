@@ -418,4 +418,27 @@ class Utils {
   static void hideKeyboard(BuildContext context) {
     FocusScope.of(context).unfocus();
   }
+
+  static String? extractUserAvatar(String? metadata) {
+    if (metadata == null || metadata.trim().isEmpty) return null;
+
+    try {
+      final Map<String, dynamic> decoded = jsonDecode(metadata);
+
+      // Navigate through the nested keys safely
+      if (decoded.containsKey('custom_metadata') &&
+          decoded['custom_metadata'] is Map &&
+          decoded['custom_metadata']['user_avatar'] is String) {
+        final String avatarUrl = decoded['custom_metadata']['user_avatar'];
+        return avatarUrl.isNotEmpty ? avatarUrl : null;
+      }
+    } catch (e) {
+      // Invalid JSON — just return null
+      return null;
+    }
+
+    return null;
+  }
+
+
 }

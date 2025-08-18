@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -12,17 +13,19 @@ import 'participant_info.dart';
 abstract class ParticipantWidget extends StatefulWidget {
   // Convenience method to return relevant widget for participant
   static ParticipantWidget widgetFor(ParticipantTrack participantTrack,
-      {bool showStatsLayer = false}) {
+      {bool showStatsLayer = false, bool isSpeaker = false}) {
     if (participantTrack.participant is LocalParticipant) {
       return LocalParticipantWidget(
           participantTrack.participant as LocalParticipant,
           participantTrack.type,
-          showStatsLayer);
+          showStatsLayer,
+          isSpeaker);
     } else if (participantTrack.participant is RemoteParticipant) {
       return RemoteParticipantWidget(
           participantTrack.participant as RemoteParticipant,
           participantTrack.type,
-          showStatsLayer);
+          showStatsLayer,
+          isSpeaker);
     }
     throw UnimplementedError('Unknown participant type');
   }
@@ -32,6 +35,7 @@ abstract class ParticipantWidget extends StatefulWidget {
   abstract final ParticipantTrackType type;
   abstract final bool showStatsLayer;
   final VideoQuality quality;
+  abstract final bool isSpeaker;
 
   const ParticipantWidget({
     this.quality = VideoQuality.MEDIUM,
@@ -46,11 +50,14 @@ class LocalParticipantWidget extends ParticipantWidget {
   final ParticipantTrackType type;
   @override
   final bool showStatsLayer;
+  @override
+  final bool isSpeaker;
 
   const LocalParticipantWidget(
     this.participant,
     this.type,
-    this.showStatsLayer, {
+    this.showStatsLayer,
+    this.isSpeaker, {
     super.key,
   });
 
@@ -65,11 +72,14 @@ class RemoteParticipantWidget extends ParticipantWidget {
   final ParticipantTrackType type;
   @override
   final bool showStatsLayer;
+  @override
+  final bool isSpeaker;
 
   const RemoteParticipantWidget(
     this.participant,
     this.type,
-    this.showStatsLayer, {
+    this.showStatsLayer,
+    this.isSpeaker, {
     super.key,
   });
 
@@ -160,7 +170,12 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
                       activeVideoTrack!,
                       fit: VideoViewFit.contain,
                     )
-                  : NoVideoWidget(name: widget.participant.name),
+                  : NoVideoWidget(
+                      name: widget.participant.name,
+                      userAvatar:
+                          Utils.extractUserAvatar(widget.participant.metadata),
+                      isSpeaker: widget.isSpeaker,
+                    ),
             ),
             // Bottom bar
             Align(

@@ -745,6 +745,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
                                                 ? ParticipantWidget.widgetFor(
                                                     participantTracks.first,
                                                     showStatsLayer: true,
+                                                    isSpeaker: true
                                                   )
                                                 : Container(),
                                       ),
