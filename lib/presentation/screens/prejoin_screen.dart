@@ -10,6 +10,7 @@ import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
 import 'package:daakia_vc_flutter_sdk/utils/storage_helper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:loading_btn/loading_btn.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -18,6 +19,7 @@ import '../../api/injection.dart';
 import '../../model/daakia_meeting_configuration.dart';
 import '../../resources/colors/color.dart';
 import '../../rtc/room.dart';
+import '../../utils/name_input_formatter.dart';
 import '../../utils/utils.dart';
 
 @protected
@@ -199,7 +201,7 @@ class _PreJoinState extends State<PreJoinScreen> {
     Map<String, dynamic> body = {
       "meeting_uid": widget.meetingId,
       "preferred_video_server_id": "ap1",
-      "display_name": name
+      "display_name": name.trim()
     };
     if (isParticipant) {
       body["lobby_request_id"] = lobbyRequestId;
@@ -370,7 +372,7 @@ class _PreJoinState extends State<PreJoinScreen> {
     }
     Map<String, dynamic> body = {
       "meeting_uid": widget.meetingId,
-      "display_name": name,
+      "display_name": name.trim(),
     };
 
     networkRequestHandler(
@@ -736,19 +738,21 @@ class _PreJoinState extends State<PreJoinScreen> {
                     child: TextFormField(
                       controller: _nameController,
                       decoration: const InputDecoration(
-                        labelText: 'Name*', // Equivalent to hint="Name*"
+                        labelText: 'Name*',
                         border: OutlineInputBorder(),
                       ),
-                      style: const TextStyle(
-                        color: Colors
-                            .black, // Equivalent to textColor="@color/black"
-                      ),
-                      enabled: _isNameEditable, // Equivalent to android:enabled="false"
-                      onChanged: (String? value) {
-                        setState(() {
-                          name = value ?? "";
-                        });
-                      },
+                      style: const TextStyle(color: Colors.black),
+                      enabled: _isNameEditable,
+                      textCapitalization: TextCapitalization.words,
+                      inputFormatters: [
+                        NameInputFormatter(),
+                        // Block digits
+                        FilteringTextInputFormatter.deny(RegExp(r'[0-9]')),
+                        // Block noisy punctuation (but allow . ' -)
+                        FilteringTextInputFormatter.deny(RegExp(r'[_\[\]{}<>@#$%^&*+=~`|\\/"^]')),
+                        LengthLimitingTextInputFormatter(50),
+                      ],
+                      onChanged: (value) => setState(() => name = value),
                     ),
                   ),
                   Visibility(
@@ -838,7 +842,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                     ),
                     onTap: (startLoading, stopLoading, btnState) async {
                       if (btnState == ButtonState.idle) {
-                        if (name.isEmpty) {
+                        if (name.trim().isEmpty) {
                           Utils.showSnackBar(context,
                               message: "Please enter your name");
                           return;
