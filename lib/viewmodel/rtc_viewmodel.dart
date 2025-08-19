@@ -612,13 +612,7 @@ class RtcViewmodel extends ChangeNotifier {
     }
     networkRequestHandler(
         apiCall: () => apiClient.acceptParticipantInLobby(body),
-        onSuccess: (_) {
-          if (accept) {
-            sendMessageToUI("Participant accepted");
-          } else {
-            sendMessageToUI("Participant rejected");
-          }
-        },
+        onSuccess: (_) {},
         onError: (message) => sendMessageToUI(message));
   }
 

@@ -309,7 +309,7 @@ class PrivateChantState extends State<PrivateChatPage> {
                               onPressed: () {
                                 Utils.hideKeyboard(context);
                                 setState(() {
-                                  if (messageController.text.isEmpty) return;
+                                  if (messageController.text.trim().isEmpty) return;
                                   widget.viewModel.sendPrivateMessage(
                                       widget.viewModel.getPrivateChatIdentity(),
                                       widget.viewModel.getPrivateChatUserName(),

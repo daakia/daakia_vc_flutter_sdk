@@ -200,7 +200,7 @@ class _ChatState extends State<ChatPage> {
                         onPressed: () {
                           Utils.hideKeyboard(context);
                           setState(() {
-                            if (messageController.text.isEmpty) return;
+                            if (messageController.text.trim().isEmpty) return;
                             widget.viewModel.sendPublicMessage(messageController.text);
                             messageController.clear();
                           });
