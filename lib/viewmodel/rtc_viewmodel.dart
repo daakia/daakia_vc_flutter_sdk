@@ -430,7 +430,11 @@ class RtcViewmodel extends ChangeNotifier {
                 action: !isCoHost
                     ? MeetingActions.removeCoHost
                     : MeetingActions.makeCoHost,
-                token: !isCoHost ? "" : meetingDetails.authorizationToken),
+                token: !isCoHost ? "" : meetingDetails.authorizationToken,
+              user: {
+                  "name": room.localParticipant?.name
+              }
+            ),
             identity),
         if (!meetingDetails.features!.isAllowMultipleCoHost())
           {
