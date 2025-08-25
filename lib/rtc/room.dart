@@ -9,6 +9,7 @@ import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/emoji_reaction_widget.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/lobby_request_manager.dart';
+import 'package:daakia_vc_flutter_sdk/rtc/widgets/connectivity_banner.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant_info.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/pip_screen.dart';
@@ -148,6 +149,40 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     }
   }
 
+  bool _isReconnecting = false;
+  bool _isConnected = false;
+
+  void onReconnectStart() {
+    setState(() {
+      _isReconnecting = true;
+      _isConnected = false;
+    });
+    // Fallback: clear reconnecting state if no event comes back within 8 sec
+    Future.delayed(const Duration(seconds: 30), () {
+      if (mounted && _isReconnecting) {
+        setState(() {
+          _isReconnecting = false;
+        });
+      }
+    });
+  }
+
+  void onReconnectSuccess() {
+    setState(() {
+      _isReconnecting = false;
+      _isConnected = true;
+    });
+
+    // Auto hide success banner after 2 seconds
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _isConnected = false;
+        });
+      }
+    });
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -174,6 +209,14 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   }
 
   void _setUpListeners() => _listener
+    ..on<RoomConnectedEvent>((event) {
+      // Successfully connected
+      onReconnectSuccess();
+    })
+    ..on<RoomReconnectedEvent>((event) {
+      // Successfully reconnected
+      onReconnectSuccess();
+    })
     ..on<RoomDisconnectedEvent>((event) async {
       if (event.reason != null) {
         _livekitProviderKey.currentState?.viewModel.isMeetingEnded = true;
@@ -214,16 +257,34 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               });
               break;
             }
-          default:
-            {
-              Timer(const Duration(seconds: 3), () {
-                if (mounted) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    closeMeetingProgrammatically(context);
-                  });
-                }
-              });
-            }
+
+          // ✅ New cases with user-friendly messages
+          case null:
+          case DisconnectReason.unknown:
+            _handleGenericDisconnect("Disconnected due to unknown reason.");
+            break;
+          case DisconnectReason.clientInitiated:
+            _handleGenericDisconnect("You have left the meeting.");
+            break;
+          case DisconnectReason.serverShutdown:
+            _handleGenericDisconnect("Meeting ended by the server.");
+            break;
+          case DisconnectReason.stateMismatch:
+            _handleGenericDisconnect("Connection lost due to state mismatch.");
+            break;
+          case DisconnectReason.joinFailure:
+            _handleGenericDisconnect("Failed to join the meeting.");
+            break;
+          case DisconnectReason.disconnected:
+            _handleGenericDisconnect("You have been disconnected.");
+            break;
+          case DisconnectReason.signalingConnectionFailure:
+            _handleGenericDisconnect("Signaling connection failed.");
+            break;
+          case DisconnectReason.reconnectAttemptsExceeded:
+            _handleGenericDisconnect(
+                "Could not reconnect. Please check your internet.");
+            break;
         }
       }
     })
@@ -275,11 +336,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       playAudio(recordingAudioPath);
     })
     ..on<RoomAttemptReconnectEvent>((event) {
-      if (kDebugMode) {
-        print(
-            'Attempting to reconnect ${event.attempt}/${event.maxAttemptsRetry}, '
-            '(${event.nextRetryDelaysInMs}ms delay until next attempt)');
-      }
+      debugPrint(
+          '[Livekit] - Attempting to reconnect ${event.attempt}/${event.maxAttemptsRetry}, '
+          '(${event.nextRetryDelaysInMs}ms delay until next attempt)');
+      onReconnectStart();
     })
     ..on<LocalTrackSubscribedEvent>((event) {
       if (kDebugMode) {
@@ -721,100 +781,135 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               ? PipScreen(
                   name: widget.room.localParticipant?.name,
                 )
-              : Scaffold(
-                  body: SafeArea(
-                    child: Stack(children: [
-                      Container(
-                        color: Colors.black,
-                        child: Column(
-                          children: [
-                            // Main content area for participants
-                            Expanded(
-                              child: Stack(
-                                children: [
-                                  Column(
+              : Stack(
+                  children: [
+                    Scaffold(
+                      body: SafeArea(
+                        child: Stack(children: [
+                          Container(
+                            color: Colors.black,
+                            child: Column(
+                              children: [
+                                // Main content area for participants
+                                Expanded(
+                                  child: Stack(
                                     children: [
-                                      Expanded(
-                                        child: _isWhiteBoardEnabled
-                                            ? WhiteBoardWidget(
-                                                key: const ValueKey(
-                                                    'whiteboard'),
-                                                controller: _webViewController,
-                                              )
-                                            : participantTracks.isNotEmpty
-                                                ? ParticipantWidget.widgetFor(
-                                                    participantTracks.first,
-                                                    showStatsLayer: true,
-                                                    isSpeaker: true
+                                      Column(
+                                        children: [
+                                          Expanded(
+                                            child: _isWhiteBoardEnabled
+                                                ? WhiteBoardWidget(
+                                                    key: const ValueKey(
+                                                        'whiteboard'),
+                                                    controller:
+                                                        _webViewController,
                                                   )
-                                                : Container(),
-                                      ),
-
-                                      // Show participant list below (adjusted based on whiteboard status)
-                                      if (participantTracks.length > 1 ||
-                                          _isWhiteBoardEnabled)
-                                        SizedBox(
-                                          height: 120,
-                                          child: ListView.builder(
-                                            scrollDirection: Axis.horizontal,
-                                            itemCount: _isWhiteBoardEnabled
-                                                ? participantTracks
-                                                    .length // show all
-                                                : participantTracks.length - 1,
-                                            // skip first
-                                            itemBuilder: (BuildContext context,
-                                                int index) {
-                                              final track = _isWhiteBoardEnabled
-                                                  ? participantTracks[
-                                                      index] // show all participants
-                                                  : participantTracks[
-                                                      index + 1]; // skip first
-
-                                              return SizedBox(
-                                                width: 180,
-                                                height: 120,
-                                                child:
-                                                    ParticipantWidget.widgetFor(
-                                                        track),
-                                              );
-                                            },
+                                                : participantTracks.isNotEmpty
+                                                    ? ParticipantWidget
+                                                        .widgetFor(
+                                                            participantTracks
+                                                                .first,
+                                                            showStatsLayer:
+                                                                true,
+                                                            isSpeaker: true)
+                                                    : Container(),
                                           ),
+
+                                          // Show participant list below (adjusted based on whiteboard status)
+                                          if (participantTracks.length > 1 ||
+                                              _isWhiteBoardEnabled)
+                                            SizedBox(
+                                              height: 120,
+                                              child: ListView.builder(
+                                                scrollDirection:
+                                                    Axis.horizontal,
+                                                itemCount: _isWhiteBoardEnabled
+                                                    ? participantTracks
+                                                        .length // show all
+                                                    : participantTracks.length -
+                                                        1,
+                                                // skip first
+                                                itemBuilder:
+                                                    (BuildContext context,
+                                                        int index) {
+                                                  final track =
+                                                      _isWhiteBoardEnabled
+                                                          ? participantTracks[
+                                                              index] // show all participants
+                                                          : participantTracks[
+                                                              index +
+                                                                  1]; // skip first
+
+                                                  return SizedBox(
+                                                    width: 180,
+                                                    height: 120,
+                                                    child: ParticipantWidget
+                                                        .widgetFor(track),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      if (_livekitProviderKey.currentState
+                                              ?.viewModel.isRecording ==
+                                          true)
+                                        const Positioned(
+                                          right: 10,
+                                          top: 10,
+                                          child: Icon(
+                                              Icons.radio_button_checked,
+                                              color: Colors.red),
                                         ),
                                     ],
                                   ),
-                                  if (_livekitProviderKey.currentState
-                                          ?.viewModel.isRecording ==
-                                      true)
-                                    const Positioned(
-                                      right: 10,
-                                      top: 10,
-                                      child: Icon(Icons.radio_button_checked,
-                                          color: Colors.red),
-                                    ),
-                                ],
-                              ),
-                            ),
-                            if (widget.room.localParticipant != null)
-                              SafeArea(
-                                top: false,
-                                child: RtcControls(
-                                  widget.room,
-                                  widget.room.localParticipant!,
                                 ),
-                              ),
-                          ],
-                        ),
+                                if (widget.room.localParticipant != null)
+                                  SafeArea(
+                                    top: false,
+                                    child: RtcControls(
+                                      widget.room,
+                                      widget.room.localParticipant!,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          Positioned(
+                            right: 0,
+                            top: 50,
+                            child: EmojiReactionWidget(
+                              viewModel:
+                                  _livekitProviderKey.currentState?.viewModel,
+                            ),
+                          ),
+                        ]),
                       ),
-                      Positioned(
+                    ),
+
+                    /// Overlay banner
+                    if (_isReconnecting)
+                      const Positioned(
+                        top: 0,
+                        left: 0,
                         right: 0,
-                        top: 50,
-                        child: EmojiReactionWidget(
-                          viewModel:
-                              _livekitProviderKey.currentState?.viewModel,
+                        child: ConnectivityBanner(
+                          message: "Reconnecting…\nPlease check your internet",
+                          backgroundColor: Colors.orange,
+                          showSpinner: true,
                         ),
                       ),
-                    ]),
-                  ),
+                    if (_isConnected && !_isReconnecting)
+                      const Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: ConnectivityBanner(
+                          message: "You’re back online",
+                          backgroundColor: Colors.green,
+                        ),
+                      ),
+                  ],
                 ),
         ),
       ),
@@ -1154,5 +1249,16 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       playAudio(Constant.startRecordingUrl);
       isCheckedWhileJoining = true;
     }
+  }
+
+  void _handleGenericDisconnect(String message) {
+    showSnackBar(message: message);
+    Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          closeMeetingProgrammatically(context);
+        });
+      }
+    });
   }
 }
