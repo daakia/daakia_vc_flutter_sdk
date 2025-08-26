@@ -7,6 +7,10 @@ environment:
   sdk: ^3.5.3
   flutter: ">=1.17.0"
 
+platforms:
+  android:
+  ios:
+
 dependencies:
   flutter:
     sdk: flutter
