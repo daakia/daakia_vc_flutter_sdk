@@ -20,7 +20,7 @@ add ``daakia_vc_flutter_sdk:`` to your ``pubspec.yaml`` dependencies then run ``
 
 ```yaml
   dependencies:
-    daakia_vc_flutter_sdk: ^3.1.2
+    daakia_vc_flutter_sdk: ^4.0.0
 ```
 
 
