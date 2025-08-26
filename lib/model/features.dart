@@ -1,3 +1,5 @@
+import 'package:daakia_vc_flutter_sdk/model/feature_configuration.dart';
+
 class Features {
   int? id;
   int? subscriptionId;
@@ -32,6 +34,7 @@ class Features {
   int? translation;
   int? videoTranslation;
   int? isBasic;
+  FeatureConfiguration? configurations;
 
   Features(
       {this.id,
@@ -66,7 +69,9 @@ class Features {
       this.spamProtection,
       this.translation,
       this.videoTranslation,
-      this.isBasic});
+      this.isBasic,
+      this.configurations,
+      });
 
   Features.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -102,6 +107,10 @@ class Features {
     translation = json['translation'];
     videoTranslation = json['video_translation'];
     isBasic = json['is_basic'];
+
+    configurations = json['configurations'] != null
+        ? FeatureConfiguration.fromJson(json['configurations'])
+        : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -139,6 +148,11 @@ class Features {
     data['translation'] = translation;
     data['video_translation'] = videoTranslation;
     data['is_basic'] = isBasic;
+
+    if (configurations != null) {
+      data['configurations'] = configurations!.toJson();
+    }
+
     return data;
   }
 
@@ -162,4 +176,19 @@ class Features {
   bool isVoiceTextTranslationAllowed() => voiceTextTranslation == 1;
 
   bool isBasicPlan() => isBasic == 1;
+
+  bool isAllowMultipleCoHost() => configurations?.allowMultipleCohost == 1;
+
+  bool isReactionAllowed() => configurations?.enableReaction == 1;
+
+  bool isPublicChatAllowed() => configurations?.enableChat == 1;
+
+  bool isPrivateChatAllowed() => configurations?.enablePrivateChat == 1;
+
+  bool isProfileEditByHostAllowed() => configurations?.allowProfileEditByHost == 1;
+
+  bool isProfileEditBySelfAllowed() => configurations?.allowProfileEditBySelf == 1;
+
+  bool isRecordingConsentAllowed() => configurations?.askRecordingRequest == "all";
+
 }

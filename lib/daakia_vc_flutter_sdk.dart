@@ -6,18 +6,42 @@ import 'package:daakia_vc_flutter_sdk/presentation/screens/loading_screen.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/screens/prejoin_screen.dart';
 import 'package:flutter/widgets.dart';
 
+import 'model/daakia_meeting_configuration.dart';
 import 'model/meeting_details_model.dart';
 
 class DaakiaVideoConferenceWidget extends StatefulWidget {
+  /// Creates a new instance of the [DaakiaVideoConferenceWidget].
+  ///
+  /// [secretKey] is the license key required for authenticating the meeting session.
+  /// [meetingId] is the unique identifier for the meeting.
+  /// [isHost] determines if the current participant is the meeting host.
+  /// [configuration] provides optional advanced customizations.
   const DaakiaVideoConferenceWidget(
       {required this.meetingId,
       required this.secretKey,
       this.isHost = false,
+      this.configuration,
       super.key});
 
+  /// Unique identifier for the meeting session.
   final String meetingId;
+
+  /// License key used to verify and authorize access to the meeting.
+  ///
+  /// This key is validated before allowing the user to join the session.
+  /// Make sure the provided key is valid for the associated [meetingId].
   final String secretKey;
+
+  /// Determines whether the user is a host.
+  ///
+  /// This can control special permissions in the meeting.
   final bool isHost;
+
+  /// Optional advanced configuration for the meeting widget.
+  ///
+  /// This is a [BETA] feature intended for advanced customization and future extensibility.
+  /// This field is optional and can be left `null` for default behavior.
+  final DaakiaMeetingConfiguration? configuration;
 
   @override
   State<StatefulWidget> createState() {
@@ -99,6 +123,7 @@ class _DaakiaVideoConferenceState extends State<DaakiaVideoConferenceWidget> {
         secretKey: widget.secretKey,
         isHost: widget.isHost,
         basicMeetingDetails: meetingDetails,
+        configuration: widget.configuration,
       );
     } else {
       screen = LicenseExpiredScreen(_licenseMessage);

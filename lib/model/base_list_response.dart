@@ -7,7 +7,7 @@ class BaseListResponse<T> {
 
   factory BaseListResponse.fromJson(
       Map<String, dynamic> json,
-      T Function(Map<String, dynamic>) fromJsonT,
+      T Function(dynamic) fromJsonT,
       ) {
     return BaseListResponse<T>(
       success: json['success'],

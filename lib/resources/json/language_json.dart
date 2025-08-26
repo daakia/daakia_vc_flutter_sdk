@@ -6,13 +6,18 @@ const String languageJsonString = '''
     "support": ["Plain text"]
   },
   {
+    "code": "sq-AL",
+    "language": "Albanian (Albania)",
+    "support": ["Plain text"]
+  },
+  {
     "code": "am-ET",
     "language": "Amharic (Ethiopia)",
     "support": ["Plain text"]
   },
   {
-    "code": "ar-AE",
-    "language": "Arabic (United Arab Emirates)",
+    "code": "ar-DZ",
+    "language": "Arabic (Algeria)",
     "support": ["Audio + human-labeled transcript", "Plain text"]
   },
   {
@@ -21,23 +26,18 @@ const String languageJsonString = '''
     "support": ["Audio + human-labeled transcript", "Plain text"]
   },
   {
-    "code": "ar-DZ",
-    "language": "Arabic (Algeria)",
-    "support": ["Audio + human-labeled transcript", "Plain text"]
-  },
-  {
     "code": "ar-EG",
     "language": "Arabic (Egypt)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text"]
+  },
+  {
+    "code": "ar-IQ",
+    "language": "Arabic (Iraq)",
     "support": ["Audio + human-labeled transcript", "Plain text"]
   },
   {
     "code": "ar-IL",
     "language": "Arabic (Israel)",
-    "support": ["Audio + human-labeled transcript", "Plain text"]
-  },
-  {
-    "code": "ar-IQ",
-    "language": "Arabic (Iraq)",
     "support": ["Audio + human-labeled transcript", "Plain text"]
   },
   {
@@ -83,7 +83,7 @@ const String languageJsonString = '''
   {
     "code": "ar-SA",
     "language": "Arabic (Saudi Arabia)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Phrase list"]
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Phrase list"]
   },
   {
     "code": "ar-SY",
@@ -96,18 +96,28 @@ const String languageJsonString = '''
     "support": ["Audio + human-labeled transcript", "Plain text"]
   },
   {
+    "code": "ar-AE",
+    "language": "Arabic (United Arab Emirates)",
+    "support": ["Audio + human-labeled transcript", "Plain text"]
+  },
+  {
     "code": "ar-YE",
     "language": "Arabic (Yemen)",
     "support": ["Audio + human-labeled transcript", "Plain text"]
   },
   {
-    "code": "az-AZ",
-    "language": "Azerbaijani (Latin, Azerbaijan)",
+    "code": "hy-AM",
+    "language": "Armenian (Armenia)",
     "support": ["Plain text"]
   },
   {
-    "code": "bg-BG",
-    "language": "Bulgarian (Bulgaria)",
+    "code": "as-IN",
+    "language": "Assamese (India)",
+    "support": ["Audio + human-labeled transcript"]
+  },
+  {
+    "code": "az-AZ",
+    "language": "Azerbaijani (Latin, Azerbaijan)",
     "support": ["Plain text"]
   },
   {
@@ -121,9 +131,39 @@ const String languageJsonString = '''
     "support": ["Plain text"]
   },
   {
+    "code": "bg-BG",
+    "language": "Bulgarian (Bulgaria)",
+    "support": ["Plain text"]
+  },
+  {
+    "code": "my-MM",
+    "language": "Burmese (Myanmar)",
+    "support": ["Plain text"]
+  },
+  {
     "code": "ca-ES",
     "language": "Catalan",
     "support": ["Plain text", "Pronunciation"]
+  },
+  {
+    "code": "zh-HK",
+    "language": "Chinese (Cantonese, Traditional, Hong Kong)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation"]
+  },
+  {
+    "code": "zh-CN",
+    "language": "Chinese (Mandarin, Simplified, China)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
+  },
+  {
+    "code": "zh-TW",
+    "language": "Chinese (Mandarin, Traditional, Taiwan)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
+  },
+  {
+    "code": "hr-HR",
+    "language": "Croatian (Croatia)",
+    "support": ["Plain text"]
   },
   {
     "code": "cs-CZ",
@@ -131,34 +171,19 @@ const String languageJsonString = '''
     "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Pronunciation"]
   },
   {
-    "code": "cy-GB",
-    "language": "Welsh (United Kingdom)",
-    "support": ["Plain text"]
-  },
-  {
     "code": "da-DK",
     "language": "Danish (Denmark)",
     "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation"]
   },
   {
-    "code": "de-AT",
-    "language": "German (Austria)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation"]
-  },
-  {
-    "code": "de-CH",
-    "language": "German (Switzerland)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Pronunciation", "Phrase list"]
-  },
-  {
-    "code": "de-DE",
-    "language": "German (Germany)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
-  },
-  {
-    "code": "el-GR",
-    "language": "Greek (Greece)",
+    "code": "nl-BE",
+    "language": "Dutch (Belgium)",
     "support": ["Plain text"]
+  },
+  {
+    "code": "nl-NL",
+    "language": "Dutch (Netherlands)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
   },
   {
     "code": "en-AU",
@@ -168,11 +193,6 @@ const String languageJsonString = '''
   {
     "code": "en-CA",
     "language": "English (Canada)",
-    "support": ["Audio + human-labeled transcript", "Audio", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
-  },
-  {
-    "code": "en-GB",
-    "language": "English (United Kingdom)",
     "support": ["Audio + human-labeled transcript", "Audio", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
   },
   {
@@ -186,14 +206,14 @@ const String languageJsonString = '''
     "support": ["Audio + human-labeled transcript", "Audio", "Plain text", "Structured text", "Output format", "Pronunciation"]
   },
   {
-    "code": "en-IE",
-    "language": "English (Ireland)",
-    "support": ["Audio + human-labeled transcript", "Audio", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
-  },
-  {
     "code": "en-IN",
     "language": "English (India)",
     "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
+  },
+  {
+    "code": "en-IE",
+    "language": "English (Ireland)",
+    "support": ["Audio + human-labeled transcript", "Audio", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
   },
   {
     "code": "en-KE",
@@ -201,13 +221,13 @@ const String languageJsonString = '''
     "support": ["Audio + human-labeled transcript", "Audio", "Plain text", "Structured text", "Pronunciation"]
   },
   {
-    "code": "en-NG",
-    "language": "English (Nigeria)",
+    "code": "en-NZ",
+    "language": "English (New Zealand)",
     "support": ["Audio + human-labeled transcript", "Audio", "Plain text", "Structured text", "Output format", "Pronunciation"]
   },
   {
-    "code": "en-NZ",
-    "language": "English (New Zealand)",
+    "code": "en-NG",
+    "language": "English (Nigeria)",
     "support": ["Audio + human-labeled transcript", "Audio", "Plain text", "Structured text", "Output format", "Pronunciation"]
   },
   {
@@ -221,9 +241,19 @@ const String languageJsonString = '''
     "support": ["Audio + human-labeled transcript", "Audio", "Plain text", "Structured text", "Output format", "Pronunciation"]
   },
   {
+    "code": "en-ZA",
+    "language": "English (South Africa)",
+    "support": ["Audio + human-labeled transcript", "Audio", "Plain text", "Structured text", "Pronunciation", "Phrase list"]
+  },
+  {
     "code": "en-TZ",
     "language": "English (Tanzania)",
     "support": ["Audio + human-labeled transcript", "Audio", "Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "en-GB",
+    "language": "English (United Kingdom)",
+    "support": ["Audio + human-labeled transcript", "Audio", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
   },
   {
     "code": "en-US",
@@ -231,129 +261,19 @@ const String languageJsonString = '''
     "support": ["Audio + human-labeled transcript", "Audio", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
   },
   {
-    "code": "en-ZA",
-    "language": "English (South Africa)",
-    "support": ["Audio + human-labeled transcript", "Audio", "Plain text", "Structured text", "Output format", "Pronunciation"]
-  },
-  {
-    "code": "es-AR",
-    "language": "Spanish (Argentina)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Pronunciation"]
-  },
-  {
-    "code": "es-BO",
-    "language": "Spanish (Bolivia)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "es-CL",
-    "language": "Spanish (Chile)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Pronunciation"]
-  },
-  {
-    "code": "es-CO",
-    "language": "Spanish (Colombia)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Pronunciation"]
-  },
-  {
-    "code": "es-CR",
-    "language": "Spanish (Costa Rica)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "es-DO",
-    "language": "Spanish (Dominican Republic)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "es-EC",
-    "language": "Spanish (Ecuador)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "es-ES",
-    "language": "Spanish (Spain)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
-  },
-  {
-    "code": "es-GT",
-    "language": "Spanish (Guatemala)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "es-HN",
-    "language": "Spanish (Honduras)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "es-MX",
-    "language": "Spanish (Mexico)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation"]
-  },
-  {
-    "code": "es-NI",
-    "language": "Spanish (Nicaragua)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "es-PA",
-    "language": "Spanish (Panama)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "es-PE",
-    "language": "Spanish (Peru)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "es-PR",
-    "language": "Spanish (Puerto Rico)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "es-PY",
-    "language": "Spanish (Paraguay)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "es-SV",
-    "language": "Spanish (El Salvador)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "es-US",
-    "language": "Spanish (United States)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation"]
-  },
-  {
-    "code": "es-UY",
-    "language": "Spanish (Uruguay)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "es-VE",
-    "language": "Spanish (Venezuela)",
-    "support": ["Plain text"]
-  },
-  {
     "code": "et-EE",
     "language": "Estonian (Estonia)",
     "support": ["Plain text"]
   },
   {
-    "code": "fa-IR",
-    "language": "Persian (Iran)",
-    "support": ["Audio + human-labeled transcript", "Plain text"]
+    "code": "fil-PH",
+    "language": "Filipino (Philippines)",
+    "support": ["Plain text"]
   },
   {
     "code": "fi-FI",
     "language": "Finnish (Finland)",
     "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation"]
-  },
-  {
-    "code": "fil-PH",
-    "language": "Filipino (Philippines)",
-    "support": ["Plain text"]
   },
   {
     "code": "fr-BE",
@@ -366,24 +286,44 @@ const String languageJsonString = '''
     "support": ["Audio + human-labeled transcript", "Plain text", "Pronunciation"]
   },
   {
-    "code": "fr-CH",
-    "language": "French (Switzerland)",
-    "support": ["Plain text"]
-  },
-  {
     "code": "fr-FR",
     "language": "French (France)",
     "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
   },
   {
-    "code": "ga-IE",
-    "language": "Irish (Ireland)",
+    "code": "fr-CH",
+    "language": "French (Switzerland)",
     "support": ["Plain text"]
   },
   {
     "code": "gl-ES",
     "language": "Galician (Spain)",
     "support": ["Plain text"]
+  },
+  {
+    "code": "ka-GE",
+    "language": "Georgian (Georgia)",
+    "support": ["Plain text"]
+  },
+  {
+    "code": "de-AT",
+    "language": "German (Austria)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "de-DE",
+    "language": "German (Germany)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
+  },
+  {
+    "code": "de-CH",
+    "language": "German (Switzerland)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Pronunciation", "Phrase list"]
+  },
+  {
+    "code": "el-GR",
+    "language": "Greek (Greece)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text"]
   },
   {
     "code": "gu-IN",
@@ -401,18 +341,13 @@ const String languageJsonString = '''
     "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation"]
   },
   {
-    "code": "hr-HR",
-    "language": "Croatian (Croatia)",
-    "support": ["Plain text"]
-  },
-  {
     "code": "hu-HU",
     "language": "Hungarian (Hungary)",
     "support": ["Plain text"]
   },
   {
-    "code": "hy-AM",
-    "language": "Armenian (Armenia)",
+    "code": "is-IS",
+    "language": "Icelandic (Iceland)",
     "support": ["Plain text"]
   },
   {
@@ -421,19 +356,19 @@ const String languageJsonString = '''
     "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Pronunciation"]
   },
   {
-    "code": "is-IS",
-    "language": "Icelandic (Iceland)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "it-CH",
-    "language": "Italian (Switzerland)",
+    "code": "ga-IE",
+    "language": "Irish (Ireland)",
     "support": ["Plain text"]
   },
   {
     "code": "it-IT",
     "language": "Italian (Italy)",
     "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
+  },
+  {
+    "code": "it-CH",
+    "language": "Italian (Switzerland)",
+    "support": ["Plain text"]
   },
   {
     "code": "ja-JP",
@@ -446,8 +381,8 @@ const String languageJsonString = '''
     "support": ["Plain text"]
   },
   {
-    "code": "ka-GE",
-    "language": "Georgian (Georgia)",
+    "code": "kn-IN",
+    "language": "Kannada (India)",
     "support": ["Plain text"]
   },
   {
@@ -461,11 +396,6 @@ const String languageJsonString = '''
     "support": ["Plain text"]
   },
   {
-    "code": "kn-IN",
-    "language": "Kannada (India)",
-    "support": ["Plain text"]
-  },
-  {
     "code": "ko-KR",
     "language": "Korean (Korea)",
     "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
@@ -476,13 +406,13 @@ const String languageJsonString = '''
     "support": ["Plain text"]
   },
   {
-    "code": "lt-LT",
-    "language": "Lithuanian (Lithuania)",
+    "code": "lv-LV",
+    "language": "Latvian (Latvia)",
     "support": ["Plain text"]
   },
   {
-    "code": "lv-LV",
-    "language": "Latvian (Latvia)",
+    "code": "lt-LT",
+    "language": "Lithuanian (Lithuania)",
     "support": ["Plain text"]
   },
   {
@@ -491,13 +421,18 @@ const String languageJsonString = '''
     "support": ["Plain text"]
   },
   {
+    "code": "ms-MY",
+    "language": "Malay (Malaysia)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Pronunciation"]
+  },
+  {
     "code": "ml-IN",
     "language": "Malayalam (India)",
     "support": ["Plain text"]
   },
   {
-    "code": "mn-MN",
-    "language": "Mongolian (Mongolia)",
+    "code": "mt-MT",
+    "language": "Maltese (Malta)",
     "support": ["Plain text"]
   },
   {
@@ -506,34 +441,14 @@ const String languageJsonString = '''
     "support": ["Plain text"]
   },
   {
-    "code": "ms-MY",
-    "language": "Malay (Malaysia)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Pronunciation"]
-  },
-  {
-    "code": "mt-MT",
-    "language": "Maltese (Malta)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "my-MM",
-    "language": "Burmese (Myanmar)",
+    "code": "mn-MN",
+    "language": "Mongolian (Mongolia)",
     "support": ["Plain text"]
   },
   {
     "code": "ne-NP",
     "language": "Nepali (Nepal)",
     "support": ["Plain text"]
-  },
-  {
-    "code": "nl-BE",
-    "language": "Dutch (Belgium)",
-    "support": ["Plain text"]
-  },
-  {
-    "code": "nl-NL",
-    "language": "Dutch (Netherlands)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
   },
   {
     "code": "no-NO",
@@ -546,19 +461,19 @@ const String languageJsonString = '''
     "support": ["Plain text"]
   },
   {
-    "code": "pa-IN",
-    "language": "Punjabi (India)",
+    "code": "ps-AF",
+    "language": "Pashto (Afghanistan)",
     "support": ["Plain text"]
+  },
+  {
+    "code": "fa-IR",
+    "language": "Persian (Iran)",
+    "support": ["Audio + human-labeled transcript", "Plain text"]
   },
   {
     "code": "pl-PL",
     "language": "Polish (Poland)",
     "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
-  },
-  {
-    "code": "ps-AF",
-    "language": "Pashto (Afghanistan)",
-    "support": ["Plain text"]
   },
   {
     "code": "pt-BR",
@@ -569,6 +484,11 @@ const String languageJsonString = '''
     "code": "pt-PT",
     "language": "Portuguese (Portugal)",
     "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
+  },
+  {
+    "code": "pa-IN",
+    "language": "Punjabi (India)",
+    "support": ["Plain text"]
   },
   {
     "code": "qu-PE",
@@ -584,6 +504,11 @@ const String languageJsonString = '''
     "code": "ru-RU",
     "language": "Russian (Russia)",
     "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
+  },
+  {
+    "code": "sr-RS",
+    "language": "Serbian (Serbia)",
+    "support": ["Plain text"]
   },
   {
     "code": "sd-IN",
@@ -611,24 +536,119 @@ const String languageJsonString = '''
     "support": ["Plain text"]
   },
   {
-    "code": "sq-AL",
-    "language": "Albanian (Albania)",
-    "support": ["Plain text"]
+    "code": "es-AR",
+    "language": "Spanish (Argentina)",
+    "support": ["Plain text", "Structured text", "Pronunciation"]
   },
   {
-    "code": "sr-RS",
-    "language": "Serbian (Serbia)",
-    "support": ["Plain text"]
+    "code": "es-BO",
+    "language": "Spanish (Bolivia)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-CL",
+    "language": "Spanish (Chile)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-CO",
+    "language": "Spanish (Colombia)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-CR",
+    "language": "Spanish (Costa Rica)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-CU",
+    "language": "Spanish (Cuba)",
+    "support": ["Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-DO",
+    "language": "Spanish (Dominican Republic)",
+    "support": ["Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-EC",
+    "language": "Spanish (Ecuador)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-SV",
+    "language": "Spanish (El Salvador)",
+    "support": ["Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-GQ",
+    "language": "Spanish (Equatorial Guinea)",
+    "support": ["Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-GT",
+    "language": "Spanish (Guatemala)",
+    "support": ["Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-HN",
+    "language": "Spanish (Honduras)",
+    "support": ["Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-MX",
+    "language": "Spanish (Mexico)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation"]
+  },
+  {
+    "code": "es-NI",
+    "language": "Spanish (Nicaragua)",
+    "support": ["Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-PA",
+    "language": "Spanish (Panama)",
+    "support": ["Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-PY",
+    "language": "Spanish (Paraguay)",
+    "support": ["Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-PE",
+    "language": "Spanish (Peru)",
+    "support": ["Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-PR",
+    "language": "Spanish (Puerto Rico)",
+    "support": ["Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-ES",
+    "language": "Spanish (Spain)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
+  },
+  {
+    "code": "es-US",
+    "language": "Spanish (United States)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation"]
+  },
+  {
+    "code": "es-UY",
+    "language": "Spanish (Uruguay)",
+    "support": ["Plain text", "Structured text", "Pronunciation"]
+  },
+  {
+    "code": "es-VE",
+    "language": "Spanish (Venezuela)",
+    "support": ["Plain text", "Structured text", "Pronunciation"]
   },
   {
     "code": "su-ID",
     "language": "Sundanese (Indonesia)",
     "support": ["Plain text"]
-  },
-  {
-    "code": "sv-SE",
-    "language": "Swedish (Sweden)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Pronunciation", "Phrase list"]
   },
   {
     "code": "sw-KE",
@@ -641,14 +661,14 @@ const String languageJsonString = '''
     "support": ["Plain text"]
   },
   {
+    "code": "sv-SE",
+    "language": "Swedish (Sweden)",
+    "support": ["Audio + human-labeled transcript", "Plain text", "Pronunciation", "Phrase list"]
+  },
+  {
     "code": "ta-IN",
     "language": "Tamil (India)",
     "support": ["Audio + human-labeled transcript", "Plain text"]
-  },
-  {
-    "code": "ta-LK",
-    "language": "Tamil (Sri Lanka)",
-    "support": ["Plain text"]
   },
   {
     "code": "ta-MY",
@@ -658,6 +678,11 @@ const String languageJsonString = '''
   {
     "code": "ta-SG",
     "language": "Tamil (Singapore)",
+    "support": ["Plain text"]
+  },
+  {
+    "code": "ta-LK",
+    "language": "Tamil (Sri Lanka)",
     "support": ["Plain text"]
   },
   {
@@ -701,6 +726,11 @@ const String languageJsonString = '''
     "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation"]
   },
   {
+    "code": "cy-GB",
+    "language": "Welsh (United Kingdom)",
+    "support": ["Plain text"]
+  },
+  {
     "code": "yi-DE",
     "language": "Yiddish (Germany)",
     "support": ["Plain text"]
@@ -709,21 +739,6 @@ const String languageJsonString = '''
     "code": "yo-NG",
     "language": "Yoruba (Nigeria)",
     "support": ["Plain text"]
-  },
-  {
-    "code": "zh-CN",
-    "language": "Chinese (Mandarin, Simplified, China)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
-  },
-  {
-    "code": "zh-HK",
-    "language": "Chinese (Cantonese, Traditional, Hong Kong)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation"]
-  },
-  {
-    "code": "zh-TW",
-    "language": "Chinese (Mandarin, Traditional, Taiwan)",
-    "support": ["Audio + human-labeled transcript", "Plain text", "Structured text", "Output format", "Pronunciation", "Phrase list"]
   }
 ]
 ''';

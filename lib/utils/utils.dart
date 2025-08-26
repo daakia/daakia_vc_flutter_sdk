@@ -72,17 +72,24 @@ class Utils {
   }
 
   static String getInitials(String? fullName) {
-    // Return "U" if the full name is null
-    if (fullName == null || fullName.isEmpty) return "U";
+    // Return "U" if the full name is null or empty
+    if (fullName == null || fullName.trim().isEmpty) return "U";
 
-    // Split the full name by spaces
-    List<String> nameParts = fullName.split(" ");
-
-    // Filter out empty parts, get the first letter of each part, capitalize it, and join without spaces
-    return nameParts
+    // Split the name into parts, ignoring extra spaces
+    List<String> nameParts = fullName
+        .trim()
+        .split(RegExp(r'\s+')) // handles multiple spaces
         .where((part) => part.isNotEmpty)
+        .toList();
+
+    // Take only the first alphabet of the first two words
+    String initials = nameParts
+        .take(2)
         .map((part) => part[0].toUpperCase())
         .join();
+
+    // Ensure it's restricted to 2 characters max
+    return initials.length > 2 ? initials.substring(0, 2) : initials;
   }
 
   static Color generateUniqueColorFromInitials(String initials) {
@@ -311,10 +318,31 @@ class Utils {
       List<TranscriptionModel> transcriptions) {
     StringBuffer contentBuffer = StringBuffer();
     for (var entry in transcriptions) {
-      contentBuffer.writeln('${entry.name} ${entry.timestamp}');
-      contentBuffer.writeln(entry.transcription);
-      contentBuffer.writeln();
-      contentBuffer.writeln();
+      if (entry.isFinal) {
+        contentBuffer.writeln('${entry.name} ${entry.timestamp}');
+        contentBuffer.writeln(entry.transcription);
+        contentBuffer.writeln();
+        contentBuffer.writeln();
+      }
+    }
+    return contentBuffer.toString();
+  }
+
+  static String getTranslatedTranscriptFormattedToSave(
+      List<TranscriptionModel> transcriptions) {
+    StringBuffer contentBuffer = StringBuffer();
+    for (var entry in transcriptions) {
+      if (entry.isFinal) {
+        final String textToUse = (entry.translatedTranscription != null &&
+                entry.translatedTranscription!.trim().isNotEmpty)
+            ? (entry.translatedTranscription ?? "")
+            : entry.transcription;
+
+        contentBuffer.writeln('${entry.name} ${entry.timestamp}');
+        contentBuffer.writeln(textToUse);
+        contentBuffer.writeln();
+        contentBuffer.writeln();
+      }
     }
     return contentBuffer.toString();
   }
@@ -380,9 +408,37 @@ class Utils {
     return encodedMessage.length <= Constant.maxMessageSize;
   }
 
-  static String generateWhiteboardUrl({required String meetingId,
+  static String generateWhiteboardUrl({
+    required String meetingId,
     required String livekitToken,
   }) {
     return '${Constant.whiteboardDomain}whiteboard/$meetingId?token=$livekitToken';
   }
+
+  static void hideKeyboard(BuildContext context) {
+    FocusScope.of(context).unfocus();
+  }
+
+  static String? extractUserAvatar(String? metadata) {
+    if (metadata == null || metadata.trim().isEmpty) return null;
+
+    try {
+      final Map<String, dynamic> decoded = jsonDecode(metadata);
+
+      // Navigate through the nested keys safely
+      if (decoded.containsKey('custom_metadata') &&
+          decoded['custom_metadata'] is Map &&
+          decoded['custom_metadata']['user_avatar'] is String) {
+        final String avatarUrl = decoded['custom_metadata']['user_avatar'];
+        return avatarUrl.isNotEmpty ? avatarUrl : null;
+      }
+    } catch (e) {
+      // Invalid JSON — just return null
+      return null;
+    }
+
+    return null;
+  }
+
+
 }

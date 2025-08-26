@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
+import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:provider/provider.dart';
 
@@ -13,17 +13,19 @@ import 'participant_info.dart';
 abstract class ParticipantWidget extends StatefulWidget {
   // Convenience method to return relevant widget for participant
   static ParticipantWidget widgetFor(ParticipantTrack participantTrack,
-      {bool showStatsLayer = false}) {
+      {bool showStatsLayer = false, bool isSpeaker = false}) {
     if (participantTrack.participant is LocalParticipant) {
       return LocalParticipantWidget(
           participantTrack.participant as LocalParticipant,
           participantTrack.type,
-          showStatsLayer);
+          showStatsLayer,
+          isSpeaker);
     } else if (participantTrack.participant is RemoteParticipant) {
       return RemoteParticipantWidget(
           participantTrack.participant as RemoteParticipant,
           participantTrack.type,
-          showStatsLayer);
+          showStatsLayer,
+          isSpeaker);
     }
     throw UnimplementedError('Unknown participant type');
   }
@@ -33,6 +35,7 @@ abstract class ParticipantWidget extends StatefulWidget {
   abstract final ParticipantTrackType type;
   abstract final bool showStatsLayer;
   final VideoQuality quality;
+  abstract final bool isSpeaker;
 
   const ParticipantWidget({
     this.quality = VideoQuality.MEDIUM,
@@ -47,11 +50,14 @@ class LocalParticipantWidget extends ParticipantWidget {
   final ParticipantTrackType type;
   @override
   final bool showStatsLayer;
+  @override
+  final bool isSpeaker;
 
   const LocalParticipantWidget(
     this.participant,
     this.type,
-    this.showStatsLayer, {
+    this.showStatsLayer,
+    this.isSpeaker, {
     super.key,
   });
 
@@ -66,11 +72,14 @@ class RemoteParticipantWidget extends ParticipantWidget {
   final ParticipantTrackType type;
   @override
   final bool showStatsLayer;
+  @override
+  final bool isSpeaker;
 
   const RemoteParticipantWidget(
     this.participant,
     this.type,
-    this.showStatsLayer, {
+    this.showStatsLayer,
+    this.isSpeaker, {
     super.key,
   });
 
@@ -135,72 +144,80 @@ abstract class _ParticipantWidgetState<T extends ParticipantWidget>
   Widget build(BuildContext ctx) {
     final viewModel = Provider.of<RtcViewmodel>(context);
     return Card(
-        elevation: 10,
-        color: emptyVideoColor,
-        clipBehavior: Clip.antiAliasWithSaveLayer,
-        child: Container(
-          foregroundDecoration: BoxDecoration(
-            border: widget.participant.isSpeaking && !isScreenShare
-                ? Border.all(
-                    width: 5,
-                    color: Colors.blue,
-                  )
-                : null,
-          ),
-          decoration: const BoxDecoration(
-            color: emptyVideoColor,
-          ),
-          child: Stack(
-            children: [
-              // Video
-              InkWell(
-                onTap: () => setState(() => _visible = !_visible),
-                child: activeVideoTrack != null && !activeVideoTrack!.muted
-                    ? VideoTrackRenderer(
-                        renderMode: VideoRenderMode.auto,
-                        activeVideoTrack!,
-                        fit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
-                      )
-                    : NoVideoWidget(name: widget.participant.name),
-              ),
-              // Bottom bar
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // ...extraWidgets(isScreenShare),
-                    ParticipantInfoWidget(
-                      title: widget.participant.name.isNotEmpty
-                          ? widget.participant.name
-                          : widget.participant.identity,
-                      audioAvailable: audioPublication?.muted == false &&
-                          audioPublication?.subscribed == true,
-                      connectionQuality: widget.participant.connectionQuality,
-                      isScreenShare: isScreenShare,
-                      enabledE2EE: widget.participant.isEncrypted,
-                    ),
-                  ],
-                ),
-              ),
-              // if (widget.showStatsLayer)
-              // Positioned(
-              //     top: 130,
-              //     right: 30,
-              //     child: ParticipantStatsWidget(
-              //       participant: widget.participant,
-              //     )),
-              if(viewModel.isHandRaised(widget.participant.identity))
-              const Positioned(
-                top: 5,
-                  left: 5,
-                  child: Icon(Icons.front_hand, color: handRaiseColor,)
-              )
-            ],
-          ),
+      elevation: 10,
+      color: emptyVideoColor,
+      clipBehavior: Clip.antiAliasWithSaveLayer,
+      child: Container(
+        foregroundDecoration: BoxDecoration(
+          border: widget.participant.isSpeaking && !isScreenShare
+              ? Border.all(
+                  width: 5,
+                  color: Colors.blue,
+                )
+              : null,
         ),
-      );}
+        decoration: const BoxDecoration(
+          color: emptyVideoColor,
+        ),
+        child: Stack(
+          children: [
+            // Video
+            InkWell(
+              onTap: () => setState(() => _visible = !_visible),
+              child: activeVideoTrack != null && !activeVideoTrack!.muted
+                  ? VideoTrackRenderer(
+                      renderMode: VideoRenderMode.auto,
+                      activeVideoTrack!,
+                      fit: VideoViewFit.contain,
+                    )
+                  : NoVideoWidget(
+                      name: widget.participant.name,
+                      userAvatar:
+                          Utils.extractUserAvatar(widget.participant.metadata),
+                      isSpeaker: widget.isSpeaker,
+                    ),
+            ),
+            // Bottom bar
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ...extraWidgets(isScreenShare),
+                  ParticipantInfoWidget(
+                    title: widget.participant.name.isNotEmpty
+                        ? widget.participant.name
+                        : widget.participant.identity,
+                    audioAvailable: audioPublication?.muted == false &&
+                        audioPublication?.subscribed == true,
+                    connectionQuality: widget.participant.connectionQuality,
+                    isScreenShare: isScreenShare,
+                    enabledE2EE: widget.participant.isEncrypted,
+                  ),
+                ],
+              ),
+            ),
+            // if (widget.showStatsLayer)
+            // Positioned(
+            //     top: 130,
+            //     right: 30,
+            //     child: ParticipantStatsWidget(
+            //       participant: widget.participant,
+            //     )),
+            if (viewModel.isHandRaised(widget.participant.identity))
+              const Positioned(
+                  top: 5,
+                  left: 5,
+                  child: Icon(
+                    Icons.front_hand,
+                    color: handRaiseColor,
+                  ))
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _LocalParticipantWidgetState

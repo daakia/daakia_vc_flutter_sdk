@@ -6,6 +6,9 @@ class Constant {
   static const String baseUrl = "https://api.daakia.co.in/v2.0/";
   static const String whiteboardDomain = "https://www.daakia.co.in/";
 
+  static const String startRecordingUrl = "https://cdn.vc.daakia.co.in/sounds/recording_start.mp3";
+  static const String stopRecordingUrl = "https://cdn.vc.daakia.co.in/sounds/recording_stop.mp3";
+
   static const String meetingUid = "MEETING_UID";
   static const String sessionUid = "SESSION_UID";
   static const String attendanceId = "ATTENDANCE_ID";

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:daakia_vc_flutter_sdk/model/features.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
@@ -9,13 +10,16 @@ import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
 import 'package:daakia_vc_flutter_sdk/utils/storage_helper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:loading_btn/loading_btn.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../api/injection.dart';
+import '../../model/daakia_meeting_configuration.dart';
 import '../../resources/colors/color.dart';
 import '../../rtc/room.dart';
+import '../../utils/name_input_formatter.dart';
 import '../../utils/utils.dart';
 
 @protected
@@ -25,12 +29,16 @@ class PreJoinScreen extends StatefulWidget {
       required this.secretKey,
       this.isHost = false,
       required this.basicMeetingDetails,
+      this.configuration,
       super.key});
 
   final String meetingId;
   final String secretKey;
   final bool isHost;
   final MeetingDetailsModel? basicMeetingDetails;
+
+  /// Optional advanced configuration
+  final DaakiaMeetingConfiguration? configuration;
 
   @override
   State<StatefulWidget> createState() {
@@ -60,6 +68,9 @@ class _PreJoinState extends State<PreJoinScreen> {
 
   var _isCoHostVerified = false;
 
+  late TextEditingController _nameController;
+  late bool _isNameEditable;
+
   //============== RTC ===============
   StreamSubscription? _subscription;
   List<MediaDevice> _audioInputs = [];
@@ -82,6 +93,12 @@ class _PreJoinState extends State<PreJoinScreen> {
     _subscription =
         Hardware.instance.onDeviceChange.stream.listen(_loadDevices);
     Hardware.instance.enumerateDevices().then(_loadDevices);
+    final initialName = widget.configuration?.participantNameConfig?.name ?? "";
+    name = initialName;
+    _nameController = TextEditingController(text: initialName);
+
+    _isNameEditable = initialName.isEmpty ||
+        (widget.configuration?.participantNameConfig?.isEditable ?? false);
     // Schedule verifyCoHost after widget is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       verifyCoHost();
@@ -184,10 +201,14 @@ class _PreJoinState extends State<PreJoinScreen> {
     Map<String, dynamic> body = {
       "meeting_uid": widget.meetingId,
       "preferred_video_server_id": "ap1",
-      "display_name": name
+      "display_name": name.trim()
     };
     if (isParticipant) {
       body["lobby_request_id"] = lobbyRequestId;
+    }
+    // Add custom_metadata only if metadata is provided
+    if (widget.configuration?.metadata != null) {
+      body["custom_metadata"] = widget.configuration?.metadata;
     }
     final cacheData = StorageHelper();
     if (!widget.isHost) {
@@ -196,7 +217,7 @@ class _PreJoinState extends State<PreJoinScreen> {
             widget.basicMeetingDetails?.currentSessionUid) {
           if (await cacheData.getAttendanceId() != "") {
             body["meeting_attendance_uid"] = await cacheData.getAttendanceId();
-            if(hostToken.isEmpty){
+            if (hostToken.isEmpty) {
               hostToken = await cacheData.getHostToken() ?? "";
             }
           }
@@ -285,6 +306,28 @@ class _PreJoinState extends State<PreJoinScreen> {
     joinMeeting(stopLoading);
   }
 
+  void _getHostToken(Function stopLoading) {
+    isLoading = true;
+    networkRequestHandler(
+        apiCall: () => apiClient.getHostToken(widget.meetingId),
+        onSuccess: (data) {
+          isHostVerified = true;
+          hostToken = data?.token ?? "";
+          isNeedToCancelApiCall = data?.token == "";
+          getFeaturesAndJoinMeeting(stopLoading);
+        },
+        onError: (message) {
+          if (mounted) {
+            Utils.showSnackBar(context, message: message);
+          }
+          setState(() {
+            isLoading = false;
+            isNeedToCancelApiCall = true;
+            stopLoading.call();
+          });
+        });
+  }
+
   void verifyHost(String email, String pin, Function stopLoading) async {
     isLoading = true;
 
@@ -329,7 +372,7 @@ class _PreJoinState extends State<PreJoinScreen> {
     }
     Map<String, dynamic> body = {
       "meeting_uid": widget.meetingId,
-      "display_name": name,
+      "display_name": name.trim(),
     };
 
     networkRequestHandler(
@@ -628,11 +671,13 @@ class _PreJoinState extends State<PreJoinScreen> {
                                         color: Colors.white),
                                     iconSize: 30,
                                     onPressed: () async {
-                                      bool permissionsGranted =
-                                          await checkAndRequestPermissions(
-                                              context,
-                                              checkForAudio: false);
-                                      if (!permissionsGranted) return;
+                                      if (!Platform.isIOS) {
+                                        bool permissionsGranted =
+                                        await checkAndRequestPermissions(
+                                            context,
+                                            checkForAudio: false);
+                                        if (!permissionsGranted) return;
+                                      }
                                       setState(() {
                                         _enableVideo = !_enableVideo;
                                         _setEnableVideo(_enableVideo);
@@ -647,11 +692,13 @@ class _PreJoinState extends State<PreJoinScreen> {
                                         color: Colors.white),
                                     iconSize: 30,
                                     onPressed: () async {
-                                      bool permissionsGranted =
-                                          await checkAndRequestPermissions(
-                                              context,
-                                              checkForCamera: false);
-                                      if (!permissionsGranted) return;
+                                      if (!Platform.isIOS) {
+                                        bool permissionsGranted =
+                                        await checkAndRequestPermissions(
+                                            context,
+                                            checkForCamera: false);
+                                        if (!permissionsGranted) return;
+                                      }
                                       setState(() {
                                         _enableAudio = !_enableAudio;
                                         _setEnableAudio(_enableAudio);
@@ -689,20 +736,23 @@ class _PreJoinState extends State<PreJoinScreen> {
                         horizontal: 20, vertical: 10),
                     // Equivalent to marginHorizontal="20dp" and marginTop="10dp"
                     child: TextFormField(
+                      controller: _nameController,
                       decoration: const InputDecoration(
-                        labelText: 'Name*', // Equivalent to hint="Name*"
+                        labelText: 'Name*',
                         border: OutlineInputBorder(),
                       ),
-                      style: const TextStyle(
-                        color: Colors
-                            .black, // Equivalent to textColor="@color/black"
-                      ),
-                      enabled: true, // Equivalent to android:enabled="false"
-                      onChanged: (String? value) {
-                        setState(() {
-                          name = value ?? "";
-                        });
-                      },
+                      style: const TextStyle(color: Colors.black),
+                      enabled: _isNameEditable,
+                      textCapitalization: TextCapitalization.words,
+                      inputFormatters: [
+                        NameInputFormatter(),
+                        // Block digits
+                        FilteringTextInputFormatter.deny(RegExp(r'[0-9]')),
+                        // Block noisy punctuation (but allow . ' -)
+                        FilteringTextInputFormatter.deny(RegExp(r'[_\[\]{}<>@#$%^&*+=~`|\\/"^]')),
+                        LengthLimitingTextInputFormatter(50),
+                      ],
+                      onChanged: (value) => setState(() => name = value),
                     ),
                   ),
                   Visibility(
@@ -792,7 +842,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                     ),
                     onTap: (startLoading, stopLoading, btnState) async {
                       if (btnState == ButtonState.idle) {
-                        if (name.isEmpty) {
+                        if (name.trim().isEmpty) {
                           Utils.showSnackBar(context,
                               message: "Please enter your name");
                           return;
@@ -821,7 +871,22 @@ class _PreJoinState extends State<PreJoinScreen> {
                           isNeedToCancelApiCall = false;
                           if (widget.isHost && !isHostVerified) {
                             if (!context.mounted) return;
-                            _showVerificationDialog(context, stopLoading);
+                            final token = widget.configuration?.vcConfig?.hostToken;
+
+                            if (token != null && token.isNotEmpty) {
+                              hostToken = token;
+                              isHostVerified == true;
+                              isNeedToCancelApiCall = false;
+                              getFeaturesAndJoinMeeting(stopLoading);
+                              return;
+                            }
+                            if (widget.basicMeetingDetails
+                                    ?.hostPinVerificationRequired ==
+                                1) {
+                              _showVerificationDialog(context, stopLoading);
+                            } else {
+                              _getHostToken(stopLoading);
+                            }
                           } else {
                             checkMeetingType(stopLoading);
                           }
@@ -848,6 +913,7 @@ class _PreJoinState extends State<PreJoinScreen> {
   void dispose() {
     _subscription?.cancel();
     _participantTimer?.cancel();
+    _nameController.dispose();
     super.dispose();
   }
 
@@ -862,7 +928,7 @@ class _PreJoinState extends State<PreJoinScreen> {
     networkRequestHandler(
         apiCall: () => apiClient.getFeatures(widget.meetingId),
         onSuccess: (data) {
-          features = data?.features;
+          features = getFeature(data?.features);
           if (meetingManager.isMeetingEnded() &&
               widget.basicMeetingDetails?.meetingConfig?.autoMeetingEnd == 1 &&
               mounted) {
@@ -1124,4 +1190,13 @@ class _PreJoinState extends State<PreJoinScreen> {
       getFeaturesAndJoinMeeting(stopLoading);
     }
   }
+
+  Features? getFeature(Features? features) {
+    final configFeature = widget.configuration?.vcConfig?.subscriptionFeature;
+    if (configFeature?.subscriptionId != null && configFeature?.features != null) {
+      return configFeature?.features;
+    }
+    return features;
+  }
+
 }

@@ -1,7 +1,7 @@
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
-import 'package:daakia_vc_flutter_sdk/resources/colors/color.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/dialog/pariticipant_dialog_controls.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/initials_circle.dart';
+import 'package:daakia_vc_flutter_sdk/resources/colors/color.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -27,7 +27,7 @@ class ParticipantTile extends StatelessWidget {
     final viewModel = Provider.of<RtcViewmodel>(context);
     return Container(
       color: emptyVideoColor,
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -35,10 +35,7 @@ class ParticipantTile extends StatelessWidget {
           InitialsCircle(
               initials: Utils.getInitials(
                   isForLobby ? lobbyRequest?.displayName : participant?.name),
-              onEdit: (!isForLobby &&
-                      ((participant?.identity ==
-                              viewModel.room.localParticipant?.identity) ||
-                          (viewModel.isHost() || viewModel.isCoHost())))
+              onEdit: _canEditProfile(viewModel, participant, isForLobby)
                   ? () {
                       _showEditNameDialog(context, viewModel);
                     }
@@ -202,5 +199,23 @@ class ParticipantTile extends StatelessWidget {
             ],
           );
         });
+  }
+
+  bool _canEditProfile(
+      RtcViewmodel viewModel, Participant? participant, bool isForLobby) {
+    if (isForLobby) return false;
+
+    final localId = viewModel.room.localParticipant?.identity;
+    final isSelf = participant?.identity == localId;
+
+    final features = viewModel.meetingDetails.features;
+
+    if (isSelf) {
+      return features?.isProfileEditBySelfAllowed() == true;
+    } else if (viewModel.isHost() || viewModel.isCoHost()) {
+      return features?.isProfileEditByHostAllowed() == true;
+    }
+
+    return false;
   }
 }

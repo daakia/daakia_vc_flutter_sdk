@@ -77,6 +77,12 @@ class LobbyRequestManager {
       Navigator.of(_context).pop();
     }
   }
+
+  void dispose() {
+    _dismissDialog();
+    _lobbyRequestQueue.clear();
+    _isShowingDialog = false;
+  }
 }
 
 class LobbyRequestDialog extends StatelessWidget {
@@ -93,30 +99,60 @@ class LobbyRequestDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(15),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(5.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Someone wants to join!", style: TextStyle(color: Colors.white, fontSize: 20)),
-            const SizedBox(height: 10,),
+            const Text(
+              "New participant wants to join",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
             Row(
               children: [
-                const SizedBox(width: 5,),
                 InitialsCircle(initials: Utils.getInitials(remoteData.displayName)),
-                const SizedBox(width: 10,),
-                Text(remoteData.displayName ?? "", style: const TextStyle(color: Colors.white, fontSize: 18)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    remoteData.displayName ?? "",
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 10,),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(
-                  onPressed: () => onAccept(false), // Reject action
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.redAccent),
+                    foregroundColor: Colors.redAccent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  ),
+                  onPressed: () => onAccept(false),
                   child: const Text("Reject"),
                 ),
-                TextButton(
-                  onPressed: () => onAccept(true), // Accept action
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.greenAccent[700],
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  onPressed: () => onAccept(true),
                   child: const Text("Accept"),
                 ),
               ],

@@ -3,16 +3,19 @@ import 'dart:convert';
 
 import 'package:animated_emoji/emoji_data.dart';
 import 'package:animated_emoji/emojis.g.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:daakia_vc_flutter_sdk/events/meeting_end_events.dart';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/emoji_reaction_widget.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/lobby_request_manager.dart';
+import 'package:daakia_vc_flutter_sdk/rtc/widgets/connectivity_banner.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant_info.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/pip_screen.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/rtc_controls.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/white_board_widget.dart';
+import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
 import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
 import 'package:daakia_vc_flutter_sdk/utils/storage_helper.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_provider.dart';
@@ -29,6 +32,7 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import '../model/emoji_message.dart';
 import '../model/remote_activity_data.dart';
 import '../presentation/pages/transcription_screen.dart';
+import '../utils/consent_status_enum.dart';
 import '../utils/meeting_actions.dart';
 import '../utils/utils.dart';
 import 'meeting_manager.dart';
@@ -89,6 +93,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         ..setAutoPipMode(
             aspectRatio: (1, 1), seamlessResize: true, autoEnter: true);
     }
+    isCheckedWhileJoining = false;
+    player = AudioPlayer();
     // add callback for a `RoomEvent` as opposed to a `ParticipantEvent`
     widget.room.addListener(_onRoomDidUpdate);
     // add callbacks for finer grained events
@@ -115,6 +121,15 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       meetingManager.startMeetingEndScheduler();
       _initializeWebViewController();
       viewModel?.getWhiteboardData();
+      viewModel?.getAttendanceListForParticipant();
+      if (viewModel?.meetingDetails.features?.isRecordingConsentAllowed() ==
+          true) {
+        viewModel?.checkSessionStatus(
+            asUser: true,
+            callBack: () {
+              showRecordingConsentDialog(viewModel);
+            });
+      }
     });
 
     if (lkPlatformIs(PlatformType.android)) {
@@ -134,6 +149,40 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     }
   }
 
+  bool _isReconnecting = false;
+  bool _isConnected = false;
+
+  void onReconnectStart() {
+    setState(() {
+      _isReconnecting = true;
+      _isConnected = false;
+    });
+    // Fallback: clear reconnecting state if no event comes back within 8 sec
+    Future.delayed(const Duration(seconds: 30), () {
+      if (mounted && _isReconnecting) {
+        setState(() {
+          _isReconnecting = false;
+        });
+      }
+    });
+  }
+
+  void onReconnectSuccess() {
+    setState(() {
+      _isReconnecting = false;
+      _isConnected = true;
+    });
+
+    // Auto hide success banner after 2 seconds
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _isConnected = false;
+        });
+      }
+    });
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -142,6 +191,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     viewModel?.stopLobbyCheck();
     viewModel?.cancelRoomEvents();
     meetingManager.cancelMeetingEndScheduler();
+    lobbyManager?.dispose();
     widget.room.disconnect();
     // always dispose listener
     (() async {
@@ -155,9 +205,18 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     onWindowShouldClose = null;
     WakelockPlus.disable();
     pip = null;
+    player.stop();
   }
 
   void _setUpListeners() => _listener
+    ..on<RoomConnectedEvent>((event) {
+      // Successfully connected
+      onReconnectSuccess();
+    })
+    ..on<RoomReconnectedEvent>((event) {
+      // Successfully reconnected
+      onReconnectSuccess();
+    })
     ..on<RoomDisconnectedEvent>((event) async {
       if (event.reason != null) {
         _livekitProviderKey.currentState?.viewModel.isMeetingEnded = true;
@@ -198,16 +257,34 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               });
               break;
             }
-          default:
-            {
-              Timer(const Duration(seconds: 3), () {
-                if (mounted) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    closeMeetingProgrammatically(context);
-                  });
-                }
-              });
-            }
+
+          // ✅ New cases with user-friendly messages
+          case null:
+          case DisconnectReason.unknown:
+            _handleGenericDisconnect("Disconnected due to unknown reason.");
+            break;
+          case DisconnectReason.clientInitiated:
+            _handleGenericDisconnect("You have left the meeting.");
+            break;
+          case DisconnectReason.serverShutdown:
+            _handleGenericDisconnect("Meeting ended by the server.");
+            break;
+          case DisconnectReason.stateMismatch:
+            _handleGenericDisconnect("Connection lost due to state mismatch.");
+            break;
+          case DisconnectReason.joinFailure:
+            _handleGenericDisconnect("Failed to join the meeting.");
+            break;
+          case DisconnectReason.disconnected:
+            _handleGenericDisconnect("You have been disconnected.");
+            break;
+          case DisconnectReason.signalingConnectionFailure:
+            _handleGenericDisconnect("Signaling connection failed.");
+            break;
+          case DisconnectReason.reconnectAttemptsExceeded:
+            _handleGenericDisconnect(
+                "Could not reconnect. Please check your internet.");
+            break;
         }
       }
     })
@@ -219,6 +296,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     ..on<ParticipantEvent>((event) {
       var viewModel = _livekitProviderKey.currentState?.viewModel;
       viewModel?.setRecording(widget.room.isRecording);
+
+      checkRecordingPlayer(widget.room.isRecording);
       // sort participants on many track events as noted in documentation linked above
       _sortParticipants();
 
@@ -231,22 +310,36 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       });
     })
     ..on<ParticipantConnectedEvent>((event) {
+      _livekitProviderKey.currentState?.viewModel
+          .getAttendanceListForParticipant();
+      _livekitProviderKey.currentState?.viewModel
+          .addParticipantToConsentList(event.participant);
       _sortParticipants();
     })
     ..on<ParticipantDisconnectedEvent>((event) {
+      _livekitProviderKey.currentState?.viewModel
+          .removeParticipantFromConsentList(event.participant.identity);
+      _livekitProviderKey.currentState?.viewModel
+          .getAttendanceListForParticipant();
       _sortParticipants();
     })
     ..on<RoomRecordingStatusChanged>((event) {
       var viewModel = _livekitProviderKey.currentState?.viewModel;
       viewModel?.setRecording(event.activeRecording);
-      // context.showRecordingStatusChangedDialog(event.activeRecording);
+      viewModel?.isRecordingActionInProgress = false;
+      if (!event.activeRecording) {
+        clearConsentList(viewModel);
+      }
+      var recordingAudioPath = event.activeRecording
+          ? Constant.startRecordingUrl
+          : Constant.stopRecordingUrl;
+      playAudio(recordingAudioPath);
     })
     ..on<RoomAttemptReconnectEvent>((event) {
-      if (kDebugMode) {
-        print(
-            'Attempting to reconnect ${event.attempt}/${event.maxAttemptsRetry}, '
-            '(${event.nextRetryDelaysInMs}ms delay until next attempt)');
-      }
+      debugPrint(
+          '[Livekit] - Attempting to reconnect ${event.attempt}/${event.maxAttemptsRetry}, '
+          '(${event.nextRetryDelaysInMs}ms delay until next attempt)');
+      onReconnectStart();
     })
     ..on<LocalTrackSubscribedEvent>((event) {
       if (kDebugMode) {
@@ -363,15 +456,18 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           storageHelper
               .setAttendanceId(Utils.getMetadataAttendanceId(metadata));
           storageHelper.setHostToken(remoteData.token ?? "");
+          viewModel?.getAttendanceListForParticipant();
         } else {
           viewModel?.setCoHost(false);
-          StorageHelper().clearAllData();
+          StorageHelper().clearSdkData();
+          clearConsentList(viewModel);
         }
         break;
 
       case MeetingActions.removeCoHost:
         viewModel?.setCoHost(false);
-        StorageHelper().clearAllData();
+        StorageHelper().clearSdkData();
+        clearConsentList(viewModel);
         break;
 
       case MeetingActions.forceMuteAll:
@@ -397,7 +493,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       case MeetingActions.showLiveCaption:
         if (remoteData.liveCaptionsData != null) {
           if (viewModel == null) return;
-          if (!viewModel.meetingDetails.features!.isVoiceTranscriptionAllowed()) {
+          if (!viewModel.meetingDetails.features!
+              .isVoiceTranscriptionAllowed()) {
             return;
           }
           viewModel.saveTranscriptionLanguage(remoteData.liveCaptionsData);
@@ -442,6 +539,24 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
             _isWhiteBoardEnabled = false;
           });
         }
+        break;
+
+      case MeetingActions.recordingConsentModal:
+        if (remoteData.value &&
+            !_isConsentDialogOpen &&
+            !_isConsentRejectedDialogOpen &&
+            !viewModel!.hasAlreadyAcceptedConsent()) {
+          showRecordingConsentDialog(viewModel);
+        }
+        break;
+
+      case MeetingActions.recordingConsentStatus:
+        final status = parseConsentStatus(remoteData.consent);
+        if (status == ConsentStatus.reject) {
+          showSnackBar(
+              message: "Some participant have rejected the recording consent");
+        }
+        viewModel?.verifyRecordingConsent(remoteData);
         break;
 
       case "":
@@ -501,10 +616,15 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   void _sortParticipants() {
     List<ParticipantTrack> userMediaTracks = [];
     List<ParticipantTrack> screenTracks = [];
+    var coHostCount = 0;
 
     // Add remote participants
     for (var participant in widget.room.remoteParticipants.values) {
       bool hasVideoTrack = false;
+
+      if (Utils.isCoHost(participant.metadata)) {
+        coHostCount++;
+      }
 
       for (var t in participant.videoTrackPublications) {
         if (t.isScreenShare) {
@@ -569,6 +689,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       participantTracks = [...screenTracks, ...userMediaTracks];
     });
     final viewmodel = _livekitProviderKey.currentState?.viewModel;
+    viewmodel?.coHostCount = coHostCount;
     viewmodel?.addParticipant(participantTracks);
   }
 
@@ -660,99 +781,135 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               ? PipScreen(
                   name: widget.room.localParticipant?.name,
                 )
-              : Scaffold(
-                  body: SafeArea(
-                    child: Stack(children: [
-                      Container(
-                        color: Colors.black,
-                        child: Column(
-                          children: [
-                            // Main content area for participants
-                            Expanded(
-                              child: Stack(
-                                children: [
-                                  Column(
+              : Stack(
+                  children: [
+                    Scaffold(
+                      body: SafeArea(
+                        child: Stack(children: [
+                          Container(
+                            color: Colors.black,
+                            child: Column(
+                              children: [
+                                // Main content area for participants
+                                Expanded(
+                                  child: Stack(
                                     children: [
-                                      Expanded(
-                                        child: _isWhiteBoardEnabled
-                                            ? WhiteBoardWidget(
-                                                key: const ValueKey(
-                                                    'whiteboard'),
-                                                controller: _webViewController,
-                                              )
-                                            : participantTracks.isNotEmpty
-                                                ? ParticipantWidget.widgetFor(
-                                                    participantTracks.first,
-                                                    showStatsLayer: true,
+                                      Column(
+                                        children: [
+                                          Expanded(
+                                            child: _isWhiteBoardEnabled
+                                                ? WhiteBoardWidget(
+                                                    key: const ValueKey(
+                                                        'whiteboard'),
+                                                    controller:
+                                                        _webViewController,
                                                   )
-                                                : Container(),
-                                      ),
-
-                                      // Show participant list below (adjusted based on whiteboard status)
-                                      if (participantTracks.length > 1 ||
-                                          _isWhiteBoardEnabled)
-                                        SizedBox(
-                                          height: 120,
-                                          child: ListView.builder(
-                                            scrollDirection: Axis.horizontal,
-                                            itemCount: _isWhiteBoardEnabled
-                                                ? participantTracks
-                                                    .length // show all
-                                                : participantTracks.length - 1,
-                                            // skip first
-                                            itemBuilder: (BuildContext context,
-                                                int index) {
-                                              final track = _isWhiteBoardEnabled
-                                                  ? participantTracks[
-                                                      index] // show all participants
-                                                  : participantTracks[
-                                                      index + 1]; // skip first
-
-                                              return SizedBox(
-                                                width: 180,
-                                                height: 120,
-                                                child:
-                                                    ParticipantWidget.widgetFor(
-                                                        track),
-                                              );
-                                            },
+                                                : participantTracks.isNotEmpty
+                                                    ? ParticipantWidget
+                                                        .widgetFor(
+                                                            participantTracks
+                                                                .first,
+                                                            showStatsLayer:
+                                                                true,
+                                                            isSpeaker: true)
+                                                    : Container(),
                                           ),
+
+                                          // Show participant list below (adjusted based on whiteboard status)
+                                          if (participantTracks.length > 1 ||
+                                              _isWhiteBoardEnabled)
+                                            SizedBox(
+                                              height: 120,
+                                              child: ListView.builder(
+                                                scrollDirection:
+                                                    Axis.horizontal,
+                                                itemCount: _isWhiteBoardEnabled
+                                                    ? participantTracks
+                                                        .length // show all
+                                                    : participantTracks.length -
+                                                        1,
+                                                // skip first
+                                                itemBuilder:
+                                                    (BuildContext context,
+                                                        int index) {
+                                                  final track =
+                                                      _isWhiteBoardEnabled
+                                                          ? participantTracks[
+                                                              index] // show all participants
+                                                          : participantTracks[
+                                                              index +
+                                                                  1]; // skip first
+
+                                                  return SizedBox(
+                                                    width: 180,
+                                                    height: 120,
+                                                    child: ParticipantWidget
+                                                        .widgetFor(track),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      if (_livekitProviderKey.currentState
+                                              ?.viewModel.isRecording ==
+                                          true)
+                                        const Positioned(
+                                          right: 10,
+                                          top: 10,
+                                          child: Icon(
+                                              Icons.radio_button_checked,
+                                              color: Colors.red),
                                         ),
                                     ],
                                   ),
-                                  if (_livekitProviderKey.currentState
-                                          ?.viewModel.isRecording ==
-                                      true)
-                                    const Positioned(
-                                      right: 10,
-                                      top: 10,
-                                      child: Icon(Icons.radio_button_checked,
-                                          color: Colors.red),
-                                    ),
-                                ],
-                              ),
-                            ),
-                            if (widget.room.localParticipant != null)
-                              SafeArea(
-                                top: false,
-                                child: RtcControls(
-                                  widget.room,
-                                  widget.room.localParticipant!,
                                 ),
-                              ),
-                          ],
-                        ),
+                                if (widget.room.localParticipant != null)
+                                  SafeArea(
+                                    top: false,
+                                    child: RtcControls(
+                                      widget.room,
+                                      widget.room.localParticipant!,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          Positioned(
+                            right: 0,
+                            top: 50,
+                            child: EmojiReactionWidget(
+                              viewModel:
+                                  _livekitProviderKey.currentState?.viewModel,
+                            ),
+                          ),
+                        ]),
                       ),
-                      Positioned(
+                    ),
+
+                    /// Overlay banner
+                    if (_isReconnecting)
+                      const Positioned(
+                        top: 0,
+                        left: 0,
                         right: 0,
-                        top: 50,
-                        child: EmojiReactionWidget(
-                          viewModel:
-                              _livekitProviderKey.currentState?.viewModel,
+                        child: ConnectivityBanner(
+                          message: "Reconnecting…\nPlease check your internet",
+                          backgroundColor: Colors.orange,
+                          showSpinner: true,
                         ),
                       ),
-                    ]),
-                  ),
+                    if (_isConnected && !_isReconnecting)
+                      const Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: ConnectivityBanner(
+                          message: "You’re back online",
+                          backgroundColor: Colors.green,
+                        ),
+                      ),
+                  ],
                 ),
         ),
       ),
@@ -845,6 +1002,9 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
   void showReaction(String? emoji, RtcViewmodel? viewModel,
       {String name = "You"}) {
+    if (viewModel?.meetingDetails.features!.isReactionAllowed() == false) {
+      return;
+    }
     switch (emoji) {
       case "heart":
         emojiAsset = AnimatedEmojis.redHeart;
@@ -907,20 +1067,198 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           });
         }
       });
-    } else {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text("Meeting Ended"),
-          content: const Text("The meeting has ended."),
+    }
+    // TODO: Uncomment the following alert if you want to show a "Meeting Ended" dialog to basic users. For basic users, this alert remains visible by default.
+    // else {
+    //   showDialog(
+    //     context: context,
+    //     builder: (context) => AlertDialog(
+    //       title: const Text("Meeting Ended"),
+    //       content: const Text("The meeting has ended."),
+    //       actions: [
+    //         TextButton(
+    //           onPressed: () => Navigator.of(context).pop(),
+    //           child: const Text("OK"),
+    //         ),
+    //       ],
+    //     ),
+    //   );
+    // }
+  }
+
+  var _isConsentDialogOpen = false;
+  var _isConsentRejectedDialogOpen = false;
+
+  void showRecordingConsentDialog(RtcViewmodel? viewModel) {
+    if (_isConsentDialogOpen) return; // Prevent duplicate dialogs
+    _isConsentDialogOpen = true;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text(
+            'Recording Consent',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            'The host is requesting your consent to record this meeting. Please choose whether you agree or reject.',
+            style: TextStyle(fontSize: 16),
+          ),
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text("OK"),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                viewModel?.updateRecordingConsentStatus(false);
+                showRejectWarningDialog(viewModel);
+              },
+              icon: const Icon(Icons.close, color: Colors.red),
+              label: const Text(
+                'Reject',
+                style:
+                    TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.red),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                viewModel?.updateRecordingConsentStatus(true);
+              },
+              icon: const Icon(Icons.check_circle_outline),
+              label: const Text(
+                'Agree',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
             ),
           ],
-        ),
-      );
+        );
+      },
+    ).then((_) {
+      _isConsentDialogOpen = false; // Reset when dialog is dismissed
+    });
+  }
+
+  void showRejectWarningDialog(RtcViewmodel? viewModel) {
+    if (_isConsentRejectedDialogOpen) return; // Prevent duplicate dialogs
+    _isConsentRejectedDialogOpen = true;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Column(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+              SizedBox(width: 8),
+              Text(
+                'Recording Rejected',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: const Text(
+            'You rejected the recording request. Would you like to change your response and allow recording?',
+            style: TextStyle(fontSize: 16),
+          ),
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          actions: [
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              icon: const Icon(Icons.cancel, color: Colors.grey),
+              label: const Text(
+                'Dismiss',
+                style:
+                    TextStyle(color: Colors.blue, fontWeight: FontWeight.w600),
+              ),
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                side: const BorderSide(color: Colors.blue),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                viewModel?.updateRecordingConsentStatus(true);
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text(
+                'Change to Agree',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+            ),
+          ],
+        );
+      },
+    ).then((_) {
+      _isConsentRejectedDialogOpen = false; // Reset when dialog is dismissed
+    });
+  }
+
+  void clearConsentList(RtcViewmodel? viewModel) {
+    if (viewModel?.meetingDetails.features?.isRecordingConsentAllowed() ==
+        true) {
+      viewModel?.participantListForConsent.clear();
     }
+  }
+
+  late final AudioPlayer player;
+
+  void playAudio(String link) {
+    player.play(UrlSource(link), mode: PlayerMode.lowLatency);
+  }
+
+  var isCheckedWhileJoining = false;
+
+  void checkRecordingPlayer(bool isRecording) {
+    if (isRecording && !isCheckedWhileJoining) {
+      playAudio(Constant.startRecordingUrl);
+      isCheckedWhileJoining = true;
+    }
+  }
+
+  void _handleGenericDisconnect(String message) {
+    showSnackBar(message: message);
+    Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          closeMeetingProgrammatically(context);
+        });
+      }
+    });
   }
 }

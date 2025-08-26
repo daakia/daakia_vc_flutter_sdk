@@ -1,4 +1,5 @@
 import 'package:daakia_vc_flutter_sdk/presentation/pages/chat_controller.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/pages/recording_consent_page.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/pages/webinar_controls.dart';
 import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
 import 'package:flutter/foundation.dart';
@@ -69,11 +70,19 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                   iconColor: viewModel.isRecording ? Colors.red : Colors.white,
                   isVisible: (viewModel.isHost() || viewModel.isCoHost()) &&
                       viewModel.meetingDetails.features!.isRecordingAllowed(),
-                  onTap: () {
-                viewModel.isRecording
-                    ? viewModel.stopRecording()
-                    : viewModel.startRecording();
+                  isEnabled: !viewModel.isRecordingActionInProgress, onTap: () {
                 Navigator.pop(context);
+                if (viewModel.meetingDetails.features
+                            ?.isRecordingConsentAllowed() ==
+                        true &&
+                    !viewModel.isRecording) {
+                  showRecordingConsentPage();
+                  viewModel.startRecordingConsentFlow();
+                } else {
+                  viewModel.isRecording
+                      ? viewModel.stopRecording()
+                      : viewModel.startRecording();
+                }
               }),
               // Live Caption
               buildOption(context,
@@ -132,7 +141,8 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
               buildOption(context,
                   icon: Icons.emoji_emotions, // Replace with your reaction icon
                   text: 'Reaction',
-                  isVisible: true, onTap: () {
+                  isVisible: viewModel.meetingDetails.features!
+                      .isReactionAllowed(), onTap: () {
                 Navigator.pop(context);
                 showEmojiDialog(viewModel);
               }),
@@ -189,6 +199,14 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
           return ChatController(
             viewModel: viewModel,
           );
+        },
+        fullscreenDialog: true));
+  }
+
+  void showRecordingConsentPage() {
+    Navigator.of(context).push(MaterialPageRoute<Null>(
+        builder: (BuildContext context) {
+          return const RecordingConsentPage();
         },
         fullscreenDialog: true));
   }
@@ -325,46 +343,53 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
   }
 }
 
-Widget buildOption(BuildContext context,
-    {required IconData icon,
-    Color iconColor = Colors.white,
-    required String text,
-    bool isVisible = true,
-    Function? onTap,
-    BadgeData? setBadge}) {
+Widget buildOption(
+  BuildContext context, {
+  required IconData icon,
+  Color iconColor = Colors.white,
+  required String text,
+  bool isVisible = true,
+  bool isEnabled = true,
+  Function? onTap,
+  BadgeData? setBadge,
+}) {
   return Visibility(
     visible: isVisible,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-      child: GestureDetector(
-        onTap: () {
-          // Null-safe invocation of the callback
-          onTap?.call(); // callback will only be called if it's not null
-        },
-        child: Row(
-          children: [
-            if (setBadge == null)
-              Icon(icon, color: iconColor, size: 24)
-            else
-              Badge(
-                isLabelVisible: setBadge.unreadCount > 0,
-                label: Text(
-                  setBadge.unreadCount.toString(),
-                  style: const TextStyle(color: Colors.white),
+    child: Opacity(
+      opacity: isEnabled ? 1.0 : 0.5, // Fades out when disabled
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+        child: GestureDetector(
+          onTap: () {
+            if (isEnabled) {
+              onTap?.call();
+            }
+          },
+          child: Row(
+            children: [
+              if (setBadge == null)
+                Icon(icon, color: iconColor, size: 24)
+              else
+                Badge(
+                  isLabelVisible: setBadge.unreadCount > 0,
+                  label: Text(
+                    setBadge.unreadCount.toString(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  offset: const Offset(4, 4),
+                  backgroundColor: Colors.red,
+                  child: Icon(icon, color: iconColor, size: 24),
                 ),
-                offset: const Offset(4, 4),
-                backgroundColor: Colors.red,
-                child: Icon(icon, color: iconColor, size: 24),
-              ), // Icon size 24
-            const SizedBox(width: 10), // Space between icon and text
-            Text(
-              text,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+              const SizedBox(width: 10),
+              Text(
+                text,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     ),

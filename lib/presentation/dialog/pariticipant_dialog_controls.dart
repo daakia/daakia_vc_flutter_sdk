@@ -90,9 +90,7 @@ class ParticipantDialogState extends State<ParticipantDialogControls> {
                     widget.viewModel.makeCoHost(widget.participant.identity,
                         !Utils.isCoHost(widget.participant.metadata));
                   },
-                  isVisible: (widget.isForIndividual &&
-                      Utils.isHost(myRoleMataData) &&
-                      !Utils.isHost(targetRoleMataData))),
+                  isVisible: (widget.isForIndividual && isCoHostButtonEnable())),
               CustomTextItem(
                 text: "Remove From Call",
                 onTap: () {
@@ -117,7 +115,7 @@ class ParticipantDialogState extends State<ParticipantDialogControls> {
                   showChatBottomSheet(widget.viewModel,
                       widget.participant.identity, widget.participant.name);
                 },
-                isVisible: widget.isForIndividual,
+                isVisible: widget.isForIndividual && (widget.viewModel.meetingDetails.features?.isPrivateChatAllowed() == true),
               ),
               CustomTextItem(
                 text: "Mute All",
@@ -153,6 +151,37 @@ class ParticipantDialogState extends State<ParticipantDialogControls> {
         ),
       ),
     );
+  }
+
+  bool isCoHostButtonEnable() {
+    final String? myMetadata = widget.viewModel.room.localParticipant?.metadata;
+    final String? targetMetadata = widget.participant.metadata;
+
+    final bool amIHost = Utils.isHost(myMetadata);
+    final bool amICoHost = Utils.isCoHost(myMetadata);
+
+    final bool isTargetHost = Utils.isHost(targetMetadata);
+    final bool isTargetCoHost = Utils.isCoHost(targetMetadata);
+    final bool isTargetGuest = !isTargetHost && !isTargetCoHost;
+
+    // ❌ Cannot modify the Host
+    if (isTargetHost) return false;
+
+    // ✅ Host or Co-Host can demote a Co-Host
+    if ((amIHost || amICoHost) && isTargetCoHost) return true;
+
+    // ✅ Host or Co-Host can promote a Guest to Co-Host
+    if ((amIHost || amICoHost) && isTargetGuest) {
+      final allowMultiple = widget.viewModel.meetingDetails.features?.isAllowMultipleCoHost() == true;
+      if (allowMultiple) {
+        return true;
+      } else {
+        return widget.viewModel.coHostCount < 1;
+      }
+    }
+
+    // ❌ In all other cases
+    return false;
   }
 
   void showChatBottomSheet(

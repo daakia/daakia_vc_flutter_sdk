@@ -89,6 +89,7 @@ class _ChatState extends State<ChatPage> {
                         icon: const Icon(Icons.attach_file),
                         color: Colors.white,
                         onPressed: () async {
+                          Utils.hideKeyboard(context);
                           try {
                             widget.viewModel.sendMainChatControllerEvent(ShowLoading());
                             FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -197,8 +198,9 @@ class _ChatState extends State<ChatPage> {
                         icon: const Icon(Icons.send),
                         color: Colors.white,
                         onPressed: () {
+                          Utils.hideKeyboard(context);
                           setState(() {
-                            if (messageController.text.isEmpty) return;
+                            if (messageController.text.trim().isEmpty) return;
                             widget.viewModel.sendPublicMessage(messageController.text);
                             messageController.clear();
                           });

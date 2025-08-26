@@ -11,6 +11,7 @@ import '../../model/language_model.dart';
 import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import '../dialog/language_select_dialog.dart';
+import '../dialog/transcript_download_choice_dialog.dart';
 
 class TranscriptionScreen extends StatefulWidget {
   final RtcViewmodel viewModel;
@@ -85,19 +86,50 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
   }
 
   Future<void> handleDownloadButtonPressed() async {
-    setState(() {
-      _isLoading = true;
-    });
-    String formattedTranscript =
-        Utils.getTranscriptFormattedToSave(widget.viewModel.transcriptionList);
-    var result = await Utils.saveDataToFile(formattedTranscript,
-        "caption_${widget.viewModel.meetingDetails.meetingUid}_${DateTime.now().millisecondsSinceEpoch}");
+    String formattedTranscript;
+
+    final isTranslationAllowed = widget.viewModel.meetingDetails.features!
+        .isVoiceTextTranslationAllowed();
+
+    if (isTranslationAllowed) {
+      final choice = await showDialog<TranscriptDownloadChoice>(
+        context: context,
+        builder: (context) => TranscriptDownloadChoiceDialog(isEnabled: widget.viewModel.translationLanguage != null,),
+      );
+
+      if (choice == null) return;
+
+      setState(() {
+        _isLoading = true;
+      });
+
+      formattedTranscript = (choice == TranscriptDownloadChoice.translated)
+          ? Utils.getTranslatedTranscriptFormattedToSave(
+              widget.viewModel.transcriptionList)
+          : Utils.getTranscriptFormattedToSave(
+              widget.viewModel.transcriptionList);
+    } else {
+      setState(() {
+        _isLoading = true;
+      });
+      formattedTranscript = Utils.getTranscriptFormattedToSave(
+          widget.viewModel.transcriptionList);
+    }
+
+    final result = await Utils.saveDataToFile(
+      formattedTranscript,
+      "caption_${widget.viewModel.meetingDetails.meetingUid}_${DateTime.now().millisecondsSinceEpoch}",
+    );
+
     setState(() {
       _isLoading = false;
     });
 
     if (result.isSuccess) {
-      widget.viewModel.sendEvent(ShowTranscriptionDownload(message: "File saved successfully!", path: result.filePath));
+      widget.viewModel.sendEvent(ShowTranscriptionDownload(
+        message: "File saved successfully!",
+        path: result.filePath,
+      ));
     } else {
       widget.viewModel.sendMessageToUI("Failed to save file!");
     }
@@ -143,9 +175,8 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          if ((!widget.viewModel.isHost() && !widget.viewModel.isCoHost()) &&
-              widget.viewModel.meetingDetails.features!
-                  .isVoiceTextTranslationAllowed())
+          if (widget.viewModel.meetingDetails.features!
+              .isVoiceTextTranslationAllowed())
             IconButton(
               icon: SvgPicture.asset(
                 'assets/icons/ic_translate_chats_colored.svg',

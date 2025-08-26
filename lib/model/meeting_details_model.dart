@@ -25,6 +25,7 @@ class MeetingDetailsModel {
   MeetingConfig? meetingConfig;
   String? currentSessionUid;
   int? meetingId;
+  int? hostPinVerificationRequired;
 
   MeetingDetailsModel(
       {this.eventMode,
@@ -52,7 +53,8 @@ class MeetingDetailsModel {
         this.transcriptionDetail,
         this.meetingConfig,
         this.currentSessionUid,
-        this.meetingId
+        this.meetingId,
+        this.hostPinVerificationRequired,
       });
 
   MeetingDetailsModel.fromJson(Map<String, dynamic> json) {
@@ -88,6 +90,7 @@ class MeetingDetailsModel {
         ? MeetingConfig.fromJson(json['meeting_config'])
         : null;
     meetingId = json['meeting_id'];
+    hostPinVerificationRequired = json['host_pin_verification_required'];
   }
 
   Map<String, dynamic> toJson() {
@@ -124,6 +127,7 @@ class MeetingDetailsModel {
       data['meeting_config'] = meetingConfig!.toJson();
     }
     data['meeting_id'] = meetingId;
+    data['host_pin_verification_required'] = hostPinVerificationRequired;
     return data;
   }
 }
