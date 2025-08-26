@@ -1,5 +1,29 @@
 # CHANGELOG
 
+## v4.0.0 - (2025-08)
+
+### 🚀 New Features
+- **Metadata Config:** Introduced configurable metadata support for meetings.
+- **Transcript Download:** Participants can now download meeting transcripts.
+- **Connectivity Status:** Added in-meeting connectivity banners and participant connectivity indicators.
+- **Participant Attendance:** Added tracking of participant attendance.
+- **Chat Restrictions:** Host can restrict chat to “Everyone”, “Host & Co-host only”, or “Disabled”.
+- **Consent Flow:** Introduced recording/streaming consent popups for participants.
+- **SDK Config:** Added centralized configuration for SDK features.
+- **Co-Host Management:** Improved APIs and controls for assigning/removing co-hosts.
+- **Role-Based Features:** Feature gating based on user role (host, co-host, participant).
+
+### 🛠 Bug Fixes & Improvements
+- Fixed memory leaks and optimized participant UI updates.
+- Improved transcript accuracy and fixed missing metadata issues.
+- Fixed iOS navigation and permission handling.
+- Improved state management for recording and live streaming.
+- Various stability, crash, and UI fixes across Android & iOS.
+- Refactored participant structure for better scalability.
+- General performance optimizations and dependency upgrades.
+
+---
+
 ## v3.1.2 (2025-04)
 
 ### 🚀 New Features
