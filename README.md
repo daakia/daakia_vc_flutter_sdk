@@ -85,17 +85,19 @@ You may need to delete Podfile.lock and re-run pod install after updating deploy
 import 'package:daakia_vc_flutter_sdk/daakia_vc_flutter_sdk.dart';
 
 await Navigator.push<void>(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => DaakiaVideoConferenceWidget(
-                              meetingId: meetingUID,
-                              secretKey: licenseKey,
-                              isHost: isHost,
-                            )),
-                  );
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DaakiaVideoConferenceWidget(
+                    meetingId: meetingUID,
+                    secretKey: licenseKey,
+                    isHost: isHost,
+                    configuration: DaakiaMeetingConfiguration (optional),
+                  ),
+                ),
+              );
 ```
-Use ``DaakiaVideoConferenceWidget`` to start the meeting.
 
+Use ``DaakiaVideoConferenceWidget`` to start the meeting.
 
 
 ## Parameters
@@ -110,6 +112,10 @@ To run the `DaakiaVideoConferenceWidget`, you will need to pass the following pa
 
 - **`isHost`** (`bool`, optional):  
   This optional parameter defines the user's role. When set to `true`, the user will join as the host of the meeting; otherwise, they will be a participant.
+
+- **`configuration`** (`DaakiaMeetingConfiguration`, optional):
+> Provides advanced customization like metadata and participant name behavior.  
+> For full details, see [DaakiaMeetingConfiguration Documentation](doc/DaakiaMeetingConfiguration.md)
 
 
 ## Obtaining Meeting ID and License Key
@@ -138,17 +144,17 @@ In the app's AndroidManifest.xml file, declare the service with the appropriate 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <!-- Required permissions for screen share -->
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <application>
     ...
     <service
-        android:name="de.julianassmann.flutter_background.IsolateHolderService"
-        android:enabled="true"
-        android:exported="false"
-        android:foregroundServiceType="mediaProjection|microphone|camera" />
+            android:name="de.julianassmann.flutter_background.IsolateHolderService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection|microphone|camera" />
   </application>
 </manifest>
 ```
@@ -157,4 +163,3 @@ On iOS, a broadcast extension is needed in order to capture screen content from 
 ## Support
 
 For support, email contact@daakia.co.in.
-
