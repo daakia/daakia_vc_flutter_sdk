@@ -16,6 +16,7 @@ import 'package:daakia_vc_flutter_sdk/rtc/widgets/pip_screen.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/rtc_controls.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/white_board_widget.dart';
 import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
+import 'package:daakia_vc_flutter_sdk/utils/datadog_disconnect_logger.dart';
 import 'package:daakia_vc_flutter_sdk/utils/datadog_reconnect_logger.dart';
 import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
 import 'package:daakia_vc_flutter_sdk/utils/storage_helper.dart';
@@ -220,6 +221,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     })
     ..on<RoomDisconnectedEvent>((event) async {
       if (event.reason != null) {
+        DatadogDisconnectLogger.logDisconnectEvent(
+            meetingId: widget.meetingDetails.meetingUid,
+            room: widget.room,
+            reason: event.reason?.name);
         _livekitProviderKey.currentState?.viewModel.isMeetingEnded = true;
         switch (event.reason) {
           case DisconnectReason.participantRemoved:
@@ -989,6 +994,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           setState(() {});
         }
       } else if (event is EndMeeting) {
+        DatadogDisconnectLogger.logDisconnectEvent(
+            meetingId: widget.meetingDetails.meetingUid,
+            room: widget.room,
+            reason: event.reason
+        );
         if (mounted) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             closeMeetingProgrammatically(context);
@@ -1057,6 +1067,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     if (viewModel?.meetingDetails.meetingBasicDetails?.meetingConfig
             ?.autoMeetingEnd ==
         1) {
+      DatadogDisconnectLogger.logDisconnectEvent(
+          meetingId: widget.meetingDetails.meetingUid,
+          room: widget.room,
+          reason: "TIME_EXCEEDED");
       showSnackBar(message: "Meeting ended");
       Timer(const Duration(seconds: 3), () {
         if (mounted) {
@@ -1068,6 +1082,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       return;
     }
     if (viewModel?.meetingDetails.features?.isBasicPlan() == true) {
+      DatadogDisconnectLogger.logDisconnectEvent(
+          meetingId: widget.meetingDetails.meetingUid,
+          room: widget.room,
+          reason: "TIME_EXCEEDED");
       showSnackBar(message: "Meeting ended");
       Timer(const Duration(seconds: 3), () {
         if (mounted) {
