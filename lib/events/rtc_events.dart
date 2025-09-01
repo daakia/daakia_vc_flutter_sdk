@@ -40,4 +40,7 @@ class UpdateView extends RTCEvents{}
 
 class EnterPIP extends RTCEvents{}
 
-class EndMeeting extends RTCEvents{}
+class EndMeeting extends RTCEvents{
+  final String reason;
+  EndMeeting({required this.reason});
+}

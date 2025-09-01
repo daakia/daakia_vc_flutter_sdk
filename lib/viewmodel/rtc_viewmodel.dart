@@ -1163,7 +1163,7 @@ class RtcViewmodel extends ChangeNotifier {
     };
     networkRequestHandler(
       apiCall: () => apiClient.endMeeting(body),
-      onSuccess: (_) => sendEvent(EndMeeting()),
+      onSuccess: (_) => sendEvent(EndMeeting(reason: "roomDeleted")),
       onError: (message) => sendMessageToUI(message),
     );
   }

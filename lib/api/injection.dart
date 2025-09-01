@@ -1,7 +1,10 @@
 import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
 import 'package:dio/dio.dart';
+
 import '../model/base_list_response.dart';
 import '../model/base_response.dart';
+import '../utils/datadog_logger_helper.dart';
+import '../utils/utils.dart';
 import 'api_client.dart';
 
 final apiClient = RestClient(setDio());
@@ -9,6 +12,44 @@ final apiClient = RestClient(setDio());
 Dio setDio() {
   final dio = Dio();
   dio.options.baseUrl = Constant.baseUrl;
+
+  dio.interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (options, handler) {
+        // Optionally capture request payload here if needed
+        handler.next(options);
+      },
+      onResponse: (response, handler) {
+        DatadogLoggerHelper.saveDatadogLog(
+          level: DatadogLogLevel.info,
+          message: Utils.extractMessage(
+            "Success",
+            response.data,
+            response.requestOptions.path,
+          ),
+          requestOptions: response.requestOptions,
+          dioException: null,
+          payload: response.requestOptions.data,
+        );
+        handler.next(response);
+      },
+      onError: (DioException e, handler) {
+        DatadogLoggerHelper.saveDatadogLog(
+          level: DatadogLogLevel.error,
+          message: Utils.extractMessage(
+            "Error",
+            e.requestOptions.data,
+            e.requestOptions.path,
+          ),
+          requestOptions: e.requestOptions,
+          dioException: e,
+          payload: e.requestOptions.data,
+        );
+        handler.next(e);
+      },
+    ),
+  );
+
   return dio;
 }
 

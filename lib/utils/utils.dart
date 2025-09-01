@@ -440,5 +440,11 @@ class Utils {
     return null;
   }
 
+  static String extractMessage(String prefix, dynamic data, String fallback) {
+    if (data is Map<String, dynamic> && data['message'] != null) {
+      return "$prefix ${data['message']}";
+    }
+    return "$prefix $fallback";
+  }
 
 }
