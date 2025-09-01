@@ -16,6 +16,7 @@ import 'package:daakia_vc_flutter_sdk/rtc/widgets/pip_screen.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/rtc_controls.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/white_board_widget.dart';
 import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
+import 'package:daakia_vc_flutter_sdk/utils/datadog_reconnect_logger.dart';
 import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
 import 'package:daakia_vc_flutter_sdk/utils/storage_helper.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_provider.dart';
@@ -340,6 +341,13 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           '[Livekit] - Attempting to reconnect ${event.attempt}/${event.maxAttemptsRetry}, '
           '(${event.nextRetryDelaysInMs}ms delay until next attempt)');
       onReconnectStart();
+      DatadogReconnectLogger.logReconnectEvent(
+          meetingId: widget.meetingDetails.meetingUid,
+          room: widget.room,
+          state: "RoomAttemptReconnectEvent",
+          attempt: event.attempt,
+          maxAttempts: event.maxAttemptsRetry,
+          delayMs: event.nextRetryDelaysInMs);
     })
     ..on<LocalTrackSubscribedEvent>((event) {
       if (kDebugMode) {
@@ -964,6 +972,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     if (isEventAdded) return;
     isEventAdded = true;
     viewModel?.roomEvents.listen((event) {
+      if (!context.mounted) return;
       if (event is ShowSnackBar) {
         showSnackBar(message: event.message);
       } else if (event is ShowTranscriptionDownload) {
