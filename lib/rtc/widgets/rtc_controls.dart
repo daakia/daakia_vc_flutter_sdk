@@ -195,7 +195,7 @@ class _RtcControlState extends State<RtcControls> {
     final result = await context.showDisconnectDialog();
     if (result == true) {
       viewModel.isMeetingEnded = true;
-      viewModel.sendEvent(EndMeeting());
+      viewModel.sendEvent(EndMeeting(reason: "clientInitiated"));
     }
   }
 
@@ -214,7 +214,7 @@ class _RtcControlState extends State<RtcControls> {
           },
           onLeaveCall: () {
             Navigator.pop(context); // Close the BottomSheet
-            viewModel.sendEvent(EndMeeting());
+            viewModel.sendEvent(EndMeeting(reason: "clientInitiated"));
           },
         );
       },

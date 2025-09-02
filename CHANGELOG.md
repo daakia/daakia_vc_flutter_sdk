@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v4.1.0 – (2025-09)
+
+### 📊 Analytics & Monitoring
+- Implemented **Datadog logging** for improved observability and performance tracking.
+
+---
+
 ## v4.0.0 - (2025-08)
 
 ### 🚀 New Features

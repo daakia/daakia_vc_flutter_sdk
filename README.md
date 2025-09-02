@@ -1,4 +1,3 @@
-
 ![Logo](https://www.daakia.co.in/assets/images/frontend/logo-dark.svg)
 
 # Daakia VC Flutter SDK
@@ -20,7 +19,7 @@ add ``daakia_vc_flutter_sdk:`` to your ``pubspec.yaml`` dependencies then run ``
 
 ```yaml
   dependencies:
-    daakia_vc_flutter_sdk: ^4.0.0
+    daakia_vc_flutter_sdk: ^4.1.0
 ```
 
 
@@ -129,7 +128,37 @@ To use the Daakia Video Conference SDK, you will need a `meetingId` and a `secre
 
 We will guide you through the process of creating meetings and obtaining your unique license key.
 
+## 📊 Optional: Datadog Logging
 
+The SDK supports **Datadog integration** for advanced logging, monitoring, and crash reporting.  
+This is **optional** — your app will run normally without it.
+
+If enabled, all SDK-related logs are automatically sent to Datadog.  
+You don’t need to call any manual log functions — everything is handled internally by the SDK.
+
+### Initialization
+
+To enable Datadog, initialize the service at app startup (e.g., in `main.dart`):
+
+```dart
+import 'package:daakia_vc_flutter_sdk/service/daakia_vc_datadog_service.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await DaakiaVcDatadogService.initialize(
+    clientToken: "<YOUR_DATADOG_CLIENT_TOKEN>",
+    env: "<YOUR_ENV>",
+    serviceName: "<YOUR_SERVICE_NAME>",
+    applicationId: "<YOUR_DATADOG_APPLICATION_ID>",
+    version: "<YOUR_APP_VERSION>",
+  );
+
+  runApp(const MyApp());
+}
+```
+
+👉 You can obtain the required **Datadog credentials** in the same way as the **`meetingId`** and **`secretKey`** — by reaching out to our team.
 
 ## Screen Share
 
