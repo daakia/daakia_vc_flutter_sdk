@@ -73,7 +73,7 @@ class LobbyRequestManager {
 
   void _dismissDialog() {
     _isShowingDialog = false;
-    if (_context != null) {
+    if (_context != null && _context.mounted) {
       Navigator.of(_context).pop();
     }
   }
