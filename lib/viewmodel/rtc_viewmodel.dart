@@ -14,6 +14,7 @@ import 'package:daakia_vc_flutter_sdk/resources/json/language_json.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_background/flutter_background.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:uuid/uuid.dart';
 
@@ -431,10 +432,7 @@ class RtcViewmodel extends ChangeNotifier {
                     ? MeetingActions.removeCoHost
                     : MeetingActions.makeCoHost,
                 token: !isCoHost ? "" : meetingDetails.authorizationToken,
-              user: {
-                  "name": room.localParticipant?.name
-              }
-            ),
+                user: {"name": room.localParticipant?.name}),
             identity),
         if (!meetingDetails.features!.isAllowMultipleCoHost())
           {
@@ -1287,7 +1285,8 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateRecordingConsentStatus(bool status, {bool needToUpdateLocally = false}) {
+  void updateRecordingConsentStatus(bool status,
+      {bool needToUpdateLocally = false}) {
     var metadata = room.localParticipant?.metadata;
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meetingUid,
@@ -1302,7 +1301,7 @@ class RtcViewmodel extends ChangeNotifier {
           if (data?.canStartRecording == true) {
             startRecording();
           }
-          if(needToUpdateLocally) {
+          if (needToUpdateLocally) {
             locallyUpdateRecordingConsentStatus(status);
           }
           sendAction(ActionModel(
@@ -1365,8 +1364,7 @@ class RtcViewmodel extends ChangeNotifier {
         },
         onError: (message) {
           sendMessageToUI(message);
-        }
-    );
+        });
   }
 
   void startRecordingConsent() {
@@ -1398,7 +1396,7 @@ class RtcViewmodel extends ChangeNotifier {
             final localList = ConsentParticipant.fromRemoteList(data);
             participantListForConsent = localList;
 
-            if(onLoaded != null){
+            if (onLoaded != null) {
               onLoaded.call(); // <-- Trigger callback after loading list
               return;
             }
@@ -1406,12 +1404,9 @@ class RtcViewmodel extends ChangeNotifier {
               action: MeetingActions.startedRecordingConsent,
               participants: localList,
             ));
-
           }
-        }
-    );
+        });
   }
-
 
   void verifyRecordingConsent(RemoteActivityData remoteData) {
     if (!isHost() && !isCoHost()) return;
@@ -1494,15 +1489,31 @@ class RtcViewmodel extends ChangeNotifier {
     final localId = room.localParticipant?.identity;
 
     final index = participantListForConsent.indexWhere(
-          (p) => p.participantId == localId,
+      (p) => p.participantId == localId,
     );
     if (index != -1) {
       participantListForConsent[index] =
           participantListForConsent[index].copyWith(
-            consent: status ? "accept" : "reject",
-          );
+        consent: status ? "accept" : "reject",
+      );
       notifyListeners();
     }
   }
 
+  Future<void> disposeScreenShare() async {
+    if (room.localParticipant?.isScreenShareEnabled() == true) {
+      final participant = room.localParticipant;
+      await participant?.setScreenShareEnabled(false);
+      if (lkPlatformIs(PlatformType.android)) {
+        // Android specific
+        try {
+          await FlutterBackground.disableBackgroundExecution();
+        } catch (error) {
+          if (kDebugMode) {
+            print('error disabling screen share: $error');
+          }
+        }
+      }
+    }
+  }
 }
