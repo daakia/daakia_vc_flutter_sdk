@@ -8,6 +8,9 @@
 ### 📦 Dependency Updates
 - Upgraded to the **latest library versions** for improved stability, security, and long-term support.
 
+### 🛠 Bug Fixes & Improvements
+- Various bug fixes and performance enhancements.
+
 ---
 
 ## v4.1.0 – (2025-09)
