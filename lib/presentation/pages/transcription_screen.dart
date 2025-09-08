@@ -94,7 +94,9 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
     if (isTranslationAllowed) {
       final choice = await showDialog<TranscriptDownloadChoice>(
         context: context,
-        builder: (context) => TranscriptDownloadChoiceDialog(isEnabled: widget.viewModel.translationLanguage != null,),
+        builder: (context) => TranscriptDownloadChoiceDialog(
+          isEnabled: widget.viewModel.translationLanguage != null,
+        ),
       );
 
       if (choice == null) return;
@@ -176,7 +178,8 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           if (widget.viewModel.meetingDetails.features!
-              .isVoiceTextTranslationAllowed())
+                  .isVoiceTextTranslationAllowed() &&
+              widget.viewModel.isTranscriptionLanguageSelected)
             IconButton(
               icon: SvgPicture.asset(
                 'assets/icons/ic_translate_chats_colored.svg',
@@ -188,7 +191,8 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
               color: Colors.white,
               onPressed: () => handleSelectTranslationButtonPressed(),
             ),
-          if (widget.viewModel.isHost() || widget.viewModel.isCoHost())
+          if (widget.viewModel.isTranscriptionLanguageSelected &&
+              (widget.viewModel.isHost() || widget.viewModel.isCoHost()))
             IconButton(
               icon: const Icon(Icons.download),
               color: Colors.white,

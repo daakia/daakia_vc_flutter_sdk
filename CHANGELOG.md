@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## v4.2.0 – (2025-09)
+
+### 📱 Android Support
+- Added **16KB screen size support** for better compatibility on larger devices.
+
+### 📦 Dependency Updates
+- Upgraded to the **latest library versions** for improved stability, security, and long-term support.
+
+### 🛠 Bug Fixes & Improvements
+- Various bug fixes and performance enhancements.
+
+---
+
 ## v4.1.0 – (2025-09)
 
 ### 📊 Analytics & Monitoring

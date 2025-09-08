@@ -226,6 +226,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
             room: widget.room,
             reason: event.reason?.name);
         _livekitProviderKey.currentState?.viewModel.isMeetingEnded = true;
+        _livekitProviderKey.currentState?.viewModel.disposeScreenShare();
         switch (event.reason) {
           case DisconnectReason.participantRemoved:
             {
@@ -257,6 +258,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               Timer(const Duration(seconds: 3), () {
                 if (mounted) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if(!context.mounted) return;
                     closeMeetingProgrammatically(context);
                   });
                 }
@@ -994,6 +996,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           setState(() {});
         }
       } else if (event is EndMeeting) {
+        viewModel.disposeScreenShare();
         DatadogDisconnectLogger.logDisconnectEvent(
             meetingId: widget.meetingDetails.meetingUid,
             room: widget.room,
