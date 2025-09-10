@@ -1,3 +1,4 @@
+import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 
@@ -116,6 +117,20 @@ class ParticipantDialogState extends State<ParticipantDialogControls> {
                       widget.participant.identity, widget.participant.name);
                 },
                 isVisible: widget.isForIndividual && (widget.viewModel.meetingDetails.features?.isPrivateChatAllowed() == true),
+              ),
+              CustomTextItem(
+                text: (widget.viewModel.pinnedParticipantId == widget.participant.identity) ? "Unpin" : "Pin to screen",
+                onTap: () {
+                  // Dismiss the ParticipantDialogControls
+                  Navigator.of(context, rootNavigator: false).pop();
+                  if (widget.viewModel.pinnedParticipantId == widget.participant.identity) {
+                    widget.viewModel.pinnedParticipantId = null;
+                  } else {
+                    widget.viewModel.pinnedParticipantId = widget.participant.identity;
+                  }
+                  widget.viewModel.sendEvent(SortParticipants());
+                },
+                isVisible: widget.isForIndividual,
               ),
               CustomTextItem(
                 text: "Mute All",

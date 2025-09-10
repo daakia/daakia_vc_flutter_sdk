@@ -699,11 +699,27 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           b.participant.joinedAt.millisecondsSinceEpoch;
     });
 
+    final viewmodel = _livekitProviderKey.currentState?.viewModel;
+
+    // Handle pinned participant
+    ParticipantTrack? pinnedTrack;
+    if (viewmodel?.pinnedParticipantId != null) {
+      final idx = userMediaTracks.indexWhere(
+            (t) => t.participant.identity == viewmodel?.pinnedParticipantId,
+      );
+      if (idx != -1) {
+        pinnedTrack = userMediaTracks.removeAt(idx);
+      }
+    }
+
     // Update the participant tracks
     setState(() {
-      participantTracks = [...screenTracks, ...userMediaTracks];
+      participantTracks = [
+        ...screenTracks, // Screen shares always first
+        if (pinnedTrack != null) pinnedTrack, // Then pinned participant
+        ...userMediaTracks, // Then remaining participants
+      ];
     });
-    final viewmodel = _livekitProviderKey.currentState?.viewModel;
     viewmodel?.coHostCount = coHostCount;
     viewmodel?.addParticipant(participantTracks);
   }
@@ -1016,6 +1032,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         loadWhiteboardUrl(Utils.generateWhiteboardUrl(
             meetingId: widget.meetingDetails.meetingUid,
             livekitToken: widget.meetingDetails.livekitToken));
+      } else if (event is SortParticipants) {
+        _sortParticipants();
       }
     });
   }
