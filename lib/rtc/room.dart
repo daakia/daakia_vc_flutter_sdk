@@ -361,6 +361,17 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         print('Local track subscribed: ${event.trackSid}');
       }
     })
+    ..on<TrackPublishedEvent>((track) {
+      var viewModel = _livekitProviderKey.currentState?.viewModel;
+      final localParticipant = widget.room.localParticipant;
+      if (localParticipant?.isScreenShareEnabled() == true) {
+        if (localParticipant?.identity != track.participant.identity) {
+          if (track.participant.isScreenShareEnabled()) {
+            viewModel?.disposeScreenShare();
+          }
+        }
+      }
+    })
     ..on<LocalTrackPublishedEvent>((_) => _sortParticipants())
     ..on<LocalTrackUnpublishedEvent>((_) => _sortParticipants())
     ..on<TrackSubscribedEvent>((_) => _sortParticipants())
