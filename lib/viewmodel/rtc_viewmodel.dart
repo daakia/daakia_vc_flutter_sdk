@@ -1516,4 +1516,13 @@ class RtcViewmodel extends ChangeNotifier {
       }
     }
   }
+
+  String? _pinnedParticipantId;
+
+  String? get pinnedParticipantId => _pinnedParticipantId;
+
+  set pinnedParticipantId(String? value) {
+    _pinnedParticipantId = value;
+    notifyListeners();
+  }
 }
