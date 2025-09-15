@@ -13,6 +13,7 @@ class Constant {
   static const String sessionUid = "SESSION_UID";
   static const String attendanceId = "ATTENDANCE_ID";
   static const String hostToken = "HOST_TOKEN";
+  static const String guestUserName = "GUEST_USER_NAME";
 
   static const int meetingExtendTime = 10;
   static const int meetingEndSoonTime = 10;
