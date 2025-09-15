@@ -1,4 +1,5 @@
 import 'package:daakia_vc_flutter_sdk/model/transcription_action_model.dart';
+
 import 'consent_participant.dart';
 
 class ActionModel {
@@ -9,18 +10,23 @@ class ActionModel {
   final TranscriptionActionModel? liveCaptionsData;
   final String? consent;
   final List<ConsentParticipant>? participants;
-  final Map<String, dynamic>? user; // <-- new field
+  final Map<String, dynamic>? user;
+  final int? timeStamp;
 
-  ActionModel({
-    this.action,
-    this.message = "",
-    this.token = "",
-    this.value = true,
-    this.liveCaptionsData,
-    this.consent,
-    this.participants,
-    this.user, // <-- added here
-  });
+  // <-- new field
+
+  ActionModel(
+      {this.action,
+      this.message = "",
+      this.token = "",
+      this.value = true,
+      this.liveCaptionsData,
+      this.consent,
+      this.participants,
+      this.user,
+      this.timeStamp
+      // <-- added here
+      });
 
   // Converts ActionModel to JSON
   Map<String, dynamic> toJson() {
@@ -42,6 +48,9 @@ class ActionModel {
     if (user != null) {
       data['user'] = user;
     }
+    if (timeStamp != null) {
+      data['timeStamp'] = timeStamp;
+    }
     return data;
   }
 
@@ -57,7 +66,9 @@ class ActionModel {
       participants: (json['participants'] as List<dynamic>?)
           ?.map((e) => ConsentParticipant.fromJson(e as Map<String, dynamic>))
           .toList(),
-      user: json['user'] as Map<String, dynamic>?, // <-- added here
+      user: json['user'] as Map<String, dynamic>?,
+      timeStamp: json['timeStamp'] as int?,
+      // <-- added here
     );
   }
 }
