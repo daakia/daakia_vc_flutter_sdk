@@ -68,8 +68,8 @@ class _PreJoinState extends State<PreJoinScreen> {
 
   var _isCoHostVerified = false;
 
-  late TextEditingController _nameController;
-  late bool _isNameEditable;
+  TextEditingController? _nameController;
+  bool _isNameEditable = true;
 
   //============== RTC ===============
   StreamSubscription? _subscription;
@@ -93,12 +93,7 @@ class _PreJoinState extends State<PreJoinScreen> {
     _subscription =
         Hardware.instance.onDeviceChange.stream.listen(_loadDevices);
     Hardware.instance.enumerateDevices().then(_loadDevices);
-    final initialName = widget.configuration?.participantNameConfig?.name ?? "";
-    name = initialName;
-    _nameController = TextEditingController(text: initialName);
-
-    _isNameEditable = initialName.isEmpty ||
-        (widget.configuration?.participantNameConfig?.isEditable ?? false);
+    setUserName();
     // Schedule verifyCoHost after widget is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       verifyCoHost();
@@ -108,6 +103,30 @@ class _PreJoinState extends State<PreJoinScreen> {
           context: context);
     });
     super.initState();
+  }
+
+  void setUserName() async {
+    final initialName = await getUserName();
+    setState(() {
+      name = initialName;
+      _nameController = TextEditingController(text: initialName);
+
+      _isNameEditable = initialName.isEmpty ||
+          (widget.configuration?.participantNameConfig?.isEditable ?? false);
+    });
+  }
+
+  Future<String> getUserName() async {
+    final inputName = widget.configuration?.participantNameConfig?.name;
+    final guestName = await StorageHelper().getGuestUserName();
+
+    // Helper to check null or empty
+    String? validName(String? value) =>
+        (value != null && value.trim().isNotEmpty) ? value : null;
+
+    final resolvedName = validName(inputName) ?? validName(guestName) ?? "";
+
+    return resolvedName;
   }
 
   String? getMeetingEndDate() {
@@ -496,7 +515,7 @@ class _PreJoinState extends State<PreJoinScreen> {
         .request();
   }
 
-  _join(BuildContext context, Function stopLoading,
+  void _join(BuildContext context, Function stopLoading,
       {required String livekitUrl, required String livekitToken}) async {
     isLoading = true;
 
@@ -562,6 +581,9 @@ class _PreJoinState extends State<PreJoinScreen> {
           camera: TrackOption(track: _videoTrack),
         ),
       );
+
+      //NOTE:: Storing guest name in cache
+      StorageHelper().setGuestUserName(name.trim());
 
       meetingDetails = MeetingDetails(
           meetingUid: widget.meetingId,
@@ -673,9 +695,9 @@ class _PreJoinState extends State<PreJoinScreen> {
                                     onPressed: () async {
                                       if (!Platform.isIOS) {
                                         bool permissionsGranted =
-                                        await checkAndRequestPermissions(
-                                            context,
-                                            checkForAudio: false);
+                                            await checkAndRequestPermissions(
+                                                context,
+                                                checkForAudio: false);
                                         if (!permissionsGranted) return;
                                       }
                                       setState(() {
@@ -694,9 +716,9 @@ class _PreJoinState extends State<PreJoinScreen> {
                                     onPressed: () async {
                                       if (!Platform.isIOS) {
                                         bool permissionsGranted =
-                                        await checkAndRequestPermissions(
-                                            context,
-                                            checkForCamera: false);
+                                            await checkAndRequestPermissions(
+                                                context,
+                                                checkForCamera: false);
                                         if (!permissionsGranted) return;
                                       }
                                       setState(() {
@@ -736,7 +758,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                         horizontal: 20, vertical: 10),
                     // Equivalent to marginHorizontal="20dp" and marginTop="10dp"
                     child: TextFormField(
-                      controller: _nameController,
+                      controller: _nameController ?? TextEditingController(),
                       decoration: const InputDecoration(
                         labelText: 'Name*',
                         border: OutlineInputBorder(),
@@ -749,7 +771,8 @@ class _PreJoinState extends State<PreJoinScreen> {
                         // Block digits
                         FilteringTextInputFormatter.deny(RegExp(r'[0-9]')),
                         // Block noisy punctuation (but allow . ' -)
-                        FilteringTextInputFormatter.deny(RegExp(r'[_\[\]{}<>@#$%^&*+=~`|\\/"^]')),
+                        FilteringTextInputFormatter.deny(
+                            RegExp(r'[_\[\]{}<>@#$%^&*+=~`|\\/"^]')),
                         LengthLimitingTextInputFormatter(50),
                       ],
                       onChanged: (value) => setState(() => name = value),
@@ -871,7 +894,8 @@ class _PreJoinState extends State<PreJoinScreen> {
                           isNeedToCancelApiCall = false;
                           if (widget.isHost && !isHostVerified) {
                             if (!context.mounted) return;
-                            final token = widget.configuration?.vcConfig?.hostToken;
+                            final token =
+                                widget.configuration?.vcConfig?.hostToken;
 
                             if (token != null && token.isNotEmpty) {
                               hostToken = token;
@@ -913,7 +937,7 @@ class _PreJoinState extends State<PreJoinScreen> {
   void dispose() {
     _subscription?.cancel();
     _participantTimer?.cancel();
-    _nameController.dispose();
+    _nameController?.dispose();
     super.dispose();
   }
 
@@ -1193,10 +1217,10 @@ class _PreJoinState extends State<PreJoinScreen> {
 
   Features? getFeature(Features? features) {
     final configFeature = widget.configuration?.vcConfig?.subscriptionFeature;
-    if (configFeature?.subscriptionId != null && configFeature?.features != null) {
+    if (configFeature?.subscriptionId != null &&
+        configFeature?.features != null) {
       return configFeature?.features;
     }
     return features;
   }
-
 }
