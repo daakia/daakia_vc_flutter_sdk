@@ -1329,15 +1329,16 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   Future<void> handleAndroidNotification({required bool enable}) async {
     if (!lkPlatformIs(PlatformType.android)) return;
 
+    final androidVersion = await Utils.getAndroidVersion();
+
+    if (androidVersion >= 34) return;
+
     final androidConfig = FlutterBackgroundAndroidConfig(
       notificationTitle:
           widget.meetingDetails.meetingBasicDetails?.eventName ?? "Meeting",
       notificationText: "Tap to return to the meeting",
       notificationImportance: AndroidNotificationImportance.high,
-      // notificationIcon: const AndroidResource(
-      //   name: 'background_icon',
-      //   defType: 'drawable',
-      // ),
+      shouldRequestBatteryOptimizationsOff: false
     );
 
     try {
