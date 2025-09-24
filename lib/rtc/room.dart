@@ -606,6 +606,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         showSnackBar(message: "${remoteData.identity?.name} has started sharing their screen.");
         break;
 
+      case MeetingActions.screenShareStopped:
+        showSnackBar(message: "${remoteData.identity?.name} has stopped sharing their screen.");
+        break;
+
       case "":
         // Handle empty action case if needed
         break;
