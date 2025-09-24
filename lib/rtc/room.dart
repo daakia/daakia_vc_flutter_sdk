@@ -469,6 +469,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
       case MeetingActions.muteMic:
         viewModel?.disableAudio();
+        showSnackBar(message: "Microphone muted!");
         break;
 
       case MeetingActions.askToUnmuteMic:
