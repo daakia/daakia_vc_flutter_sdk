@@ -68,7 +68,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   bool _isInForeground = true;
 
   SimplePip? pip;
-  bool isInPipMode = false;
+  bool _isInPipMode = false;
 
   bool _isProgrammaticPop = false; // Flag to track programmatic pop
 
@@ -92,7 +92,15 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         const SystemUiOverlayStyle(statusBarColor: Colors.black));
     WakelockPlus.enable();
     if (lkPlatformIs(PlatformType.android)) {
-      pip = SimplePip()
+      pip = SimplePip(onPipEntered: () {
+        setState(() {
+          _isInPipMode = true;
+        });
+      }, onPipExited: () {
+        setState(() {
+          _isInPipMode = false;
+        });
+      })
         ..setAutoPipMode(
             aspectRatio: (1, 1), seamlessResize: true, autoEnter: true);
     }
@@ -193,6 +201,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     super.dispose();
     WidgetsBinding.instance.removeObserver(this);
     var viewModel = _livekitProviderKey.currentState?.viewModel;
+    clearMemory(viewModel);
     viewModel?.stopLobbyCheck();
     viewModel?.cancelRoomEvents();
     meetingManager.cancelMeetingEndScheduler();
@@ -210,7 +219,6 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     })();
     onWindowShouldClose = null;
     WakelockPlus.disable();
-    pip = null;
     player.stop();
   }
 
@@ -230,8 +238,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
             room: widget.room,
             reason: event.reason?.name);
         _livekitProviderKey.currentState?.viewModel.isMeetingEnded = true;
-        _livekitProviderKey.currentState?.viewModel.disposeScreenShare();
-        handleAndroidNotification(enable: false);
+        clearMemory(_livekitProviderKey.currentState?.viewModel);
         switch (event.reason) {
           case DisconnectReason.participantRemoved:
             {
@@ -824,7 +831,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         child: MaterialApp(
           scaffoldMessengerKey: scaffoldMessengerKey,
           debugShowCheckedModeBanner: false,
-          home: (!_isInForeground)
+          home: (_isInPipMode)
               ? PipScreen(
                   name: widget.room.localParticipant?.name,
                 )
@@ -1028,8 +1035,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           setState(() {});
         }
       } else if (event is EndMeeting) {
-        viewModel.disposeScreenShare();
-        handleAndroidNotification(enable: false);
+        clearMemory(viewModel);
         DatadogDisconnectLogger.logDisconnectEvent(
             meetingId: widget.meetingDetails.meetingUid,
             room: widget.room,
@@ -1334,12 +1340,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     if (androidVersion >= 34) return;
 
     final androidConfig = FlutterBackgroundAndroidConfig(
-      notificationTitle:
-          widget.meetingDetails.meetingBasicDetails?.eventName ?? "Meeting",
-      notificationText: "Tap to return to the meeting",
-      notificationImportance: AndroidNotificationImportance.high,
-      shouldRequestBatteryOptimizationsOff: false
-    );
+        notificationTitle:
+            widget.meetingDetails.meetingBasicDetails?.eventName ?? "Meeting",
+        notificationText: "Tap to return to the meeting",
+        notificationImportance: AndroidNotificationImportance.high,
+        shouldRequestBatteryOptimizationsOff: false);
 
     try {
       if (enable) {
@@ -1365,5 +1370,16 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     } catch (e) {
       debugPrint("Error while handling Android background notification: $e");
     }
+  }
+
+  void clearMemory(RtcViewmodel? viewModel) {
+    viewModel?.disposeScreenShare();
+    handleAndroidNotification(enable: false);
+    _disposePip();
+  }
+
+  void _disposePip() {
+    pip?.setAutoPipMode(autoEnter: false);
+    pip = null;
   }
 }
