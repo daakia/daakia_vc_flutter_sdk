@@ -25,6 +25,7 @@ import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_background/flutter_background.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:simple_pip_mode/simple_pip.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -149,6 +150,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
             duration: const Duration(seconds: 5));
       };
     }
+
+    handleAndroidNotification(enable: true);
   }
 
   bool _isReconnecting = false;
@@ -195,6 +198,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     meetingManager.cancelMeetingEndScheduler();
     lobbyManager?.dispose();
     widget.room.disconnect();
+    handleAndroidNotification(enable: false);
     // always dispose listener
     (() async {
       if (lkPlatformIs(PlatformType.iOS)) {
@@ -227,6 +231,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
             reason: event.reason?.name);
         _livekitProviderKey.currentState?.viewModel.isMeetingEnded = true;
         _livekitProviderKey.currentState?.viewModel.disposeScreenShare();
+        handleAndroidNotification(enable: false);
         switch (event.reason) {
           case DisconnectReason.participantRemoved:
             {
@@ -258,7 +263,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               Timer(const Duration(seconds: 3), () {
                 if (mounted) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if(!context.mounted) return;
+                    if (!context.mounted) return;
                     closeMeetingProgrammatically(context);
                   });
                 }
@@ -716,7 +721,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     ParticipantTrack? pinnedTrack;
     if (viewmodel?.pinnedParticipantId != null) {
       final idx = userMediaTracks.indexWhere(
-            (t) => t.participant.identity == viewmodel?.pinnedParticipantId,
+        (t) => t.participant.identity == viewmodel?.pinnedParticipantId,
       );
       if (idx != -1) {
         pinnedTrack = userMediaTracks.removeAt(idx);
@@ -1024,11 +1029,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         }
       } else if (event is EndMeeting) {
         viewModel.disposeScreenShare();
+        handleAndroidNotification(enable: false);
         DatadogDisconnectLogger.logDisconnectEvent(
             meetingId: widget.meetingDetails.meetingUid,
             room: widget.room,
-            reason: event.reason
-        );
+            reason: event.reason);
         if (mounted) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             closeMeetingProgrammatically(context);
@@ -1319,5 +1324,46 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         });
       }
     });
+  }
+
+  Future<void> handleAndroidNotification({required bool enable}) async {
+    if (!lkPlatformIs(PlatformType.android)) return;
+
+    final androidVersion = await Utils.getAndroidVersion();
+
+    if (androidVersion >= 34) return;
+
+    final androidConfig = FlutterBackgroundAndroidConfig(
+      notificationTitle:
+          widget.meetingDetails.meetingBasicDetails?.eventName ?? "Meeting",
+      notificationText: "Tap to return to the meeting",
+      notificationImportance: AndroidNotificationImportance.high,
+      shouldRequestBatteryOptimizationsOff: false
+    );
+
+    try {
+      if (enable) {
+        // Step 1: initialize (ask for permission + setup)
+        final initialized =
+            await FlutterBackground.initialize(androidConfig: androidConfig);
+
+        if (!initialized) {
+          debugPrint("Background permission not granted.");
+          return;
+        }
+
+        // Step 2: only enable if not already running
+        if (!FlutterBackground.isBackgroundExecutionEnabled) {
+          await FlutterBackground.enableBackgroundExecution();
+        }
+      } else {
+        // disable if currently enabled
+        if (FlutterBackground.isBackgroundExecutionEnabled) {
+          await FlutterBackground.disableBackgroundExecution();
+        }
+      }
+    } catch (e) {
+      debugPrint("Error while handling Android background notification: $e");
+    }
   }
 }
