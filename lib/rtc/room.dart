@@ -464,6 +464,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
       case MeetingActions.muteCamera:
         viewModel?.disableVideo();
+        showSnackBar(message: "Camera off!");
         break;
 
       case MeetingActions.muteMic:
