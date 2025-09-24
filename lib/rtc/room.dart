@@ -571,6 +571,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
       case MeetingActions.whiteboardState:
         if (remoteData.value) {
+          showSnackBar(message: "Whiteboard Opened");
           setState(() {
             _isWhiteBoardEnabled = true;
             loadWhiteboardUrl(Utils.generateWhiteboardUrl(
@@ -578,6 +579,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
                 livekitToken: widget.meetingDetails.livekitToken));
           });
         } else {
+          showSnackBar(message: "Whiteboard Closed");
           setState(() {
             _isWhiteBoardEnabled = false;
           });
