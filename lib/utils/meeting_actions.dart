@@ -58,6 +58,8 @@ class MeetingActions {
 
   static const String screenShareStarted = "screen-share-started";
 
+  static const String screenShareStopped = "screen-share-stopped";
+
   // ✅ Add new fields here
 
   // ✅ Method to check if an action is valid
@@ -102,6 +104,7 @@ class MeetingActions {
     recordingConsentModal,
     startedRecordingConsent,
     screenShareStarted,
+    screenShareStopped
     // ✅ Add new fields here
   };
 }
