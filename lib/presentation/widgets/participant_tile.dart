@@ -1,7 +1,6 @@
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/dialog/pariticipant_dialog_controls.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/initials_circle.dart';
-import 'package:daakia_vc_flutter_sdk/resources/colors/color.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -26,7 +25,7 @@ class ParticipantTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = Provider.of<RtcViewmodel>(context);
     return Container(
-      color: emptyVideoColor,
+      color: Colors.black,
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,

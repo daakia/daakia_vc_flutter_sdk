@@ -4,7 +4,6 @@ import 'package:daakia_vc_flutter_sdk/presentation/widgets/pending_attendance_wi
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../resources/colors/color.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 
 class AllParticipantPage extends StatelessWidget {
@@ -14,55 +13,28 @@ class AllParticipantPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = Provider.of<RtcViewmodel>(context);
     return Scaffold(
-      backgroundColor: emptyVideoColor,
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text("Participant", style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 20.0),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 10.0, bottom: 20.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    color: Colors.white,
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                  const SizedBox(width: 20.0),
-                  const Expanded(
-                    child: Text(
-                      'Participant',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20.0,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LobbyRequestWidget(viewModel: viewModel),
+                JoinedParticipantWidget(viewModel: viewModel),
+                if (viewModel.pendingParticipantList.isNotEmpty &&
+                    (viewModel.isHost() || viewModel.isCoHost()))
+                  PendingAttendanceWidget(viewModel: viewModel)
+              ],
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      LobbyRequestWidget(viewModel: viewModel),
-                      JoinedParticipantWidget(viewModel: viewModel),
-                      if (viewModel.pendingParticipantList.isNotEmpty && (viewModel.isHost() || viewModel.isCoHost()))
-                        PendingAttendanceWidget(viewModel: viewModel)
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
