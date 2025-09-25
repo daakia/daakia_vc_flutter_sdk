@@ -334,6 +334,9 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
   void _disableScreenShare(RtcViewmodel viewModel) async {
     final participant = viewModel.room.localParticipant;
     await participant?.setScreenShareEnabled(false);
+    viewModel.sendAction(ActionModel(
+        action: MeetingActions.screenShareStopped
+    ));
     if (lkPlatformIs(PlatformType.android)) {
       // Android specific
       try {

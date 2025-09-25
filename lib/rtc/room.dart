@@ -464,10 +464,12 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
       case MeetingActions.muteCamera:
         viewModel?.disableVideo();
+        showSnackBar(message: "Camera off!");
         break;
 
       case MeetingActions.muteMic:
         viewModel?.disableAudio();
+        showSnackBar(message: "Microphone muted!");
         break;
 
       case MeetingActions.askToUnmuteMic:
@@ -495,10 +497,12 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               .setAttendanceId(Utils.getMetadataAttendanceId(metadata));
           storageHelper.setHostToken(remoteData.token ?? "");
           viewModel?.getAttendanceListForParticipant();
+          showSnackBar(message: "${remoteData.identity?.name} made you a Co-Host");
         } else {
           viewModel?.setCoHost(false);
           StorageHelper().clearSdkData();
           clearConsentList(viewModel);
+          showSnackBar(message: "${remoteData.identity?.name} remove you as a Co-Host");
         }
         break;
 
@@ -506,6 +510,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         viewModel?.setCoHost(false);
         StorageHelper().clearSdkData();
         clearConsentList(viewModel);
+        showSnackBar(message: "${remoteData.identity?.name} remove you as a Co-Host");
         break;
 
       case MeetingActions.forceMuteAll:
@@ -566,6 +571,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
       case MeetingActions.whiteboardState:
         if (remoteData.value) {
+          showSnackBar(message: "Whiteboard Opened");
           setState(() {
             _isWhiteBoardEnabled = true;
             loadWhiteboardUrl(Utils.generateWhiteboardUrl(
@@ -573,6 +579,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
                 livekitToken: widget.meetingDetails.livekitToken));
           });
         } else {
+          showSnackBar(message: "Whiteboard Closed");
           setState(() {
             _isWhiteBoardEnabled = false;
           });
@@ -595,6 +602,14 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               message: "Some participant have rejected the recording consent");
         }
         viewModel?.verifyRecordingConsent(remoteData);
+        break;
+
+      case MeetingActions.screenShareStarted:
+        showSnackBar(message: "${remoteData.identity?.name} has started sharing their screen.");
+        break;
+
+      case MeetingActions.screenShareStopped:
+        showSnackBar(message: "${remoteData.identity?.name} has stopped sharing their screen.");
         break;
 
       case "":
