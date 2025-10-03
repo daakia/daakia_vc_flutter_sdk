@@ -359,6 +359,7 @@ Widget buildOption(
   BadgeData? setBadge,
 }) {
   return GestureDetector(
+    behavior: HitTestBehavior.translucent,
     onTap: () {
       if (isEnabled) {
         onTap?.call();
@@ -367,8 +368,9 @@ Widget buildOption(
     child: Visibility(
       visible: isVisible,
       child: Opacity(
-        opacity: isEnabled ? 1.0 : 0.5, // Fades out when disabled
-        child: Padding(
+        opacity: isEnabled ? 1.0 : 0.5,
+        child: Container(
+          width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
           child: Row(
             children: [
