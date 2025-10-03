@@ -326,17 +326,15 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
 
     await participant?.setScreenShareEnabled(true, captureScreenAudio: true);
     viewModel.sendAction(ActionModel(
-      action: MeetingActions.screenShareStarted,
-      timeStamp: DateTime.now().microsecondsSinceEpoch
-    ));
+        action: MeetingActions.screenShareStarted,
+        timeStamp: DateTime.now().microsecondsSinceEpoch));
   }
 
   void _disableScreenShare(RtcViewmodel viewModel) async {
     final participant = viewModel.room.localParticipant;
     await participant?.setScreenShareEnabled(false);
-    viewModel.sendAction(ActionModel(
-        action: MeetingActions.screenShareStopped
-    ));
+    viewModel
+        .sendAction(ActionModel(action: MeetingActions.screenShareStopped));
     if (lkPlatformIs(PlatformType.android)) {
       // Android specific
       try {
@@ -360,18 +358,20 @@ Widget buildOption(
   Function? onTap,
   BadgeData? setBadge,
 }) {
-  return Visibility(
-    visible: isVisible,
-    child: Opacity(
-      opacity: isEnabled ? 1.0 : 0.5, // Fades out when disabled
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-        child: GestureDetector(
-          onTap: () {
-            if (isEnabled) {
-              onTap?.call();
-            }
-          },
+  return GestureDetector(
+    behavior: HitTestBehavior.translucent,
+    onTap: () {
+      if (isEnabled) {
+        onTap?.call();
+      }
+    },
+    child: Visibility(
+      visible: isVisible,
+      child: Opacity(
+        opacity: isEnabled ? 1.0 : 0.5,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
           child: Row(
             children: [
               if (setBadge == null)
