@@ -459,6 +459,8 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
+  String? dispatchId;
+
   void startRecording({bool isNeedToShowError = true}) {
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meetingUid,
@@ -466,9 +468,14 @@ class RtcViewmodel extends ChangeNotifier {
     networkRequestHandler(
       apiCall: () =>
           apiClient.startRecording(meetingDetails.authorizationToken, body),
-      onSuccess: (_) {
+      onSuccess: (data) {
+        dispatchId = data?.dispatchId.id;
         resetRecordingActionInProgressAfterDelay();
         sendMessageToUI("Recording is starting...");
+        sendAction(ActionModel(
+          action: MeetingActions.startRecording,
+          dispatchId: dispatchId
+        ));
       },
       onError: (message) {
         isRecordingActionInProgress = false;
@@ -482,13 +489,18 @@ class RtcViewmodel extends ChangeNotifier {
   void stopRecording() {
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meetingUid,
+      "dispatch_id": dispatchId
     };
     networkRequestHandler(
       apiCall: () =>
           apiClient.stopRecording(meetingDetails.authorizationToken, body),
       onSuccess: (_) {
+        dispatchId = null;
         resetRecordingActionInProgressAfterDelay();
         sendMessageToUI("Recording is stopping...");
+        sendAction(ActionModel(
+            action: MeetingActions.stopRecording
+        ));
         try {
           meetingDetails
               .meetingBasicDetails?.meetingConfig?.recordingForceStopped = 1;
