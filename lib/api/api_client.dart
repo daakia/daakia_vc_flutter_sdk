@@ -15,6 +15,7 @@ import '../model/base_response.dart';
 import '../model/event_password_protected_data.dart';
 import '../model/host_token_model.dart';
 import '../model/meeting_details_model.dart';
+import '../model/recording_dispatch_data.dart';
 import '../model/remote_participant_consent_model.dart';
 import '../model/rtc_data.dart';
 import '../model/upload_data.dart';
@@ -95,7 +96,7 @@ abstract class RestClient {
   );
 
   @POST("rtc/recording/dispatchId")
-  Future<BaseResponse<EgressData>> getRecordingDispatchedId(
+  Future<BaseResponse<RecordingDispatchData>> getRecordingDispatchedId(
     @Header("Authorization") String token,
     @Body() Map<String, dynamic> body,
   );

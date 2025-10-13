@@ -454,7 +454,7 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<BaseResponse<EgressData>> getRecordingDispatchedId(
+  Future<BaseResponse<RecordingDispatchData>> getRecordingDispatchedId(
     String token,
     Map<String, dynamic> body,
   ) async {
@@ -464,7 +464,7 @@ class _RestClient implements RestClient {
     _headers.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
     _data.addAll(body);
-    final _options = _setStreamType<BaseResponse<EgressData>>(
+    final _options = _setStreamType<BaseResponse<RecordingDispatchData>>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -475,11 +475,11 @@ class _RestClient implements RestClient {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late BaseResponse<EgressData> _value;
+    late BaseResponse<RecordingDispatchData> _value;
     try {
-      _value = BaseResponse<EgressData>.fromJson(
+      _value = BaseResponse<RecordingDispatchData>.fromJson(
         _result.data!,
-        (json) => EgressData.fromJson(json as Map<String, dynamic>),
+        (json) => RecordingDispatchData.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
