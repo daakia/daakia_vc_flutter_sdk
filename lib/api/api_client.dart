@@ -95,10 +95,10 @@ abstract class RestClient {
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("rtc/recording/dispatchId")
+  @GET("rtc/recording/dispatchId")
   Future<BaseResponse<RecordingDispatchData>> getRecordingDispatchedId(
     @Header("Authorization") String token,
-    @Body() Map<String, dynamic> body,
+    @Query("meeting_id") String meetingUid
   );
 
   @POST("rtc/meeting/addParticipant/toLobby")

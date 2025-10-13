@@ -456,16 +456,15 @@ class _RestClient implements RestClient {
   @override
   Future<BaseResponse<RecordingDispatchData>> getRecordingDispatchedId(
     String token,
-    Map<String, dynamic> body,
+    String meetingUid,
   ) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'meeting_id': meetingUid};
     final _headers = <String, dynamic>{r'Authorization': token};
     _headers.removeWhere((k, v) => v == null);
-    final _data = <String, dynamic>{};
-    _data.addAll(body);
+    const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<BaseResponse<RecordingDispatchData>>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
+      Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
             'rtc/recording/dispatchId',
