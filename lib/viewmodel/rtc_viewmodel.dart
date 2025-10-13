@@ -455,9 +455,16 @@ class RtcViewmodel extends ChangeNotifier {
   bool get isRecordingActionInProgress => _isRecordingActionInProgress;
 
   set isRecordingActionInProgress(bool value) {
+    if (_isRecordingActionInProgress == value) return; // avoid redundant rebuilds
     _isRecordingActionInProgress = value;
+
+    if (!value) cancelResetRecordingAction();
+
     notifyListeners();
   }
+
+
+  bool isRecordingStartByMe = false;
 
   String? dispatchId;
 
@@ -469,8 +476,9 @@ class RtcViewmodel extends ChangeNotifier {
       apiCall: () =>
           apiClient.startRecording(meetingDetails.authorizationToken, body),
       onSuccess: (data) {
+        isRecordingStartByMe = true;
         dispatchId = data?.dispatchId.id;
-        resetRecordingActionInProgressAfterDelay();
+        resetRecordingActionInProgressAfterDelay(10);
         sendMessageToUI("Recording is starting...");
         sendAction(ActionModel(
           action: MeetingActions.startRecording,
@@ -495,6 +503,7 @@ class RtcViewmodel extends ChangeNotifier {
       apiCall: () =>
           apiClient.stopRecording(meetingDetails.authorizationToken, body),
       onSuccess: (_) {
+        isRecordingStartByMe = true;
         dispatchId = null;
         resetRecordingActionInProgressAfterDelay();
         sendMessageToUI("Recording is stopping...");
@@ -513,12 +522,25 @@ class RtcViewmodel extends ChangeNotifier {
     );
   }
 
-  void resetRecordingActionInProgressAfterDelay([int seconds = 10]) {
+  Timer? _resetTimer;
+
+  void resetRecordingActionInProgressAfterDelay([int seconds = 30]) {
+    // Cancel any existing timer if one is active
+    _resetTimer?.cancel();
+
     isRecordingActionInProgress = true;
-    Future.delayed(Duration(seconds: seconds), () {
+
+    _resetTimer = Timer(Duration(seconds: seconds), () {
       isRecordingActionInProgress = false;
+      _resetTimer = null; // optional: clean up
     });
   }
+
+  void cancelResetRecordingAction() {
+    _resetTimer?.cancel();
+    _resetTimer = null;
+  }
+
 
   bool isHost() {
     return Utils.isHost(room.localParticipant?.metadata);
