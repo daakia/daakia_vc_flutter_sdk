@@ -467,6 +467,7 @@ class RtcViewmodel extends ChangeNotifier {
   bool isRecordingStartByMe = false;
 
   String? dispatchId;
+  bool _stopRecordingRetried = false;
 
   void startRecording({bool isNeedToShowError = true}) {
     Map<String, dynamic> body = {
@@ -482,7 +483,7 @@ class RtcViewmodel extends ChangeNotifier {
         sendMessageToUI("Recording is starting...");
         sendAction(ActionModel(
           action: MeetingActions.startRecording,
-          dispatchId: dispatchId
+          dispatchId: dispatchId,
         ));
       },
       onError: (message) {
@@ -494,33 +495,100 @@ class RtcViewmodel extends ChangeNotifier {
     );
   }
 
-  void stopRecording() {
+  void stopRecording({bool isNeedToShowError = true}) {
+    if (dispatchId == null) {
+      // No dispatchId available, fetch it first
+      getRecordingDispatchedId(
+        isNeedToShowError: isNeedToShowError,
+        onComplete: () {
+          if (dispatchId != null) {
+            _attemptStopRecording(isNeedToShowError: isNeedToShowError);
+          } else {
+            isRecordingActionInProgress = false;
+            if (isNeedToShowError) {
+              sendMessageToUI("Unable to stop recording: dispatch ID not found.");
+            }
+          }
+        },
+      );
+    } else {
+      _attemptStopRecording(isNeedToShowError: isNeedToShowError);
+    }
+  }
+
+  void _attemptStopRecording({bool isNeedToShowError = true}) {
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meetingUid,
-      "dispatch_id": dispatchId
+      "dispatch_id": dispatchId,
     };
+
     networkRequestHandler(
       apiCall: () =>
           apiClient.stopRecording(meetingDetails.authorizationToken, body),
       onSuccess: (_) {
-        isRecordingStartByMe = true;
+        _stopRecordingRetried = false;
+        isRecordingStartByMe = false;
         dispatchId = null;
         resetRecordingActionInProgressAfterDelay();
         sendMessageToUI("Recording is stopping...");
-        sendAction(ActionModel(
-            action: MeetingActions.stopRecording
-        ));
+        sendAction(ActionModel(action: MeetingActions.stopRecording));
+
         try {
           meetingDetails
               .meetingBasicDetails?.meetingConfig?.recordingForceStopped = 1;
         } catch (_) {}
       },
       onError: (message) {
-        isRecordingActionInProgress = false;
-        sendMessageToUI(message);
+        // Fail-safe retry logic (only once)
+        if (!_stopRecordingRetried) {
+          _stopRecordingRetried = true;
+          if (isNeedToShowError) {
+            sendMessageToUI("Retrying to stop recording...");
+          }
+          getRecordingDispatchedId(
+            isNeedToShowError: false,
+            onComplete: () {
+              if (dispatchId != null) {
+                _attemptStopRecording(isNeedToShowError: isNeedToShowError);
+              } else {
+                isRecordingActionInProgress = false;
+                sendMessageToUI("Unable to stop recording: dispatch ID not found.");
+              }
+            },
+          );
+        } else {
+          isRecordingActionInProgress = false;
+          _stopRecordingRetried = false;
+          if (isNeedToShowError) {
+            sendMessageToUI(message);
+          }
+        }
       },
     );
   }
+
+  void getRecordingDispatchedId({
+    bool isNeedToShowError = true,
+    VoidCallback? onComplete,
+  }) {
+    networkRequestHandler(
+      apiCall: () => apiClient.getRecordingDispatchedId(
+        meetingDetails.authorizationToken,
+        meetingDetails.meetingUid,
+      ),
+      onSuccess: (data) {
+        dispatchId = data?.dispatchId;
+        onComplete?.call();
+      },
+      onError: (message) {
+        if (isNeedToShowError) {
+          sendMessageToUI(message);
+        }
+        onComplete?.call();
+      },
+    );
+  }
+
 
   Timer? _resetTimer;
 
