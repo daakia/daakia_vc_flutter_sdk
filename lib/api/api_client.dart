@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:daakia_vc_flutter_sdk/model/consent_status_data.dart';
+import 'package:daakia_vc_flutter_sdk/model/egress_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/feature_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/licence_verify_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/participant_attendance_data.dart';
@@ -89,6 +90,12 @@ abstract class RestClient {
 
   @POST("rtc/meeting/recording/stop")
   Future<BaseResponse> stopRecording(
+    @Header("Authorization") String token,
+    @Body() Map<String, dynamic> body,
+  );
+
+  @POST("rtc/recording/dispatchId")
+  Future<BaseResponse<EgressData>> getRecordingDispatchedId(
     @Header("Authorization") String token,
     @Body() Map<String, dynamic> body,
   );
