@@ -6,6 +6,7 @@ import 'package:animated_emoji/emojis.g.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:daakia_vc_flutter_sdk/events/meeting_end_events.dart';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
+import 'package:daakia_vc_flutter_sdk/model/action_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/emoji_reaction_widget.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/lobby_request_manager.dart';
@@ -354,6 +355,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           ? Constant.startRecordingUrl
           : Constant.stopRecordingUrl;
       playAudio(recordingAudioPath);
+      handleRecordingButton(viewModel, event.activeRecording);
     })
     ..on<RoomAttemptReconnectEvent>((event) {
       debugPrint(
@@ -612,8 +614,23 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         showSnackBar(message: "${remoteData.identity?.name} has stopped sharing their screen.");
         break;
 
+      case MeetingActions.startRecording:
+        viewModel?.dispatchId = remoteData.dispatchId;
+        viewModel?.resetRecordingActionInProgressAfterDelay(10);
+        break;
+
+      case MeetingActions.stopRecording:
+        viewModel?.dispatchId = null;
+        viewModel?.resetRecordingActionInProgressAfterDelay(30);
+        break;
+
+      case MeetingActions.finallyStartRecording:
+      case MeetingActions.finallyStopRecording:
+        viewModel?.isRecordingActionInProgress = false;
+        break;
+
       case "":
-        // Handle empty action case if needed
+      // Handle empty action case if needed
         break;
 
       default:
@@ -1396,5 +1413,14 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   void _disposePip() {
     pip?.setAutoPipMode(autoEnter: false);
     pip = null;
+  }
+
+  void handleRecordingButton(RtcViewmodel? viewModel, bool activeRecording) {
+    if (viewModel?.isRecordingStartByMe == true) {
+      viewModel?.sendAction(ActionModel(
+        action: activeRecording ? MeetingActions.finallyStartRecording : MeetingActions.finallyStopRecording
+      ));
+    }
+    viewModel?.isRecordingStartByMe = false;
   }
 }

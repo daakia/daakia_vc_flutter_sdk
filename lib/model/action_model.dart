@@ -12,21 +12,23 @@ class ActionModel {
   final List<ConsentParticipant>? participants;
   final Map<String, dynamic>? user;
   final int? timeStamp;
+  final String? dispatchId;
 
-  // <-- new field
+  // ✅ ADD NEW FIELD
 
-  ActionModel(
-      {this.action,
-      this.message = "",
-      this.token = "",
-      this.value = true,
-      this.liveCaptionsData,
-      this.consent,
-      this.participants,
-      this.user,
-      this.timeStamp
-      // <-- added here
-      });
+  ActionModel({
+    this.action,
+    this.message = "",
+    this.token = "",
+    this.value = true,
+    this.liveCaptionsData,
+    this.consent,
+    this.participants,
+    this.user,
+    this.timeStamp,
+    this.dispatchId,
+    // ✅ ADD NEW FIELD
+  });
 
   // Converts ActionModel to JSON
   Map<String, dynamic> toJson() {
@@ -51,6 +53,10 @@ class ActionModel {
     if (timeStamp != null) {
       data['timeStamp'] = timeStamp;
     }
+    if (dispatchId != null) {
+      data['dispatchId'] = dispatchId;
+    }
+    // ✅ ADD NEW FIELD
     return data;
   }
 
@@ -68,7 +74,8 @@ class ActionModel {
           .toList(),
       user: json['user'] as Map<String, dynamic>?,
       timeStamp: json['timeStamp'] as int?,
-      // <-- added here
+      dispatchId: json['dispatchId'] as String? ?? "",
+      // ✅ ADD NEW FIELD
     );
   }
 }
