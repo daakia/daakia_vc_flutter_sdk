@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:daakia_vc_flutter_sdk/model/saved_data.dart';
 import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -445,6 +446,12 @@ class Utils {
       return "$prefix ${data['message']}";
     }
     return "$prefix $fallback";
+  }
+
+  static Future<int> getAndroidVersion() async {
+    DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+    final androidInfo = await deviceInfoPlugin.androidInfo;
+    return androidInfo.version.sdkInt;
   }
 
 }

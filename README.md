@@ -19,7 +19,7 @@ add ``daakia_vc_flutter_sdk:`` to your ``pubspec.yaml`` dependencies then run ``
 
 ```yaml
   dependencies:
-    daakia_vc_flutter_sdk: ^4.2.0
+    daakia_vc_flutter_sdk: ^4.2.1
 ```
 
 
@@ -45,6 +45,44 @@ We require a set of permissions that need to be declared in your AppManifest.xml
   ...
 </manifest>
 ```
+
+## 🪟 Picture-in-Picture (PiP) Support (Android Only)
+
+Daakia SDK supports **Picture-in-Picture (PiP)** mode on Android to allow users to continue their meeting while navigating away from the app.
+
+📱 **Note:** PiP is currently available only on Android. iOS support will be added in a future release.
+
+### Android Setup
+
+1. **Update `AndroidManifest.xml`**
+
+    ```xml
+    <application>
+      <activity
+              android:name=".MainActivity"
+              android:supportsPictureInPicture="true">
+      </activity>
+    </application>
+    ```
+
+2. **Update `MainActivity.kt`**
+
+   Change your activity from:
+
+    ```kotlin
+    import io.flutter.embedding.android.FlutterActivity
+
+    class MainActivity: FlutterActivity()
+    ```
+
+   to:
+
+    ```kotlin
+    import cl.puntito.simple_pip_mode.PipCallbackHelperActivityWrapper
+
+    class MainActivity : PipCallbackHelperActivityWrapper()
+    ```
+
 ## iOS
 
 Camera and microphone usage need to be declared in your `Info.plist` file.

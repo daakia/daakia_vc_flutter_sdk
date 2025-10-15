@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## v4.2.1 – (2025-10)
+
+### 🚀 New Features
+- **Pin to Screen:** Added the ability to pin participants’ video to the main screen for focused view.
+- **Restrict Multiple Screen Shares:** Prevents multiple users from sharing their screen simultaneously.
+- **Guest Name Storage:** Stores guest user names for better participant identification in meetings.
+- **Background Support (Android):** Added a **foreground service** to improve meeting stability and ensure continued operation when the app is in the background.
+- **Picture-in-Picture (PiP):** Added PiP mode support for Android to allow multitasking during meetings.
+- **Meeting Alerts & Actions:** Added in-meeting alerts and real-time action handling for better event visibility.
+- **Recording Flow Update:** Improved recording start/stop logic with `dispatchId` integration, failsafe handling, and UI enhancements.
+
+### 🧩 Improvements
+- **UI/UX Enhancements:** General interface refinements and layout improvements.
+- Enhanced recording reliability and button state control.
+- Improved meeting flow stability and background performance.
+
+---
+
 ## v4.2.0 – (2025-09)
 
 ### 📱 Android Support

@@ -24,6 +24,7 @@ class RemoteActivityData {
   final int? whiteboardId;
   final String? consent;
   final List<ConsentParticipant>? participants;
+  final String? dispatchId;
   // ✅ ADD NEW FIELD
 
   RemoteActivityData({
@@ -48,6 +49,7 @@ class RemoteActivityData {
     this.whiteboardId,
     this.consent,
     this.participants,
+    this.dispatchId,
     // ✅ ADD NEW FIELD
   });
 
@@ -78,8 +80,9 @@ class RemoteActivityData {
       participants: (json['participants'] as List<dynamic>?)
           ?.map((e) => ConsentParticipant.fromJson(e as Map<String, dynamic>))
           .toList(),
+      dispatchId: json['dispatchId'] as String?,
+      // ✅ ADD NEW FIELD
     );
-    // ✅ ADD NEW FIELD
   }
 
   Map<String, dynamic> toJson() {
@@ -105,6 +108,7 @@ class RemoteActivityData {
       'whiteboardId': whiteboardId,
       'consent': consent,
       'participants': participants?.map((e) => e.toJson()).toList(),
+      'dispatchId': dispatchId
       // ✅ ADD NEW FIELD
     };
   }
@@ -131,6 +135,7 @@ class RemoteActivityData {
     int? whiteboardId,
     String? consent,
     List<ConsentParticipant>? participants,
+    String? dispatchId
     // ✅ ADD NEW FIELD
   }) {
     return RemoteActivityData(
@@ -155,6 +160,7 @@ class RemoteActivityData {
       whiteboardId: whiteboardId ?? this.whiteboardId,
       consent: consent ?? this.consent,
       participants: participants ?? this.participants,
+      dispatchId: dispatchId ?? this.dispatchId
       // ✅ ADD NEW FIELD
     );
   }

@@ -6,6 +6,7 @@ import 'package:animated_emoji/emojis.g.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:daakia_vc_flutter_sdk/events/meeting_end_events.dart';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
+import 'package:daakia_vc_flutter_sdk/model/action_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/emoji_reaction_widget.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/lobby_request_manager.dart';
@@ -25,6 +26,7 @@ import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_background/flutter_background.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:simple_pip_mode/simple_pip.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -67,7 +69,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   bool _isInForeground = true;
 
   SimplePip? pip;
-  bool isInPipMode = false;
+  bool _isInPipMode = false;
 
   bool _isProgrammaticPop = false; // Flag to track programmatic pop
 
@@ -91,7 +93,15 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         const SystemUiOverlayStyle(statusBarColor: Colors.black));
     WakelockPlus.enable();
     if (lkPlatformIs(PlatformType.android)) {
-      pip = SimplePip()
+      pip = SimplePip(onPipEntered: () {
+        setState(() {
+          _isInPipMode = true;
+        });
+      }, onPipExited: () {
+        setState(() {
+          _isInPipMode = false;
+        });
+      })
         ..setAutoPipMode(
             aspectRatio: (1, 1), seamlessResize: true, autoEnter: true);
     }
@@ -149,6 +159,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
             duration: const Duration(seconds: 5));
       };
     }
+
+    handleAndroidNotification(enable: true);
   }
 
   bool _isReconnecting = false;
@@ -190,11 +202,13 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     super.dispose();
     WidgetsBinding.instance.removeObserver(this);
     var viewModel = _livekitProviderKey.currentState?.viewModel;
+    clearMemory(viewModel);
     viewModel?.stopLobbyCheck();
     viewModel?.cancelRoomEvents();
     meetingManager.cancelMeetingEndScheduler();
     lobbyManager?.dispose();
     widget.room.disconnect();
+    handleAndroidNotification(enable: false);
     // always dispose listener
     (() async {
       if (lkPlatformIs(PlatformType.iOS)) {
@@ -206,7 +220,6 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     })();
     onWindowShouldClose = null;
     WakelockPlus.disable();
-    pip = null;
     player.stop();
   }
 
@@ -226,7 +239,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
             room: widget.room,
             reason: event.reason?.name);
         _livekitProviderKey.currentState?.viewModel.isMeetingEnded = true;
-        _livekitProviderKey.currentState?.viewModel.disposeScreenShare();
+        clearMemory(_livekitProviderKey.currentState?.viewModel);
         switch (event.reason) {
           case DisconnectReason.participantRemoved:
             {
@@ -258,7 +271,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               Timer(const Duration(seconds: 3), () {
                 if (mounted) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if(!context.mounted) return;
+                    if (!context.mounted) return;
                     closeMeetingProgrammatically(context);
                   });
                 }
@@ -342,6 +355,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           ? Constant.startRecordingUrl
           : Constant.stopRecordingUrl;
       playAudio(recordingAudioPath);
+      handleRecordingButton(viewModel, event.activeRecording);
     })
     ..on<RoomAttemptReconnectEvent>((event) {
       debugPrint(
@@ -359,6 +373,17 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     ..on<LocalTrackSubscribedEvent>((event) {
       if (kDebugMode) {
         print('Local track subscribed: ${event.trackSid}');
+      }
+    })
+    ..on<TrackPublishedEvent>((track) {
+      var viewModel = _livekitProviderKey.currentState?.viewModel;
+      final localParticipant = widget.room.localParticipant;
+      if (localParticipant?.isScreenShareEnabled() == true) {
+        if (localParticipant?.identity != track.participant.identity) {
+          if (track.participant.isScreenShareEnabled()) {
+            viewModel?.disposeScreenShare();
+          }
+        }
       }
     })
     ..on<LocalTrackPublishedEvent>((_) => _sortParticipants())
@@ -441,10 +466,12 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
       case MeetingActions.muteCamera:
         viewModel?.disableVideo();
+        showSnackBar(message: "Camera off!");
         break;
 
       case MeetingActions.muteMic:
         viewModel?.disableAudio();
+        showSnackBar(message: "Microphone muted!");
         break;
 
       case MeetingActions.askToUnmuteMic:
@@ -472,10 +499,12 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               .setAttendanceId(Utils.getMetadataAttendanceId(metadata));
           storageHelper.setHostToken(remoteData.token ?? "");
           viewModel?.getAttendanceListForParticipant();
+          showSnackBar(message: "${remoteData.identity?.name} made you a Co-Host");
         } else {
           viewModel?.setCoHost(false);
           StorageHelper().clearSdkData();
           clearConsentList(viewModel);
+          showSnackBar(message: "${remoteData.identity?.name} remove you as a Co-Host");
         }
         break;
 
@@ -483,6 +512,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         viewModel?.setCoHost(false);
         StorageHelper().clearSdkData();
         clearConsentList(viewModel);
+        showSnackBar(message: "${remoteData.identity?.name} remove you as a Co-Host");
         break;
 
       case MeetingActions.forceMuteAll:
@@ -543,6 +573,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
       case MeetingActions.whiteboardState:
         if (remoteData.value) {
+          showSnackBar(message: "Whiteboard Opened");
           setState(() {
             _isWhiteBoardEnabled = true;
             loadWhiteboardUrl(Utils.generateWhiteboardUrl(
@@ -550,6 +581,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
                 livekitToken: widget.meetingDetails.livekitToken));
           });
         } else {
+          showSnackBar(message: "Whiteboard Closed");
           setState(() {
             _isWhiteBoardEnabled = false;
           });
@@ -574,8 +606,31 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         viewModel?.verifyRecordingConsent(remoteData);
         break;
 
+      case MeetingActions.screenShareStarted:
+        showSnackBar(message: "${remoteData.identity?.name} has started sharing their screen.");
+        break;
+
+      case MeetingActions.screenShareStopped:
+        showSnackBar(message: "${remoteData.identity?.name} has stopped sharing their screen.");
+        break;
+
+      case MeetingActions.startRecording:
+        viewModel?.dispatchId = remoteData.dispatchId;
+        viewModel?.resetRecordingActionInProgressAfterDelay(10);
+        break;
+
+      case MeetingActions.stopRecording:
+        viewModel?.dispatchId = null;
+        viewModel?.resetRecordingActionInProgressAfterDelay(30);
+        break;
+
+      case MeetingActions.finallyStartRecording:
+      case MeetingActions.finallyStopRecording:
+        viewModel?.isRecordingActionInProgress = false;
+        break;
+
       case "":
-        // Handle empty action case if needed
+      // Handle empty action case if needed
         break;
 
       default:
@@ -699,11 +754,27 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           b.participant.joinedAt.millisecondsSinceEpoch;
     });
 
+    final viewmodel = _livekitProviderKey.currentState?.viewModel;
+
+    // Handle pinned participant
+    ParticipantTrack? pinnedTrack;
+    if (viewmodel?.pinnedParticipantId != null) {
+      final idx = userMediaTracks.indexWhere(
+        (t) => t.participant.identity == viewmodel?.pinnedParticipantId,
+      );
+      if (idx != -1) {
+        pinnedTrack = userMediaTracks.removeAt(idx);
+      }
+    }
+
     // Update the participant tracks
     setState(() {
-      participantTracks = [...screenTracks, ...userMediaTracks];
+      participantTracks = [
+        ...screenTracks, // Screen shares always first
+        if (pinnedTrack != null) pinnedTrack, // Then pinned participant
+        ...userMediaTracks, // Then remaining participants
+      ];
     });
-    final viewmodel = _livekitProviderKey.currentState?.viewModel;
     viewmodel?.coHostCount = coHostCount;
     viewmodel?.addParticipant(participantTracks);
   }
@@ -792,7 +863,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         child: MaterialApp(
           scaffoldMessengerKey: scaffoldMessengerKey,
           debugShowCheckedModeBanner: false,
-          home: (!_isInForeground)
+          home: (_isInPipMode)
               ? PipScreen(
                   name: widget.room.localParticipant?.name,
                 )
@@ -996,12 +1067,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           setState(() {});
         }
       } else if (event is EndMeeting) {
-        viewModel.disposeScreenShare();
+        clearMemory(viewModel);
         DatadogDisconnectLogger.logDisconnectEvent(
             meetingId: widget.meetingDetails.meetingUid,
             room: widget.room,
-            reason: event.reason
-        );
+            reason: event.reason);
         if (mounted) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             closeMeetingProgrammatically(context);
@@ -1016,6 +1086,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         loadWhiteboardUrl(Utils.generateWhiteboardUrl(
             meetingId: widget.meetingDetails.meetingUid,
             livekitToken: widget.meetingDetails.livekitToken));
+      } else if (event is SortParticipants) {
+        _sortParticipants();
       }
     });
   }
@@ -1290,5 +1362,65 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         });
       }
     });
+  }
+
+  Future<void> handleAndroidNotification({required bool enable}) async {
+    if (!lkPlatformIs(PlatformType.android)) return;
+
+    final androidVersion = await Utils.getAndroidVersion();
+
+    if (androidVersion >= 34) return;
+
+    final androidConfig = FlutterBackgroundAndroidConfig(
+        notificationTitle:
+            widget.meetingDetails.meetingBasicDetails?.eventName ?? "Meeting",
+        notificationText: "Tap to return to the meeting",
+        notificationImportance: AndroidNotificationImportance.high,
+        shouldRequestBatteryOptimizationsOff: false);
+
+    try {
+      if (enable) {
+        // Step 1: initialize (ask for permission + setup)
+        final initialized =
+            await FlutterBackground.initialize(androidConfig: androidConfig);
+
+        if (!initialized) {
+          debugPrint("Background permission not granted.");
+          return;
+        }
+
+        // Step 2: only enable if not already running
+        if (!FlutterBackground.isBackgroundExecutionEnabled) {
+          await FlutterBackground.enableBackgroundExecution();
+        }
+      } else {
+        // disable if currently enabled
+        if (FlutterBackground.isBackgroundExecutionEnabled) {
+          await FlutterBackground.disableBackgroundExecution();
+        }
+      }
+    } catch (e) {
+      debugPrint("Error while handling Android background notification: $e");
+    }
+  }
+
+  void clearMemory(RtcViewmodel? viewModel) {
+    viewModel?.disposeScreenShare();
+    handleAndroidNotification(enable: false);
+    _disposePip();
+  }
+
+  void _disposePip() {
+    pip?.setAutoPipMode(autoEnter: false);
+    pip = null;
+  }
+
+  void handleRecordingButton(RtcViewmodel? viewModel, bool activeRecording) {
+    if (viewModel?.isRecordingStartByMe == true) {
+      viewModel?.sendAction(ActionModel(
+        action: activeRecording ? MeetingActions.finallyStartRecording : MeetingActions.finallyStopRecording
+      ));
+    }
+    viewModel?.isRecordingStartByMe = false;
   }
 }
