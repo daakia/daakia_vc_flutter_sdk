@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../model/emoji_message.dart';
 
-class ReactionBubble extends StatelessWidget{
+class ReactionBubble extends StatelessWidget {
   const ReactionBubble(this.emojiMessage, {super.key});
   final EmojiMessage? emojiMessage;
 
@@ -13,8 +13,23 @@ class ReactionBubble extends StatelessWidget{
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(emojiMessage?.senderName ?? "Unknown", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+          Tooltip(
+            message: emojiMessage?.senderName ?? "Unknown",
+            child: SizedBox(
+              width: 100, // tweak based on design
+              child: Text(
+                emojiMessage?.senderName ?? "Unknown",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueAccent,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+          ),
           const SizedBox(height: 2),
           Container(
             decoration: BoxDecoration(
@@ -22,11 +37,12 @@ class ReactionBubble extends StatelessWidget{
               color: Colors.blueAccent.withValues(alpha: 0.7),
             ),
             padding: const EdgeInsets.all(10),
-            child: AnimatedEmoji(emojiMessage?.emoji ?? AnimatedEmojis.alarmClock),
+            child: AnimatedEmoji(
+              emojiMessage?.emoji ?? AnimatedEmojis.alarmClock,
+            ),
           ),
         ],
       ),
     );
   }
-
 }
