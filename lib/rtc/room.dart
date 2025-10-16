@@ -386,8 +386,19 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         }
       }
     })
-    ..on<LocalTrackPublishedEvent>((_) => _sortParticipants())
-    ..on<LocalTrackUnpublishedEvent>((_) => _sortParticipants())
+    ..on<LocalTrackPublishedEvent>((track){
+      var viewModel = _livekitProviderKey.currentState?.viewModel;
+      final localParticipant = widget.room.localParticipant;
+      if (localParticipant?.isScreenShareEnabled() == true) {
+        viewModel?.sendAction(ActionModel(
+            action: MeetingActions.screenShareStarted,
+            timeStamp: DateTime.now().microsecondsSinceEpoch));
+      }
+      _sortParticipants();
+    })
+    ..on<LocalTrackUnpublishedEvent>((track){
+      _sortParticipants();
+    })
     ..on<TrackSubscribedEvent>((_) => _sortParticipants())
     ..on<TrackUnsubscribedEvent>((_) => _sortParticipants())
     ..on<TrackE2EEStateEvent>(_onE2EEStateEvent)

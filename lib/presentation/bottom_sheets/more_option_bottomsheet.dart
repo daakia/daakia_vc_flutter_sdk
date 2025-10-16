@@ -325,9 +325,6 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
     }
 
     await participant?.setScreenShareEnabled(true, captureScreenAudio: true);
-    viewModel.sendAction(ActionModel(
-        action: MeetingActions.screenShareStarted,
-        timeStamp: DateTime.now().microsecondsSinceEpoch));
   }
 
   void _disableScreenShare(RtcViewmodel viewModel) async {
