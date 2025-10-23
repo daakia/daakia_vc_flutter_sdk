@@ -40,7 +40,7 @@ import '../utils/consent_status_enum.dart';
 import '../utils/meeting_actions.dart';
 import '../utils/utils.dart';
 import 'meeting_manager.dart';
-import 'method_channels/reply_kit.dart';
+import 'method_channels/daakia_pip.dart';
 
 class RoomPage extends StatefulWidget {
   final Room room;
@@ -142,14 +142,14 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               showRecordingConsentDialog(viewModel);
             });
       }
+      DaakiaPiP.createPipVideoCall(
+          name: widget.room.localParticipant?.name ?? "Unknown",
+          avatar: Utils.extractUserAvatar(widget.room.localParticipant?.metadata),
+      );
     });
 
     if (lkPlatformIs(PlatformType.android)) {
       Hardware.instance.setSpeakerphoneOn(false);
-    }
-
-    if (lkPlatformIs(PlatformType.iOS)) {
-      ReplayKitChannel.listenMethodChannel(widget.room);
     }
 
     if (lkPlatformIsDesktop()) {
@@ -211,9 +211,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     handleAndroidNotification(enable: false);
     // always dispose listener
     (() async {
-      if (lkPlatformIs(PlatformType.iOS)) {
-        ReplayKitChannel.closeReplayKit();
-      }
+      DaakiaPiP.disposePiP();
       widget.room.removeListener(_onRoomDidUpdate);
       await _listener.dispose();
       await widget.room.dispose();
