@@ -89,13 +89,14 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
   void increaseUnreadPrivateChatCount() {
-    if (isPrivateChatOpen) return;
     _unreadMessageCountPrivateChat++;
     notifyListeners();
   }
 
-  void resetUnreadPrivateChatCount() {
-    _unreadMessageCountPrivateChat = 0;
+  void resetUnreadPrivateChatCount(PrivateChatModel person) {
+    if (_unreadMessageCountPrivateChat == 0) return;
+    _unreadMessageCountPrivateChat -= person.unreadCount;
+    person.unreadCount = 0;
     notifyListeners();
   }
 
@@ -119,22 +120,36 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
   void addPrivateMessage(RemoteActivityData message) {
-    // Check if the key exists; if not, initialize it with an empty list
     if (message.identity != null) {
-      checkAndCreatePrivateChat(
-          message.identity?.identity, message.identity?.name);
-      _privateChat[message.identity?.identity ?? ""]?.chats.add(message);
+      final identity = message.identity?.identity ?? "";
+      final name = message.identity?.name ?? "Unknown";
+
+      checkAndCreatePrivateChat(identity, name);
+      _privateChat[identity]?.chats.add(message);
+
+      final chatModel = _privateChat[identity];
+      if (chatModel == null) return;
+
+      // ✅ FIXED LOGIC
+      // Increase unread if:
+      // - Chat page is closed (normal case)
+      // - OR Chat page is open but this particular chat is not selected
+      if ((chatModel.identity != _privateChatIdentity)|| !isPrivateChatOpen) {
+        chatModel.unreadCount++;
+        increaseUnreadPrivateChatCount();
+      }
     } else {
+      final identity = message.userIdentity ?? "Unknown";
+      final name = message.userName ?? "Unknown";
+
       _privateChat.putIfAbsent(
-          message.userIdentity ?? "",
-          () => PrivateChatModel(
-              identity: message.userIdentity ?? "Unknown",
-              name: message.userName ?? "Unknown",
-              chats: []));
-      _privateChat[message.userIdentity ?? ""]?.chats.add(message);
+        identity,
+            () => PrivateChatModel(identity: identity, name: name, chats: []),
+      );
+      _privateChat[identity]?.chats.add(message);
     }
+
     notifyListeners();
-    increaseUnreadPrivateChatCount();
     sendPrivateChatEvent(UpdateView());
   }
 
