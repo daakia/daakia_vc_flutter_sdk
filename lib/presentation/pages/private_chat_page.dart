@@ -38,7 +38,6 @@ class PrivateChantState extends State<PrivateChatPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.viewModel.isPrivateChatOpen = true;
-      widget.viewModel.resetUnreadPrivateChatCount();
       setState(() {
         if (widget.identity.isEmpty &&
             widget.viewModel.getPrivateMessage().isNotEmpty) {
@@ -47,9 +46,13 @@ class PrivateChantState extends State<PrivateChatPage> {
           var person = privateMessages[0];
           widget.viewModel.setPrivateChatIdentity(person.identity);
           widget.viewModel.setPrivateChatUserName(person.name);
+          widget.viewModel.resetUnreadPrivateChatCount(person);
         } else {
           widget.viewModel.setPrivateChatIdentity(widget.identity);
           widget.viewModel.setPrivateChatUserName(widget.name);
+          var person = widget.viewModel.getPrivateMessage()[widget.identity];
+          if(person == null) return;
+          widget.viewModel.resetUnreadPrivateChatCount(person);
         }
       });
     });
@@ -109,6 +112,7 @@ class PrivateChantState extends State<PrivateChatPage> {
                                       .setPrivateChatIdentity(person.identity);
                                   widget.viewModel
                                       .setPrivateChatUserName(person.name);
+                                  widget.viewModel.resetUnreadPrivateChatCount(person);
                                 });
                               },
                               child: Center(
@@ -124,6 +128,7 @@ class PrivateChantState extends State<PrivateChatPage> {
                                       isSelected: (person.identity ==
                                           widget.viewModel
                                               .getPrivateChatIdentity()),
+                                      unreadCount: person.unreadCount,
                                     ),
                                     Text(
                                       person.name,
