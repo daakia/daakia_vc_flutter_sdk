@@ -1642,4 +1642,15 @@ class RtcViewmodel extends ChangeNotifier {
     _pinnedParticipantId = value;
     notifyListeners();
   }
+
+
+  //===============================[Pin Chat]===============================
+  RemoteActivityData? _pinnedPublicChat;
+  set pinnedPublicChat(RemoteActivityData? chat) {
+    _pinnedPublicChat = chat;
+    notifyListeners();
+  }
+
+  RemoteActivityData? get pinnedPublicChat => _pinnedPublicChat;
+
 }

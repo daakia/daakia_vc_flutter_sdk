@@ -60,7 +60,9 @@ class _MessageBubbleState extends State<MessageBubble> {
                   onReply: () => (),
                   onCopy: () => (),
                   onDelete: () => (),
-                  onPin: () {},
+                  onPin: () {
+                    !widget.isPrivateChat ? widget.viewModel.pinnedPublicChat = widget.chat : null; //TODO:: need to work on private chat logic
+                  },
                   onReact: (emoji) => (),
                 ),
               ),
