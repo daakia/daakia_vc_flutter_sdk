@@ -1,20 +1,21 @@
+import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
+import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
 import 'package:flutter/material.dart';
 
 import '../../utils/utils.dart';
+import '../bottom_sheets/message_action_sheet.dart';
 import 'file_preview.dart';
 
 class MessageBubble extends StatefulWidget {
-  final String userName;
-  final String message;
-  final String time;
-  final bool isSender;
+  final RemoteActivityData chat;
+  final RtcViewmodel viewModel;
+  final bool isPrivateChat;
 
   const MessageBubble({
     super.key,
-    required this.userName,
-    required this.message,
-    required this.time,
-    this.isSender = false,
+    required this.chat,
+    required this.viewModel,
+    this.isPrivateChat = false,
   });
 
   @override
@@ -24,18 +25,22 @@ class MessageBubble extends StatefulWidget {
 class _MessageBubbleState extends State<MessageBubble> {
   @override
   Widget build(BuildContext context) {
+    final String userName = widget.chat.identity?.name ?? "Unknown";
+    final String message = widget.chat.message ?? "";
+    final String time = Utils.formatTimestampToTime(widget.chat.timestamp);
+    final bool isSender = widget.chat.isSender;
     return Align(
-      alignment: widget.isSender ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
         child: Column(
           crossAxisAlignment:
-          widget.isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             // Display username for the receiver only
-            if (!widget.isSender)
+            if (!isSender)
               Text(
-                widget.userName,
+                userName,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -43,49 +48,70 @@ class _MessageBubbleState extends State<MessageBubble> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-            if (!widget.isSender) const SizedBox(height: 5.0),
+            if (!isSender) const SizedBox(height: 5.0),
 
             // Message Card
             GestureDetector(
+              onLongPress: () => showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.transparent,
+                builder: (_) => MessageActionSheet(
+                  isMine: isSender,
+                  onReply: () => (),
+                  onCopy: () => (),
+                  onDelete: () => (),
+                  onPin: () {},
+                  onReact: (emoji) => (),
+                ),
+              ),
               child: Card(
-                color: widget.isSender
+                color: isSender
                     ? const Color(0xFF2196F3)
-                    : const Color(0xFF303030), // Different colors for sender and receiver
+                    : const Color(0xFF303030),
+                // Different colors for sender and receiver
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 200, minWidth: 100),
+                  constraints:
+                      const BoxConstraints(maxWidth: 200, minWidth: 100),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10.0, vertical: 5.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if(Utils.isOnlyLink(widget.message) || Utils.isLink(widget.message))
+                        if (Utils.isOnlyLink(message) || Utils.isLink(message))
                           Center(
                             child: Card(
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12), // Rounded corners
+                                borderRadius: BorderRadius.circular(
+                                    12), // Rounded corners
                               ),
-                              elevation: 0, // Zero elevation
-                              shadowColor: Colors.transparent, // Transparent shadow
-                              color: Colors.transparent, // Transparent background
-                              child: FilePreviewWidget(fileUrl: (widget.message), // Replace with your widget
+                              elevation: 0,
+                              // Zero elevation
+                              shadowColor: Colors.transparent,
+                              // Transparent shadow
+                              color: Colors.transparent,
+                              // Transparent background
+                              child: FilePreviewWidget(
+                                fileUrl: (message), // Replace with your widget
+                              ),
                             ),
                           ),
-                          ),
-                        if(!Utils.isOnlyLink(widget.message) || !Utils.isLink(widget.message))
+                        if (!Utils.isOnlyLink(message) ||
+                            !Utils.isLink(message))
                           Text(
-                            Utils.extractNonLinkText(widget.message),
+                            Utils.extractNonLinkText(message),
                             style: const TextStyle(color: Colors.white),
                           ),
                         const SizedBox(height: 5.0),
-              
+
                         // Sent Time
                         Align(
                           alignment: Alignment.centerRight,
                           child: Text(
-                            widget.time,
+                            time,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 8.0,
