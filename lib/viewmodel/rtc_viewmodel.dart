@@ -18,6 +18,7 @@ import 'package:flutter_background/flutter_background.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:uuid/uuid.dart';
 
+import '../enum/chat_type_enum.dart';
 import '../model/action_model.dart';
 import '../model/emoji_message.dart';
 import '../model/language_model.dart';
@@ -1660,5 +1661,30 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
   RemoteActivityData? get pinnedPrivateChat => getPrivateMessage()[getPrivateChatIdentity()]?.pinnedChat;
+
+  void deleteMessage(String mode, String? id) {
+    final chatType = ChatTypeExtension.fromString(mode);
+    switch (chatType) {
+      case ChatType.public:
+        _deletePublicMessage(id);
+        break;
+
+      case ChatType.private:
+        break;
+    }
+  }
+
+  void _deletePublicMessage(String? id) {
+    if (id == null) return;
+
+    final index = _messageList.indexWhere((message) => message.id == id);
+    if (index != -1) {
+      _messageList[index] = _messageList[index].copyWith(
+        message: "[Message deleted]",
+        isDeleted: true,
+      );
+      notifyListeners();
+    }
+  }
 
 }
