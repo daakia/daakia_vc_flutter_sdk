@@ -1687,4 +1687,16 @@ class RtcViewmodel extends ChangeNotifier {
     }
   }
 
+  void sendDeleteMessageAction(String mode, RemoteActivityData chat) {
+    final chatType = ChatTypeExtension.fromString(mode);
+    switch (chatType) {
+      case ChatType.public:
+        sendAction(ActionModel(action: MeetingActions.deleteMessage, id: chat.id, mode: mode));
+        break;
+
+      case ChatType.private:
+        break;
+    }
+  }
+
 }

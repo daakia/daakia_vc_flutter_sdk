@@ -13,6 +13,8 @@ class ActionModel {
   final Map<String, dynamic>? user;
   final int? timeStamp;
   final String? dispatchId;
+  final String? id;
+  final String? mode;
 
   // ✅ ADD NEW FIELD
 
@@ -27,6 +29,8 @@ class ActionModel {
     this.user,
     this.timeStamp,
     this.dispatchId,
+    this.id,
+    this.mode,
     // ✅ ADD NEW FIELD
   });
 
@@ -56,6 +60,12 @@ class ActionModel {
     if (dispatchId != null) {
       data['dispatchId'] = dispatchId;
     }
+    if (id != null) {
+      data['id'] = id;
+    }
+    if (mode != null) {
+      data['mode'] = mode;
+    }
     // ✅ ADD NEW FIELD
     return data;
   }
@@ -75,6 +85,8 @@ class ActionModel {
       user: json['user'] as Map<String, dynamic>?,
       timeStamp: json['timeStamp'] as int?,
       dispatchId: json['dispatchId'] as String? ?? "",
+      id: json['id'] as String? ?? "",
+      mode: json['mode'] as String? ?? "",
       // ✅ ADD NEW FIELD
     );
   }
