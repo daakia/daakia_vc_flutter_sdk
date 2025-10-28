@@ -6,9 +6,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../events/rtc_events.dart';
+import '../../presentation/widgets/compact_file_preview.dart';
 import '../../utils/constants.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
-import '../../presentation/widgets/compact_file_preview.dart';
+import '../widgets/pinned_message_widget.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({required this.viewModel, super.key});
@@ -52,6 +53,14 @@ class _ChatState extends State<ChatPage> {
           padding: const EdgeInsets.symmetric(vertical: 20.0),
           child: Column(
             children: [
+              if (widget.viewModel.pinnedPublicChat != null)
+                PinnedMessageWidget(
+                  name: widget.viewModel.pinnedPublicChat?.isSender == true ? widget.viewModel.room.localParticipant?.name : widget.viewModel.pinnedPublicChat?.identity?.name,
+                  message: widget.viewModel.pinnedPublicChat?.message ?? "",
+                  onPinPressed: () {
+                    widget.viewModel.pinnedPublicChat = null;
+                  },
+                ),
               Expanded(
                 child: ListView.builder(
                   reverse: true,
@@ -64,23 +73,28 @@ class _ChatState extends State<ChatPage> {
                     var message =
                         widget.viewModel.getMessageList()[reversedIndex];
                     return MessageBubble(
-                        userName: message.identity?.name ?? "Unknown",
-                        message: message.message ?? "",
-                        time: Utils.formatTimestampToTime(message.timestamp),
-                        isSender: message.isSender);
+                      chat: message,
+                      viewModel: widget.viewModel,
+                    );
                   },
                 ),
               ),
 
               // Message Input Section
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10.0, vertical: 10.0),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10.0, vertical: 5.0),
                   decoration: BoxDecoration(
-                    color: Colors.grey[800], // Adjust the background color as needed
-                    borderRadius: BorderRadius.circular(30.0), // Rounded corners
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.3)), // Optional border
+                    color: Colors.grey[800],
+                    // Adjust the background color as needed
+                    borderRadius: BorderRadius.circular(30.0),
+                    // Rounded corners
+                    border: Border.all(
+                        color: Colors.white
+                            .withValues(alpha: 0.3)), // Optional border
                   ),
                   child: Row(
                     children: [
@@ -91,23 +105,29 @@ class _ChatState extends State<ChatPage> {
                         onPressed: () async {
                           Utils.hideKeyboard(context);
                           try {
-                            widget.viewModel.sendMainChatControllerEvent(ShowLoading());
-                            FilePickerResult? result = await FilePicker.platform.pickFiles(
+                            widget.viewModel
+                                .sendMainChatControllerEvent(ShowLoading());
+                            FilePickerResult? result =
+                                await FilePicker.platform.pickFiles(
                               allowMultiple: false,
                               type: FileType.custom,
                               allowedExtensions: Constant.allowedExtensions(),
                             );
-                            widget.viewModel.sendMainChatControllerEvent(StopLoading());
+                            widget.viewModel
+                                .sendMainChatControllerEvent(StopLoading());
                             if (result != null) {
-                              File? file = result.files.single.path != null ? File(result.files.single.path!) : null;
-                              var isValidFileSize = await Utils.validateFile(file, (error){
+                              File? file = result.files.single.path != null
+                                  ? File(result.files.single.path!)
+                                  : null;
+                              var isValidFileSize =
+                                  await Utils.validateFile(file, (error) {
                                 widget.viewModel.sendMessageToUI(error);
                               });
-                              if(!isValidFileSize) {
+                              if (!isValidFileSize) {
                                 return;
                               }
-                              if(file != null) {
-                                if(!context.mounted) return;
+                              if (file != null) {
+                                if (!context.mounted) return;
                                 showModalBottomSheet(
                                   context: context,
                                   builder: (context) => Padding(
@@ -117,65 +137,88 @@ class _ChatState extends State<ChatPage> {
                                       children: [
                                         const Text(
                                           "Selected File",
-                                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold),
                                         ),
                                         const SizedBox(height: 10),
-                                        LocalFilePreview(file: file, progress: widget.viewModel.publicMessageProgress, viewModel: widget.viewModel),
+                                        LocalFilePreview(
+                                            file: file,
+                                            progress: widget.viewModel
+                                                .publicMessageProgress,
+                                            viewModel: widget.viewModel),
                                         const SizedBox(height: 10),
                                         Row(
-                                          mainAxisAlignment: MainAxisAlignment.center, // Center the buttons
+                                          mainAxisAlignment: MainAxisAlignment
+                                              .center, // Center the buttons
                                           children: [
                                             // Delete button
                                             Container(
-                                              padding: const EdgeInsets.all(8.0),
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
                                               decoration: BoxDecoration(
-                                                color: Colors.redAccent.withValues(alpha: 0.5), // Button-like background
-                                                borderRadius: BorderRadius.circular(8.0),
+                                                color: Colors.redAccent
+                                                    .withValues(alpha: 0.5),
+                                                // Button-like background
+                                                borderRadius:
+                                                    BorderRadius.circular(8.0),
                                               ),
                                               child: IconButton(
                                                 onPressed: () {
                                                   Navigator.pop(context);
                                                 },
-                                                icon: const Icon(Icons.delete, color: Colors.redAccent),
+                                                icon: const Icon(Icons.delete,
+                                                    color: Colors.redAccent),
                                                 tooltip: "Delete",
                                               ),
                                             ),
-                                            const SizedBox(width: 10), // Spacing between buttons
+                                            const SizedBox(width: 10),
+                                            // Spacing between buttons
                                             // Upload button
                                             Container(
-                                              padding: const EdgeInsets.all(8.0),
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
                                               decoration: BoxDecoration(
-                                                color: Colors.green.withValues(alpha: 0.5), // Button-like background
-                                                borderRadius: BorderRadius.circular(8.0),
+                                                color: Colors.green
+                                                    .withValues(alpha: 0.5),
+                                                // Button-like background
+                                                borderRadius:
+                                                    BorderRadius.circular(8.0),
                                               ),
                                               child: IconButton(
                                                 onPressed: () {
-                                                  widget.viewModel.uploadAttachment(file, () {
+                                                  widget.viewModel
+                                                      .uploadAttachment(file,
+                                                          () {
                                                     Navigator.pop(context);
                                                   });
                                                 },
-                                                icon: const Icon(Icons.upload, color: Colors.green),
+                                                icon: const Icon(Icons.upload,
+                                                    color: Colors.green),
                                                 tooltip: "Upload",
                                               ),
                                             ),
                                           ],
                                         )
-
                                       ],
                                     ),
                                   ),
                                   backgroundColor: Colors.black,
                                 );
                               } else {
-                                widget.viewModel.sendMessageToUI("File not found!");
+                                widget.viewModel
+                                    .sendMessageToUI("File not found!");
                               }
                             } else {
-                              widget.viewModel.sendMessageToUI("File not selected!");
+                              widget.viewModel
+                                  .sendMessageToUI("File not selected!");
                             }
-                          } catch (e){
-                            widget.viewModel.sendMessageToUI(e.runtimeType.toString());
+                          } catch (e) {
+                            widget.viewModel
+                                .sendMessageToUI(e.runtimeType.toString());
                           } finally {
-                            widget.viewModel.sendMainChatControllerEvent(StopLoading());
+                            widget.viewModel
+                                .sendMainChatControllerEvent(StopLoading());
                           }
                         },
                       ),
@@ -201,7 +244,8 @@ class _ChatState extends State<ChatPage> {
                           Utils.hideKeyboard(context);
                           setState(() {
                             if (messageController.text.trim().isEmpty) return;
-                            widget.viewModel.sendPublicMessage(messageController.text);
+                            widget.viewModel
+                                .sendPublicMessage(messageController.text);
                             messageController.clear();
                           });
                         },
@@ -210,7 +254,6 @@ class _ChatState extends State<ChatPage> {
                   ),
                 ),
               )
-
             ],
           ),
         ),

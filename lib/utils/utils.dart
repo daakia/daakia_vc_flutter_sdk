@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/saved_data.dart';
 import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -452,6 +453,12 @@ class Utils {
     DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
     final androidInfo = await deviceInfoPlugin.androidInfo;
     return androidInfo.version.sdkInt;
+  }
+
+  static bool isPinned(RemoteActivityData? chat, RemoteActivityData? pinnedPublicChat) {
+    if (chat == null || pinnedPublicChat == null) return false;
+    if (chat.id == pinnedPublicChat.id) return true;
+    return false;
   }
 
 }
