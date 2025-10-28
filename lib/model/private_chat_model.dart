@@ -6,6 +6,7 @@ class PrivateChatModel {
   final List<RemoteActivityData> chats;
   int unreadCount;
   bool isSelected;
+  RemoteActivityData? pinnedChat;
 
   PrivateChatModel({
     required this.identity,
@@ -13,5 +14,6 @@ class PrivateChatModel {
     required this.chats,
     this.isSelected = false,
     this.unreadCount = 0,
+    this.pinnedChat
   });
 }
