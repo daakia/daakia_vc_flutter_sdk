@@ -10,6 +10,7 @@ import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import '../widgets/compact_file_preview.dart';
 import '../widgets/message_bubble.dart';
+import '../widgets/pinned_message_widget.dart';
 
 class PrivateChatPage extends StatefulWidget {
   PrivateChatPage(
@@ -156,6 +157,14 @@ class PrivateChantState extends State<PrivateChatPage> {
                         fontSize: 16.0, // Adjust font size
                       ),
                     ),
+                    if (widget.viewModel.pinnedPrivateChat != null)
+                      PinnedMessageWidget(
+                        name: widget.viewModel.pinnedPrivateChat?.isSender == true ? widget.viewModel.room.localParticipant?.name : widget.viewModel.pinnedPrivateChat?.identity?.name,
+                        message: widget.viewModel.pinnedPrivateChat?.message ?? "",
+                        onPinPressed: () {
+                          widget.viewModel.pinnedPrivateChat = null;
+                        },
+                      ),
                     Expanded(
                       child: ListView.builder(
                         reverse: true,
