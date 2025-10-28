@@ -9,6 +9,7 @@ import '../../events/rtc_events.dart';
 import '../../presentation/widgets/compact_file_preview.dart';
 import '../../utils/constants.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
+import '../widgets/pinned_message_widget.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({required this.viewModel, super.key});
@@ -52,6 +53,14 @@ class _ChatState extends State<ChatPage> {
           padding: const EdgeInsets.symmetric(vertical: 20.0),
           child: Column(
             children: [
+              if (widget.viewModel.pinnedPublicChat != null)
+                PinnedMessageWidget(
+                  name: widget.viewModel.pinnedPublicChat?.isSender == true ? widget.viewModel.room.localParticipant?.name : widget.viewModel.pinnedPublicChat?.identity?.name,
+                  message: widget.viewModel.pinnedPublicChat?.message ?? "",
+                  onPinPressed: () {
+                    widget.viewModel.pinnedPublicChat = null;
+                  },
+                ),
               Expanded(
                 child: ListView.builder(
                   reverse: true,
