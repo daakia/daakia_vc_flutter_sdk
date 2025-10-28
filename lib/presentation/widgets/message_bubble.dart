@@ -57,11 +57,16 @@ class _MessageBubbleState extends State<MessageBubble> {
                 backgroundColor: Colors.transparent,
                 builder: (_) => MessageActionSheet(
                   isMine: isSender,
+                  isPinned: Utils.isPinned(widget.chat, widget.isPrivateChat ? widget.viewModel.pinnedPrivateChat : widget.viewModel.pinnedPublicChat),
                   onReply: () => (),
                   onCopy: () => (),
                   onDelete: () => (),
                   onPin: () {
-                    !widget.isPrivateChat ? widget.viewModel.pinnedPublicChat = widget.chat : widget.viewModel.pinnedPrivateChat = widget.chat;
+                    if (Utils.isPinned(widget.chat, widget.isPrivateChat ? widget.viewModel.pinnedPrivateChat : widget.viewModel.pinnedPublicChat)) {
+                      !widget.isPrivateChat ? widget.viewModel.pinnedPublicChat = null : widget.viewModel.pinnedPrivateChat = null;
+                    } else {
+                      !widget.isPrivateChat ? widget.viewModel.pinnedPublicChat = widget.chat : widget.viewModel.pinnedPrivateChat = widget.chat;
+                    }
                   },
                   onReact: (emoji) => (),
                 ),

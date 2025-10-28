@@ -1,3 +1,4 @@
+import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -5,6 +6,7 @@ import '../../resources/colors/color.dart';
 
 class MessageActionSheet extends StatelessWidget {
   final bool isMine;
+  final bool isPinned;
   final VoidCallback? onReply;
   final VoidCallback? onCopy;
   final VoidCallback? onPin;
@@ -14,6 +16,7 @@ class MessageActionSheet extends StatelessWidget {
   const MessageActionSheet({
     super.key,
     this.isMine = false,
+    this.isPinned = false,
     this.onReply,
     this.onCopy,
     this.onPin,
@@ -80,7 +83,7 @@ class MessageActionSheet extends StatelessWidget {
     final actions = <_MessageAction>[
       _MessageAction('Reply', Icons.reply, onReply),
       _MessageAction('Copy', Icons.copy, onCopy),
-      _MessageAction('Pin', Icons.push_pin, onPin),
+      _MessageAction(isPinned ? 'Unpin' : 'Pin', Icons.push_pin, onPin),
       if (isMine) _MessageAction('Delete', Icons.delete, onDelete),
     ];
 
@@ -109,9 +112,10 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.pop(context);
         HapticFeedback.selectionClick();
+        Navigator.pop(context);
         action.onTap?.call();
+        Utils.hideKeyboard(context); // 👈 This line closes the keyboard
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,
