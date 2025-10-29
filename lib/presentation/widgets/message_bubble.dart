@@ -63,7 +63,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                   onCopy: () => (),
                   onDelete: () {
                     final chatType = widget.isPrivateChat ? ChatType.private.name : ChatType.public.name;
-                    widget.viewModel.deleteMessage(chatType, widget.chat.id);
+                    widget.viewModel.deleteMessage(chatType, widget.chat.id, widget.chat.userIdentity);
                     widget.viewModel.sendDeleteMessageAction(chatType, widget.chat);
                   },
                   onPin: () {
