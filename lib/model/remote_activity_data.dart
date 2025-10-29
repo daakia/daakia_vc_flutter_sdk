@@ -25,6 +25,9 @@ class RemoteActivityData {
   final String? consent;
   final List<ConsentParticipant>? participants;
   final String? dispatchId;
+  final String? mode;
+  final bool isDeleted;
+
   // ✅ ADD NEW FIELD
 
   RemoteActivityData({
@@ -50,6 +53,8 @@ class RemoteActivityData {
     this.consent,
     this.participants,
     this.dispatchId,
+    this.mode,
+    this.isDeleted = false,
     // ✅ ADD NEW FIELD
   });
 
@@ -70,7 +75,8 @@ class RemoteActivityData {
       userIdentity: json['user_identity'] as String? ?? "",
       userName: json['user_name'] as String? ?? "",
       liveCaptionsData: json['liveCaptionsData'] != null
-          ? TranscriptionActionModel.fromJson(json['liveCaptionsData'] as Map<String, dynamic>)
+          ? TranscriptionActionModel.fromJson(
+              json['liveCaptionsData'] as Map<String, dynamic>)
           : null,
       partialTranscription: json['partial'] as String?,
       finalTranscription: json['final'] as String?,
@@ -81,6 +87,8 @@ class RemoteActivityData {
           ?.map((e) => ConsentParticipant.fromJson(e as Map<String, dynamic>))
           .toList(),
       dispatchId: json['dispatchId'] as String?,
+      mode: json['mode'] as String?,
+      isDeleted: json['isDeleted'] as bool? ?? false,
       // ✅ ADD NEW FIELD
     );
   }
@@ -108,7 +116,9 @@ class RemoteActivityData {
       'whiteboardId': whiteboardId,
       'consent': consent,
       'participants': participants?.map((e) => e.toJson()).toList(),
-      'dispatchId': dispatchId
+      'dispatchId': dispatchId,
+      'mode': mode,
+      'isDeleted': isDeleted
       // ✅ ADD NEW FIELD
     };
   }
@@ -135,7 +145,9 @@ class RemoteActivityData {
     int? whiteboardId,
     String? consent,
     List<ConsentParticipant>? participants,
-    String? dispatchId
+    String? dispatchId,
+    String? mode,
+    bool? isDeleted,
     // ✅ ADD NEW FIELD
   }) {
     return RemoteActivityData(
@@ -148,7 +160,8 @@ class RemoteActivityData {
       requestId: requestId ?? this.requestId,
       meetingUid: meetingUid ?? this.meetingUid,
       displayName: displayName ?? this.displayName,
-      participantLobbyStatus: participantLobbyStatus ?? this.participantLobbyStatus,
+      participantLobbyStatus:
+          participantLobbyStatus ?? this.participantLobbyStatus,
       token: token ?? this.token,
       value: value ?? this.value,
       userIdentity: userIdentity ?? this.userIdentity,
@@ -160,7 +173,9 @@ class RemoteActivityData {
       whiteboardId: whiteboardId ?? this.whiteboardId,
       consent: consent ?? this.consent,
       participants: participants ?? this.participants,
-      dispatchId: dispatchId ?? this.dispatchId
+      dispatchId: dispatchId ?? this.dispatchId,
+      mode: mode ?? this.mode,
+      isDeleted: isDeleted ?? this.isDeleted,
       // ✅ ADD NEW FIELD
     );
   }

@@ -1,3 +1,4 @@
+import 'package:daakia_vc_flutter_sdk/enum/chat_type_enum.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
 import 'package:flutter/material.dart';
@@ -52,7 +53,7 @@ class _MessageBubbleState extends State<MessageBubble> {
 
             // Message Card
             GestureDetector(
-              onLongPress: () => showModalBottomSheet(
+              onLongPress: () => !widget.chat.isDeleted ? showModalBottomSheet(
                 context: context,
                 backgroundColor: Colors.transparent,
                 builder: (_) => MessageActionSheet(
@@ -60,7 +61,11 @@ class _MessageBubbleState extends State<MessageBubble> {
                   isPinned: Utils.isPinned(widget.chat, widget.isPrivateChat ? widget.viewModel.pinnedPrivateChat : widget.viewModel.pinnedPublicChat),
                   onReply: () => (),
                   onCopy: () => (),
-                  onDelete: () => (),
+                  onDelete: () {
+                    final chatType = widget.isPrivateChat ? ChatType.private.name : ChatType.public.name;
+                    widget.viewModel.deleteMessage(chatType, widget.chat.id, widget.chat.userIdentity);
+                    widget.viewModel.sendDeleteMessageAction(chatType, widget.chat);
+                  },
                   onPin: () {
                     if (Utils.isPinned(widget.chat, widget.isPrivateChat ? widget.viewModel.pinnedPrivateChat : widget.viewModel.pinnedPublicChat)) {
                       !widget.isPrivateChat ? widget.viewModel.pinnedPublicChat = null : widget.viewModel.pinnedPrivateChat = null;
@@ -70,7 +75,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                   },
                   onReact: (emoji) => (),
                 ),
-              ),
+              ) : null,
               child: Card(
                 color: isSender
                     ? const Color(0xFF2196F3)
