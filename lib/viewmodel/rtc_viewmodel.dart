@@ -1662,7 +1662,7 @@ class RtcViewmodel extends ChangeNotifier {
 
   RemoteActivityData? get pinnedPrivateChat => getPrivateMessage()[getPrivateChatIdentity()]?.pinnedChat;
 
-  void deleteMessage(String mode, String? id) {
+  void deleteMessage(String mode, String? id, String? identity) {
     final chatType = ChatTypeExtension.fromString(mode);
     switch (chatType) {
       case ChatType.public:
@@ -1670,6 +1670,7 @@ class RtcViewmodel extends ChangeNotifier {
         break;
 
       case ChatType.private:
+        _deletePrivateMessage(id, identity);
         break;
     }
   }
@@ -1687,6 +1688,20 @@ class RtcViewmodel extends ChangeNotifier {
     }
   }
 
+  void _deletePrivateMessage(String? id, String? identity) {
+    if (id == null || identity == null) return;
+    final privateChats = _privateChat[identity]?.chats;
+    if (privateChats == null) return;
+    final index = privateChats.indexWhere((message) => message.id == id);
+    if (index != -1) {
+      privateChats[index] = privateChats[index].copyWith(
+        message: "[Message deleted]",
+        isDeleted: true,
+      );
+      notifyListeners();
+    }
+  }
+
   void sendDeleteMessageAction(String mode, RemoteActivityData chat) {
     final chatType = ChatTypeExtension.fromString(mode);
     switch (chatType) {
@@ -1695,6 +1710,7 @@ class RtcViewmodel extends ChangeNotifier {
         break;
 
       case ChatType.private:
+        sendPrivateAction(ActionModel(action: MeetingActions.deleteMessage, id: chat.id, mode: mode), chat.userIdentity);
         break;
     }
   }
