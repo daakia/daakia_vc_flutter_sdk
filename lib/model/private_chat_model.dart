@@ -1,4 +1,5 @@
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
+import 'package:daakia_vc_flutter_sdk/model/reply_message.dart';
 
 class PrivateChatModel {
   final String identity;
@@ -7,6 +8,7 @@ class PrivateChatModel {
   int unreadCount;
   bool isSelected;
   RemoteActivityData? pinnedChat;
+  ReplyMessage? replyMessage;
 
   PrivateChatModel({
     required this.identity,
@@ -14,6 +16,7 @@ class PrivateChatModel {
     required this.chats,
     this.isSelected = false,
     this.unreadCount = 0,
-    this.pinnedChat
+    this.pinnedChat,
+    this.replyMessage,
   });
 }
