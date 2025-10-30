@@ -8,6 +8,7 @@ import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/model/consent_participant.dart';
 import 'package:daakia_vc_flutter_sdk/model/participant_attendance_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
+import 'package:daakia_vc_flutter_sdk/model/reply_message.dart';
 import 'package:daakia_vc_flutter_sdk/model/transcription_action_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/transcription_model.dart';
 import 'package:daakia_vc_flutter_sdk/resources/json/language_json.dart';
@@ -184,6 +185,8 @@ class RtcViewmodel extends ChangeNotifier {
       id: const Uuid().v4(), // Generate a unique ID
       message: userMessage,
       timestamp: DateTime.now().millisecondsSinceEpoch, // Current timestamp
+      isReplied: _publicReplyDraft != null,
+      replyMessage: _publicReplyDraft,
     );
 
     // Publish the data to the LiveKit room
@@ -202,8 +205,10 @@ class RtcViewmodel extends ChangeNotifier {
         action: MeetingActions.sendPublicMessage,
         // Assuming no action is provided
         isSender: true, // isSender
+        replyMessage: message.replyMessage
       ),
     );
+    publicReplyDraft = null;
   }
 
   Future<void> sendPrivateMessage(
@@ -1715,4 +1720,13 @@ class RtcViewmodel extends ChangeNotifier {
     }
   }
 
+  //===============================[Reply Chat]===============================
+  ReplyMessage? _publicReplyDraft;
+
+  ReplyMessage? get publicReplyDraft => _publicReplyDraft;
+
+  set publicReplyDraft(ReplyMessage? value) {
+    _publicReplyDraft = value;
+    notifyListeners();
+  }
 }
