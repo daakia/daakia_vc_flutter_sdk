@@ -1,5 +1,7 @@
+import 'package:daakia_vc_flutter_sdk/model/reply_message.dart';
 import 'package:daakia_vc_flutter_sdk/model/transcription_action_model.dart';
 import 'package:livekit_client/livekit_client.dart';
+
 import 'consent_participant.dart';
 
 class RemoteActivityData {
@@ -27,6 +29,7 @@ class RemoteActivityData {
   final String? dispatchId;
   final String? mode;
   final bool isDeleted;
+  final ReplyMessage? replyMessage;
 
   // ✅ ADD NEW FIELD
 
@@ -55,12 +58,14 @@ class RemoteActivityData {
     this.dispatchId,
     this.mode,
     this.isDeleted = false,
+    this.replyMessage,
     // ✅ ADD NEW FIELD
   });
 
   factory RemoteActivityData.fromJson(Map<String, dynamic> json) {
     return RemoteActivityData(
-      identity: json['identity'], // If needed, parse manually
+      identity: json['identity'],
+      // If needed, parse manually
       id: json['id'] as String?,
       message: json['message'] as String?,
       timestamp: json['timestamp'] as int?,
@@ -89,6 +94,9 @@ class RemoteActivityData {
       dispatchId: json['dispatchId'] as String?,
       mode: json['mode'] as String?,
       isDeleted: json['isDeleted'] as bool? ?? false,
+      replyMessage: json['replyMessage'] != null
+          ? ReplyMessage.fromJson(json['replyMessage'] as Map<String, dynamic>)
+          : null,
       // ✅ ADD NEW FIELD
     );
   }
@@ -118,7 +126,8 @@ class RemoteActivityData {
       'participants': participants?.map((e) => e.toJson()).toList(),
       'dispatchId': dispatchId,
       'mode': mode,
-      'isDeleted': isDeleted
+      'isDeleted': isDeleted,
+      'replyMessage': replyMessage,
       // ✅ ADD NEW FIELD
     };
   }
@@ -148,6 +157,7 @@ class RemoteActivityData {
     String? dispatchId,
     String? mode,
     bool? isDeleted,
+    ReplyMessage? replyMessage,
     // ✅ ADD NEW FIELD
   }) {
     return RemoteActivityData(
@@ -176,6 +186,7 @@ class RemoteActivityData {
       dispatchId: dispatchId ?? this.dispatchId,
       mode: mode ?? this.mode,
       isDeleted: isDeleted ?? this.isDeleted,
+      replyMessage: replyMessage ?? this.replyMessage,
       // ✅ ADD NEW FIELD
     );
   }
