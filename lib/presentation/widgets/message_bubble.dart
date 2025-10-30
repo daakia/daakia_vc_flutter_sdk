@@ -1,5 +1,6 @@
 import 'package:daakia_vc_flutter_sdk/enum/chat_type_enum.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/reply_message_widget.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
 import 'package:flutter/material.dart';
 
@@ -53,29 +54,49 @@ class _MessageBubbleState extends State<MessageBubble> {
 
             // Message Card
             GestureDetector(
-              onLongPress: () => !widget.chat.isDeleted ? showModalBottomSheet(
-                context: context,
-                backgroundColor: Colors.transparent,
-                builder: (_) => MessageActionSheet(
-                  isMine: isSender,
-                  isPinned: Utils.isPinned(widget.chat, widget.isPrivateChat ? widget.viewModel.pinnedPrivateChat : widget.viewModel.pinnedPublicChat),
-                  onReply: () => (),
-                  onCopy: () => (),
-                  onDelete: () {
-                    final chatType = widget.isPrivateChat ? ChatType.private.name : ChatType.public.name;
-                    widget.viewModel.deleteMessage(chatType, widget.chat.id, widget.chat.userIdentity);
-                    widget.viewModel.sendDeleteMessageAction(chatType, widget.chat);
-                  },
-                  onPin: () {
-                    if (Utils.isPinned(widget.chat, widget.isPrivateChat ? widget.viewModel.pinnedPrivateChat : widget.viewModel.pinnedPublicChat)) {
-                      !widget.isPrivateChat ? widget.viewModel.pinnedPublicChat = null : widget.viewModel.pinnedPrivateChat = null;
-                    } else {
-                      !widget.isPrivateChat ? widget.viewModel.pinnedPublicChat = widget.chat : widget.viewModel.pinnedPrivateChat = widget.chat;
-                    }
-                  },
-                  onReact: (emoji) => (),
-                ),
-              ) : null,
+              onLongPress: () => !widget.chat.isDeleted
+                  ? showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => MessageActionSheet(
+                        isMine: isSender,
+                        isPinned: Utils.isPinned(
+                            widget.chat,
+                            widget.isPrivateChat
+                                ? widget.viewModel.pinnedPrivateChat
+                                : widget.viewModel.pinnedPublicChat),
+                        onReply: () => (),
+                        onCopy: () => (),
+                        onDelete: () {
+                          final chatType = widget.isPrivateChat
+                              ? ChatType.private.name
+                              : ChatType.public.name;
+                          widget.viewModel.deleteMessage(chatType,
+                              widget.chat.id, widget.chat.userIdentity);
+                          widget.viewModel
+                              .sendDeleteMessageAction(chatType, widget.chat);
+                        },
+                        onPin: () {
+                          if (Utils.isPinned(
+                              widget.chat,
+                              widget.isPrivateChat
+                                  ? widget.viewModel.pinnedPrivateChat
+                                  : widget.viewModel.pinnedPublicChat)) {
+                            !widget.isPrivateChat
+                                ? widget.viewModel.pinnedPublicChat = null
+                                : widget.viewModel.pinnedPrivateChat = null;
+                          } else {
+                            !widget.isPrivateChat
+                                ? widget.viewModel.pinnedPublicChat =
+                                    widget.chat
+                                : widget.viewModel.pinnedPrivateChat =
+                                    widget.chat;
+                          }
+                        },
+                        onReact: (emoji) => (),
+                      ),
+                    )
+                  : null,
               child: Card(
                 color: isSender
                     ? const Color(0xFF2196F3)
@@ -93,30 +114,32 @@ class _MessageBubbleState extends State<MessageBubble> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // ✅ Reply message shown inside the bubble
+                        if (widget.chat.replyMessage != null)
+                          ReplyMessageWidget(
+                            reply: widget.chat.replyMessage!,
+                            isSender: isSender,
+                          ),
+
+                        // Main message content
                         if (Utils.isOnlyLink(message) || Utils.isLink(message))
                           Center(
                             child: Card(
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                    12), // Rounded corners
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               elevation: 0,
-                              // Zero elevation
                               shadowColor: Colors.transparent,
-                              // Transparent shadow
                               color: Colors.transparent,
-                              // Transparent background
-                              child: FilePreviewWidget(
-                                fileUrl: (message), // Replace with your widget
-                              ),
+                              child: FilePreviewWidget(fileUrl: message),
                             ),
-                          ),
-                        if (!Utils.isOnlyLink(message) ||
-                            !Utils.isLink(message))
+                          )
+                        else
                           Text(
                             Utils.extractNonLinkText(message),
                             style: const TextStyle(color: Colors.white),
                           ),
+
                         const SizedBox(height: 5.0),
 
                         // Sent Time
