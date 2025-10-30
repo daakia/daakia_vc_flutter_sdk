@@ -28,8 +28,6 @@ class MessageActionSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    HapticFeedback.selectionClick();
-
     return SafeArea(
       child: Container(
         margin: const EdgeInsets.all(10),
@@ -112,7 +110,6 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
         Navigator.pop(context);
         action.onTap?.call();
         Utils.hideKeyboard(context); // 👈 This line closes the keyboard

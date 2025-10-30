@@ -11,6 +11,7 @@ import '../../viewmodel/rtc_viewmodel.dart';
 import '../widgets/compact_file_preview.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/pinned_message_widget.dart';
+import '../widgets/reply_preview_widget.dart';
 
 class PrivateChatPage extends StatefulWidget {
   PrivateChatPage(
@@ -159,8 +160,13 @@ class PrivateChantState extends State<PrivateChatPage> {
                     ),
                     if (widget.viewModel.pinnedPrivateChat != null)
                       PinnedMessageWidget(
-                        name: widget.viewModel.pinnedPrivateChat?.isSender == true ? widget.viewModel.room.localParticipant?.name : widget.viewModel.pinnedPrivateChat?.identity?.name,
-                        message: widget.viewModel.pinnedPrivateChat?.message ?? "",
+                        name:
+                            widget.viewModel.pinnedPrivateChat?.isSender == true
+                                ? widget.viewModel.room.localParticipant?.name
+                                : widget.viewModel.pinnedPrivateChat?.identity
+                                    ?.name,
+                        message:
+                            widget.viewModel.pinnedPrivateChat?.message ?? "",
                         onPinPressed: () {
                           widget.viewModel.pinnedPrivateChat = null;
                         },
@@ -185,11 +191,17 @@ class PrivateChantState extends State<PrivateChatPage> {
                           return MessageBubble(
                               chat: message,
                               viewModel: widget.viewModel,
-                              isPrivateChat: true
-                          );
+                              isPrivateChat: true);
                         },
                       ),
                     ),
+                    if (widget.viewModel.privateReplyDraft != null)
+                      ReplyPreviewWidget(
+                        reply: widget.viewModel.privateReplyDraft!,
+                        onCancel: () {
+                          widget.viewModel.privateReplyDraft = null;
+                        },
+                      ),
                     // Message Input Section
                     Padding(
                       padding: const EdgeInsets.symmetric(
