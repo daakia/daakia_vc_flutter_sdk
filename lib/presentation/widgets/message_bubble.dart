@@ -65,7 +65,16 @@ class _MessageBubbleState extends State<MessageBubble> {
                             widget.isPrivateChat
                                 ? widget.viewModel.pinnedPrivateChat
                                 : widget.viewModel.pinnedPublicChat),
-                        onReply: () => (),
+                        onReply: () {
+                          widget.isPrivateChat
+                              ? null
+                              : (widget.viewModel.publicReplyDraft =
+                                  Utils.getReplyDraft(widget.chat,
+                                      name: isSender
+                                          ? widget.viewModel.room
+                                              .localParticipant?.name
+                                          : null));
+                        },
                         onCopy: () => (),
                         onDelete: () {
                           final chatType = widget.isPrivateChat

@@ -10,6 +10,7 @@ import '../../presentation/widgets/compact_file_preview.dart';
 import '../../utils/constants.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import '../widgets/pinned_message_widget.dart';
+import '../widgets/reply_preview_widget.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({required this.viewModel, super.key});
@@ -55,7 +56,9 @@ class _ChatState extends State<ChatPage> {
             children: [
               if (widget.viewModel.pinnedPublicChat != null)
                 PinnedMessageWidget(
-                  name: widget.viewModel.pinnedPublicChat?.isSender == true ? widget.viewModel.room.localParticipant?.name : widget.viewModel.pinnedPublicChat?.identity?.name,
+                  name: widget.viewModel.pinnedPublicChat?.isSender == true
+                      ? widget.viewModel.room.localParticipant?.name
+                      : widget.viewModel.pinnedPublicChat?.identity?.name,
                   message: widget.viewModel.pinnedPublicChat?.message ?? "",
                   onPinPressed: () {
                     widget.viewModel.pinnedPublicChat = null;
@@ -79,7 +82,13 @@ class _ChatState extends State<ChatPage> {
                   },
                 ),
               ),
-
+              if (widget.viewModel.publicReplyDraft != null)
+                ReplyPreviewWidget(
+                  reply: widget.viewModel.publicReplyDraft!,
+                  onCancel: () {
+                    widget.viewModel.publicReplyDraft = null;
+                  },
+                ),
               // Message Input Section
               Padding(
                 padding: const EdgeInsets.symmetric(
