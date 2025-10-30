@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
+import 'package:daakia_vc_flutter_sdk/model/reply_message.dart';
 import 'package:daakia_vc_flutter_sdk/model/saved_data.dart';
 import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -459,6 +460,10 @@ class Utils {
     if (chat == null || pinnedPublicChat == null) return false;
     if (chat.id == pinnedPublicChat.id) return true;
     return false;
+  }
+
+  static ReplyMessage? getReplyDraft(RemoteActivityData chat, {String? name}) {
+    return ReplyMessage(name: name ?? (chat.identity?.name ?? ""), message: chat.message ?? "", id: chat.id ?? "", identity: chat.userIdentity ?? "");
   }
 
 }
