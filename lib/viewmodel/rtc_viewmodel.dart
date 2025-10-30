@@ -223,6 +223,8 @@ class RtcViewmodel extends ChangeNotifier {
       id: const Uuid().v4(), // Generate a unique ID
       message: userMessage,
       timestamp: DateTime.now().millisecondsSinceEpoch, // Current timestamp
+      isReplied: privateReplyDraft != null,
+      replyMessage: privateReplyDraft,
     );
 
     if (identity != null) {
@@ -247,8 +249,11 @@ class RtcViewmodel extends ChangeNotifier {
               isSender: true,
               // isSender
               userIdentity: identity,
-              userName: name),
+              userName: name,
+              replyMessage: message.replyMessage
+          ),
         );
+        privateReplyDraft = null;
       } catch (e) {
         if (kDebugMode) {
           print('Error sending private action: $e');
@@ -1729,4 +1734,11 @@ class RtcViewmodel extends ChangeNotifier {
     _publicReplyDraft = value;
     notifyListeners();
   }
+
+  set privateReplyDraft(ReplyMessage? replyChat) {
+    getPrivateMessage()[getPrivateChatIdentity()]?.replyMessage = replyChat;
+    notifyListeners();
+  }
+
+  ReplyMessage? get privateReplyDraft => getPrivateMessage()[getPrivateChatIdentity()]?.replyMessage;
 }
