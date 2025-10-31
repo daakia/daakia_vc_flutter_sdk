@@ -1741,4 +1741,45 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
   ReplyMessage? get privateReplyDraft => getPrivateMessage()[getPrivateChatIdentity()]?.replyMessage;
+
+  //===============================[Reply Chat]===============================
+  void editMessage(String mode, String? id, String? identity, String? message) {
+    final chatType = ChatTypeExtension.fromString(mode);
+    switch (chatType) {
+      case ChatType.public:
+        _editPublicMessage(id, message);
+        break;
+
+      case ChatType.private:
+        _editPrivateMessage(id, identity, message);
+        break;
+    }
+  }
+
+  void _editPublicMessage(String? id, String? message) {
+    if (id == null) return;
+
+    final index = _messageList.indexWhere((message) => message.id == id);
+    if (index != -1) {
+      _messageList[index] = _messageList[index].copyWith(
+        message: message,
+        isEdited: true,
+      );
+      notifyListeners();
+    }
+  }
+
+  void _editPrivateMessage(String? id, String? identity, String? message) {
+    if (id == null || identity == null) return;
+    final privateChats = _privateChat[identity]?.chats;
+    if (privateChats == null) return;
+    final index = privateChats.indexWhere((message) => message.id == id);
+    if (index != -1) {
+      privateChats[index] = privateChats[index].copyWith(
+        message: message,
+        isEdited: true,
+      );
+      notifyListeners();
+    }
+  }
 }
