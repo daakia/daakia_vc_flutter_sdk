@@ -9,6 +9,7 @@ import '../../events/rtc_events.dart';
 import '../../presentation/widgets/compact_file_preview.dart';
 import '../../utils/constants.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
+import '../widgets/edit_preview_widget.dart';
 import '../widgets/pinned_message_widget.dart';
 import '../widgets/reply_preview_widget.dart';
 
@@ -89,6 +90,14 @@ class _ChatState extends State<ChatPage> {
                     widget.viewModel.publicReplyDraft = null;
                   },
                 ),
+              if (widget.viewModel.publicEditDraft != null)
+                EditPreviewWidget(
+                  originalMessage: widget.viewModel.publicEditDraft!.message,
+                  onCancel: () {
+                    widget.viewModel.publicEditDraft = null;
+                  },
+                ),
+
               // Message Input Section
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -251,12 +260,21 @@ class _ChatState extends State<ChatPage> {
                         color: Colors.white,
                         onPressed: () {
                           Utils.hideKeyboard(context);
-                          setState(() {
-                            if (messageController.text.trim().isEmpty) return;
-                            widget.viewModel
-                                .sendPublicMessage(messageController.text);
-                            messageController.clear();
-                          });
+                          if (messageController.text.trim().isEmpty) return;
+
+                          if (widget.viewModel.publicEditDraft != null) {
+                            // Edit existing message
+                            widget.viewModel.editPublicMessage(
+                              messageController.text.trim()
+                            );
+                            widget.viewModel.publicEditDraft = null;
+                          } else {
+                            // Normal send
+                            widget.viewModel.sendPublicMessage(messageController.text.trim());
+                          }
+
+                          messageController.clear();
+                          setState(() {});
                         },
                       ),
                     ],

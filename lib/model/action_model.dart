@@ -12,6 +12,7 @@ class ActionModel {
   final List<ConsentParticipant>? participants;
   final Map<String, dynamic>? user;
   final int? timeStamp;
+  final int? timestamp; //specially for edit message
   final String? dispatchId;
   final String? id;
   final String? mode;
@@ -28,6 +29,7 @@ class ActionModel {
     this.participants,
     this.user,
     this.timeStamp,
+    this.timestamp,
     this.dispatchId,
     this.id,
     this.mode,
@@ -57,6 +59,9 @@ class ActionModel {
     if (timeStamp != null) {
       data['timeStamp'] = timeStamp;
     }
+    if (timestamp != null) {
+      data['timestamp'] = timestamp;
+    }
     if (dispatchId != null) {
       data['dispatchId'] = dispatchId;
     }
@@ -84,6 +89,7 @@ class ActionModel {
           .toList(),
       user: json['user'] as Map<String, dynamic>?,
       timeStamp: json['timeStamp'] as int?,
+      timestamp: json['timestamp'] as int?,
       dispatchId: json['dispatchId'] as String? ?? "",
       id: json['id'] as String? ?? "",
       mode: json['mode'] as String? ?? "",

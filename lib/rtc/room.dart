@@ -642,6 +642,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         viewModel?.deleteMessage(remoteData.mode??"", remoteData.id, remoteData.identity?.identity);
         break;
 
+      case MeetingActions.editMessage:
+        viewModel?.editMessage(remoteData.mode??"", remoteData.id, remoteData.identity?.identity, remoteData.message);
+        break;
+
       case "":
       // Handle empty action case if needed
         break;

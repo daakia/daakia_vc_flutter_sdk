@@ -9,6 +9,7 @@ import '../../utils/constants.dart';
 import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import '../widgets/compact_file_preview.dart';
+import '../widgets/edit_preview_widget.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/pinned_message_widget.dart';
 import '../widgets/reply_preview_widget.dart';
@@ -202,6 +203,13 @@ class PrivateChantState extends State<PrivateChatPage> {
                           widget.viewModel.privateReplyDraft = null;
                         },
                       ),
+                    if (widget.viewModel.privateEditDraft != null)
+                      EditPreviewWidget(
+                        originalMessage: widget.viewModel.privateEditDraft!.message,
+                        onCancel: () {
+                          widget.viewModel.privateEditDraft = null;
+                        },
+                      ),
                     // Message Input Section
                     Padding(
                       padding: const EdgeInsets.symmetric(
@@ -387,14 +395,25 @@ class PrivateChantState extends State<PrivateChatPage> {
                               color: Colors.white,
                               onPressed: () {
                                 Utils.hideKeyboard(context);
-                                setState(() {
-                                  if (messageController.text.trim().isEmpty) return;
+                                final messageText = messageController.text.trim();
+                                if (messageText.isEmpty) return;
+
+                                if (widget.viewModel.privateEditDraft != null) {
+                                  // Edit existing private message
+                                  final identity = widget.viewModel.getPrivateChatIdentity();
+                                  widget.viewModel.editPrivateMessage(messageText, identity);
+                                  widget.viewModel.privateEditDraft = null;
+                                } else {
+                                  // Send new message
                                   widget.viewModel.sendPrivateMessage(
-                                      widget.viewModel.getPrivateChatIdentity(),
-                                      widget.viewModel.getPrivateChatUserName(),
-                                      messageController.text);
-                                  messageController.clear();
-                                });
+                                    widget.viewModel.getPrivateChatIdentity(),
+                                    widget.viewModel.getPrivateChatUserName(),
+                                    messageText,
+                                  );
+                                }
+
+                                messageController.clear();
+                                setState(() {});
                               },
                             ),
                           ],

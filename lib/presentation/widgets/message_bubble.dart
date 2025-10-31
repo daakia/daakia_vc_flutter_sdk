@@ -1,4 +1,5 @@
 import 'package:daakia_vc_flutter_sdk/enum/chat_type_enum.dart';
+import 'package:daakia_vc_flutter_sdk/model/edit_message.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/reply_message_widget.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
@@ -31,6 +32,7 @@ class _MessageBubbleState extends State<MessageBubble> {
     final String message = widget.chat.message ?? "";
     final String time = Utils.formatTimestampToTime(widget.chat.timestamp);
     final bool isSender = widget.chat.isSender;
+    final bool isEdited = widget.chat.isEdited;
     return Align(
       alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
@@ -80,6 +82,16 @@ class _MessageBubbleState extends State<MessageBubble> {
                           }
                         },
                         onCopy: () => (),
+                        onEdit: () {
+                          final chat = widget.chat;
+                          if (widget.isPrivateChat) {
+                            widget.viewModel.privateEditDraft = EditMessage(
+                                id: chat.id ?? "", message: chat.message ?? "");
+                          } else {
+                            widget.viewModel.publicEditDraft = EditMessage(
+                                id: chat.id ?? "", message: chat.message ?? "");
+                          }
+                        },
                         onDelete: () {
                           final chatType = widget.isPrivateChat
                               ? ChatType.private.name
@@ -159,7 +171,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: Text(
-                            time,
+                            isEdited ? "Edited  $time" : time,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 8.0,

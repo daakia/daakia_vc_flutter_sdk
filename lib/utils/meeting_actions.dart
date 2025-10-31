@@ -70,6 +70,8 @@ class MeetingActions {
 
   static const String deleteMessage = "delete-message";
 
+  static const String editMessage = "edit-message";
+
   // ✅ Add new fields here
 
   // ✅ Method to check if an action is valid
@@ -119,7 +121,8 @@ class MeetingActions {
     stopRecording,
     finallyStartRecording,
     finallyStopRecording,
-    deleteMessage
+    deleteMessage,
+    editMessage,
     // ✅ Add new fields here
   };
 }
