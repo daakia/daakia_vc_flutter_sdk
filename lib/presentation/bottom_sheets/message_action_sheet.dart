@@ -10,6 +10,7 @@ class MessageActionSheet extends StatelessWidget {
   final VoidCallback? onReply;
   final VoidCallback? onCopy;
   final VoidCallback? onPin;
+  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
   final Function(String emoji)? onReact;
 
@@ -20,6 +21,7 @@ class MessageActionSheet extends StatelessWidget {
     this.onReply,
     this.onCopy,
     this.onPin,
+    this.onEdit,
     this.onDelete,
     this.onReact,
   });
@@ -82,6 +84,7 @@ class MessageActionSheet extends StatelessWidget {
       _MessageAction('Reply', Icons.reply, onReply),
       _MessageAction('Copy', Icons.copy, onCopy),
       _MessageAction(isPinned ? 'Unpin' : 'Pin', Icons.push_pin, onPin),
+      if (isMine) _MessageAction('Edit', Icons.edit, onEdit),
       if (isMine) _MessageAction('Delete', Icons.delete, onDelete),
     ];
 
