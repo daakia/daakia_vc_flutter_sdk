@@ -31,6 +31,7 @@ class _MessageBubbleState extends State<MessageBubble> {
     final String message = widget.chat.message ?? "";
     final String time = Utils.formatTimestampToTime(widget.chat.timestamp);
     final bool isSender = widget.chat.isSender;
+    final bool isEdited = widget.chat.isEdited;
     return Align(
       alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
@@ -159,7 +160,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: Text(
-                            time,
+                            isEdited ? "Edited  $time" : time,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 8.0,
