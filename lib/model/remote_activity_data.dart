@@ -29,6 +29,7 @@ class RemoteActivityData {
   final String? dispatchId;
   final String? mode;
   final bool isDeleted;
+  final bool isEdited;
   final ReplyMessage? replyMessage;
 
   // ✅ ADD NEW FIELD
@@ -58,6 +59,7 @@ class RemoteActivityData {
     this.dispatchId,
     this.mode,
     this.isDeleted = false,
+    this.isEdited = false,
     this.replyMessage,
     // ✅ ADD NEW FIELD
   });
@@ -94,6 +96,7 @@ class RemoteActivityData {
       dispatchId: json['dispatchId'] as String?,
       mode: json['mode'] as String?,
       isDeleted: json['isDeleted'] as bool? ?? false,
+      isEdited: json['isEdited'] as bool? ?? false,
       replyMessage: json['replyMessage'] != null
           ? ReplyMessage.fromJson(json['replyMessage'] as Map<String, dynamic>)
           : null,
@@ -127,6 +130,7 @@ class RemoteActivityData {
       'dispatchId': dispatchId,
       'mode': mode,
       'isDeleted': isDeleted,
+      'isEdited': isEdited,
       'replyMessage': replyMessage,
       // ✅ ADD NEW FIELD
     };
@@ -157,6 +161,7 @@ class RemoteActivityData {
     String? dispatchId,
     String? mode,
     bool? isDeleted,
+    bool? isEdited,
     ReplyMessage? replyMessage,
     // ✅ ADD NEW FIELD
   }) {
@@ -186,6 +191,7 @@ class RemoteActivityData {
       dispatchId: dispatchId ?? this.dispatchId,
       mode: mode ?? this.mode,
       isDeleted: isDeleted ?? this.isDeleted,
+      isEdited: isEdited ?? this.isEdited,
       replyMessage: replyMessage ?? this.replyMessage,
       // ✅ ADD NEW FIELD
     );
