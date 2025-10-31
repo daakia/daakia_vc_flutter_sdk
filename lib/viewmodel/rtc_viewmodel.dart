@@ -6,6 +6,7 @@ import 'package:collection/collection.dart';
 import 'package:daakia_vc_flutter_sdk/api/injection.dart';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/model/consent_participant.dart';
+import 'package:daakia_vc_flutter_sdk/model/edit_message.dart';
 import 'package:daakia_vc_flutter_sdk/model/participant_attendance_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/reply_message.dart';
@@ -136,7 +137,7 @@ class RtcViewmodel extends ChangeNotifier {
       // Increase unread if:
       // - Chat page is closed (normal case)
       // - OR Chat page is open but this particular chat is not selected
-      if ((chatModel.identity != _privateChatIdentity)|| !isPrivateChatOpen) {
+      if ((chatModel.identity != _privateChatIdentity) || !isPrivateChatOpen) {
         chatModel.unreadCount++;
         increaseUnreadPrivateChatCount();
       }
@@ -146,7 +147,7 @@ class RtcViewmodel extends ChangeNotifier {
 
       _privateChat.putIfAbsent(
         identity,
-            () => PrivateChatModel(identity: identity, name: name, chats: []),
+        () => PrivateChatModel(identity: identity, name: name, chats: []),
       );
       _privateChat[identity]?.chats.add(message);
     }
@@ -182,9 +183,11 @@ class RtcViewmodel extends ChangeNotifier {
     // Create a message
     final message = SendMessageModel(
       action: MeetingActions.sendPublicMessage,
-      id: const Uuid().v4(), // Generate a unique ID
+      id: const Uuid().v4(),
+      // Generate a unique ID
       message: userMessage,
-      timestamp: DateTime.now().millisecondsSinceEpoch, // Current timestamp
+      timestamp: DateTime.now().millisecondsSinceEpoch,
+      // Current timestamp
       isReplied: _publicReplyDraft != null,
       replyMessage: _publicReplyDraft,
     );
@@ -198,15 +201,15 @@ class RtcViewmodel extends ChangeNotifier {
     // Update the message list
     addMessage(
       RemoteActivityData(
-        identity: null,
-        id: message.id,
-        message: message.message,
-        timestamp: message.timestamp,
-        action: MeetingActions.sendPublicMessage,
-        // Assuming no action is provided
-        isSender: true, // isSender
-        replyMessage: message.replyMessage
-      ),
+          identity: null,
+          id: message.id,
+          message: message.message,
+          timestamp: message.timestamp,
+          action: MeetingActions.sendPublicMessage,
+          // Assuming no action is provided
+          isSender: true,
+          // isSender
+          replyMessage: message.replyMessage),
     );
     publicReplyDraft = null;
   }
@@ -220,9 +223,11 @@ class RtcViewmodel extends ChangeNotifier {
     // Create a message
     final message = SendMessageModel(
       action: MeetingActions.sendPrivateMessage,
-      id: const Uuid().v4(), // Generate a unique ID
+      id: const Uuid().v4(),
+      // Generate a unique ID
       message: userMessage,
-      timestamp: DateTime.now().millisecondsSinceEpoch, // Current timestamp
+      timestamp: DateTime.now().millisecondsSinceEpoch,
+      // Current timestamp
       isReplied: privateReplyDraft != null,
       replyMessage: privateReplyDraft,
     );
@@ -250,8 +255,7 @@ class RtcViewmodel extends ChangeNotifier {
               // isSender
               userIdentity: identity,
               userName: name,
-              replyMessage: message.replyMessage
-          ),
+              replyMessage: message.replyMessage),
         );
         privateReplyDraft = null;
       } catch (e) {
@@ -489,7 +493,6 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
-
   bool isRecordingStartByMe = false;
 
   String? dispatchId;
@@ -532,7 +535,8 @@ class RtcViewmodel extends ChangeNotifier {
           } else {
             isRecordingActionInProgress = false;
             if (isNeedToShowError) {
-              sendMessageToUI("Unable to stop recording: dispatch ID not found.");
+              sendMessageToUI(
+                  "Unable to stop recording: dispatch ID not found.");
             }
           }
         },
@@ -578,7 +582,8 @@ class RtcViewmodel extends ChangeNotifier {
                 _attemptStopRecording(isNeedToShowError: isNeedToShowError);
               } else {
                 isRecordingActionInProgress = false;
-                sendMessageToUI("Unable to stop recording: dispatch ID not found.");
+                sendMessageToUI(
+                    "Unable to stop recording: dispatch ID not found.");
               }
             },
           );
@@ -615,7 +620,6 @@ class RtcViewmodel extends ChangeNotifier {
     );
   }
 
-
   Timer? _resetTimer;
 
   void resetRecordingActionInProgressAfterDelay([int seconds = 30]) {
@@ -634,7 +638,6 @@ class RtcViewmodel extends ChangeNotifier {
     _resetTimer?.cancel();
     _resetTimer = null;
   }
-
 
   bool isHost() {
     return Utils.isHost(room.localParticipant?.metadata);
@@ -1654,9 +1657,9 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
-
   //===============================[Pin Chat]===============================
   RemoteActivityData? _pinnedPublicChat;
+
   set pinnedPublicChat(RemoteActivityData? chat) {
     _pinnedPublicChat = chat;
     notifyListeners();
@@ -1664,13 +1667,13 @@ class RtcViewmodel extends ChangeNotifier {
 
   RemoteActivityData? get pinnedPublicChat => _pinnedPublicChat;
 
-
   set pinnedPrivateChat(RemoteActivityData? chat) {
     getPrivateMessage()[getPrivateChatIdentity()]?.pinnedChat = chat;
     notifyListeners();
   }
 
-  RemoteActivityData? get pinnedPrivateChat => getPrivateMessage()[getPrivateChatIdentity()]?.pinnedChat;
+  RemoteActivityData? get pinnedPrivateChat =>
+      getPrivateMessage()[getPrivateChatIdentity()]?.pinnedChat;
 
   void deleteMessage(String mode, String? id, String? identity) {
     final chatType = ChatTypeExtension.fromString(mode);
@@ -1716,11 +1719,15 @@ class RtcViewmodel extends ChangeNotifier {
     final chatType = ChatTypeExtension.fromString(mode);
     switch (chatType) {
       case ChatType.public:
-        sendAction(ActionModel(action: MeetingActions.deleteMessage, id: chat.id, mode: mode));
+        sendAction(ActionModel(
+            action: MeetingActions.deleteMessage, id: chat.id, mode: mode));
         break;
 
       case ChatType.private:
-        sendPrivateAction(ActionModel(action: MeetingActions.deleteMessage, id: chat.id, mode: mode), chat.userIdentity);
+        sendPrivateAction(
+            ActionModel(
+                action: MeetingActions.deleteMessage, id: chat.id, mode: mode),
+            chat.userIdentity);
         break;
     }
   }
@@ -1740,7 +1747,8 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
-  ReplyMessage? get privateReplyDraft => getPrivateMessage()[getPrivateChatIdentity()]?.replyMessage;
+  ReplyMessage? get privateReplyDraft =>
+      getPrivateMessage()[getPrivateChatIdentity()]?.replyMessage;
 
   //===============================[Reply Chat]===============================
   void editMessage(String mode, String? id, String? identity, String? message) {
@@ -1781,5 +1789,52 @@ class RtcViewmodel extends ChangeNotifier {
       );
       notifyListeners();
     }
+  }
+
+  EditMessage? _publicEditDraft;
+
+  EditMessage? get publicEditDraft => _publicEditDraft;
+
+  set publicEditDraft(EditMessage? value) {
+    _publicEditDraft = value;
+    notifyListeners();
+  }
+
+  set privateEditDraft(EditMessage? editMessage) {
+    getPrivateMessage()[getPrivateChatIdentity()]?.editMessage = editMessage;
+    notifyListeners();
+  }
+
+  EditMessage? get privateEditDraft =>
+      getPrivateMessage()[getPrivateChatIdentity()]?.editMessage;
+
+  void editPublicMessage(String updatedMessage) {
+    sendAction(ActionModel(
+        action: MeetingActions.editMessage,
+        id: _publicEditDraft?.id,
+        message: updatedMessage,
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+        mode: ChatType.public.name));
+
+    editMessage(ChatType.public.name, _publicEditDraft?.id,
+        room.localParticipant?.identity, updatedMessage);
+  }
+
+  void editPrivateMessage(String updatedMessage, String identity) {
+    final draft = privateEditDraft;
+    if (draft == null) return;
+
+    sendPrivateAction(
+      ActionModel(
+        action: MeetingActions.editMessage,
+        id: draft.id,
+        message: updatedMessage,
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+        mode: ChatType.private.name,
+      ),
+      identity,
+    );
+
+    editMessage(ChatType.private.name, draft.id, identity, updatedMessage);
   }
 }
