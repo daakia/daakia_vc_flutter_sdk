@@ -1,4 +1,5 @@
 import 'package:daakia_vc_flutter_sdk/enum/chat_type_enum.dart';
+import 'package:daakia_vc_flutter_sdk/model/edit_message.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/reply_message_widget.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
@@ -81,6 +82,16 @@ class _MessageBubbleState extends State<MessageBubble> {
                           }
                         },
                         onCopy: () => (),
+                        onEdit: () {
+                          final chat = widget.chat;
+                          if (widget.isPrivateChat) {
+                            widget.viewModel.privateEditDraft = EditMessage(
+                                id: chat.id ?? "", message: chat.message ?? "");
+                          } else {
+                            widget.viewModel.publicEditDraft = EditMessage(
+                                id: chat.id ?? "", message: chat.message ?? "");
+                          }
+                        },
                         onDelete: () {
                           final chatType = widget.isPrivateChat
                               ? ChatType.private.name
