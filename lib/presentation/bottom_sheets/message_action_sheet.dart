@@ -57,7 +57,6 @@ class MessageActionSheet extends StatelessWidget {
                     // Convert emoji to Unicode code (for sending)
                     final emojiCode = ReactionEmojiMap.emojiToCode[emoji] ?? emoji;
                     onReact?.call(emojiCode);
-                    HapticFeedback.lightImpact();
                   },
                   child: AnimatedScale(
                     scale: 1.0,
