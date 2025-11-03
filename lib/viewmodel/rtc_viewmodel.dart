@@ -8,6 +8,7 @@ import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/model/consent_participant.dart';
 import 'package:daakia_vc_flutter_sdk/model/edit_message.dart';
 import 'package:daakia_vc_flutter_sdk/model/participant_attendance_data.dart';
+import 'package:daakia_vc_flutter_sdk/model/reaction_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/reply_message.dart';
 import 'package:daakia_vc_flutter_sdk/model/transcription_action_model.dart';
@@ -1837,4 +1838,172 @@ class RtcViewmodel extends ChangeNotifier {
 
     editMessage(ChatType.private.name, draft.id, identity, updatedMessage);
   }
+
+  //===============================[Chat Reaction]===============================
+  void handleReaction(RemoteActivityData remoteData) {
+    final chatType = ChatTypeExtension.fromString(remoteData.mode ?? "");
+    final id = remoteData.messageId;
+    final reaction = remoteData.reaction;
+    final isRemoveReaction = remoteData.removeReaction;
+    final senderIdentity = remoteData.identity?.identity; // who sent event
+
+    switch (chatType) {
+      case ChatType.public:
+        _publicReaction(id, reaction, isRemoveReaction);
+        break;
+
+      case ChatType.private:
+        _privateReaction(id, senderIdentity, reaction, isRemoveReaction);
+        break;
+    }
+  }
+
+  void _publicReaction(
+    String? id,
+    Reaction? reaction,
+    bool isRemoveReaction,
+  ) {
+    if (id == null || reaction == null) return;
+
+    final index = _messageList.indexWhere((message) => message.id == id);
+    if (index == -1) return;
+
+    final message = _messageList[index];
+
+    // Copy existing reactions or use empty list if null
+    final reactions = List<Reaction>.from(message.reactions ?? []);
+
+    // Reactor = user who actually reacted (from reaction model)
+    final reactorId = reaction.reactor;
+    if (reactorId == null) return;
+
+    // Check if this user already reacted
+    final existingIndex = reactions.indexWhere((r) => r.reactor == reactorId);
+
+    if (isRemoveReaction) {
+      // 🔹 Remove reaction if user already reacted
+      if (existingIndex != -1) {
+        reactions.removeAt(existingIndex);
+      }
+    } else {
+      if (existingIndex != -1) {
+        // 🔹 Replace old reaction (update emoji)
+        reactions[existingIndex] = reaction;
+      } else {
+        // 🔹 Add new reaction
+        reactions.add(reaction);
+      }
+    }
+
+    // Update message in list
+    _messageList[index] = message.copyWith(reactions: reactions);
+
+    notifyListeners();
+  }
+
+  void _privateReaction(
+    String? id,
+    String? identity,
+    Reaction? reaction,
+    bool isRemoveReaction,
+  ) {
+    if (id == null || identity == null || reaction == null) return;
+    final privateChats = _privateChat[identity]?.chats;
+    if (privateChats == null) return;
+
+    final index = privateChats.indexWhere((message) => message.id == id);
+    if (index == -1) return;
+
+    final message = privateChats[index];
+
+    // Copy existing reactions or use empty list if null
+    final reactions = List<Reaction>.from(message.reactions ?? []);
+
+    // Reactor = user who actually reacted (from reaction model)
+    final reactorId = reaction.reactor;
+    if (reactorId == null) return;
+
+    // Check if this user already reacted
+    final existingIndex = reactions.indexWhere((r) => r.reactor == reactorId);
+
+    if (isRemoveReaction) {
+      // 🔹 Remove reaction if user already reacted
+      if (existingIndex != -1) {
+        reactions.removeAt(existingIndex);
+      }
+    } else {
+      if (existingIndex != -1) {
+        // 🔹 Replace old reaction (update emoji)
+        reactions[existingIndex] = reaction;
+      } else {
+        // 🔹 Add new reaction
+        reactions.add(reaction);
+      }
+    }
+
+    if (index != -1) {
+      privateChats[index] = privateChats[index].copyWith(
+        reactions: reactions
+      );
+      notifyListeners();
+    }
+  }
+
+  bool shouldUpdateReaction(
+      List<Reaction> reactions,
+      String identity,
+      String newEmoji,
+      ) {
+    if (identity == "" || newEmoji == "") return true;
+    final existing = reactions.firstWhere(
+          (r) => r.reactor == identity,
+      orElse: () => Reaction(),
+    );
+
+    if (existing.reactor == null) {
+      // User hasn't reacted yet → adding
+      return true;
+    }
+
+    if (existing.emoji == newEmoji) {
+      // Same emoji → removing
+      return false;
+    }
+
+    // Different emoji → updating
+    return true;
+  }
+
+  void addReaction(String chatType, String emoji, RemoteActivityData chat) {
+    final mode = ChatTypeExtension.fromString(chatType);
+    final identityDetails = room.localParticipant;
+    final id = chat.id;
+    final reaction = Reaction(emoji: emoji, reactor: identityDetails?.identity, name: identityDetails?.name);
+    final reactions = chat.reactions ?? [];
+    final isRemoveReaction = !shouldUpdateReaction(reactions, identityDetails?.identity ?? "", emoji);
+    final senderIdentity = chat.identity?.identity; // who sent event
+    final action = ActionModel(
+      action: MeetingActions.addReaction,
+      mode: chatType,
+      messageId: id,
+      reaction: reaction,
+      removeReaction: isRemoveReaction
+    );
+
+    switch (mode) {
+      case ChatType.public:
+        sendAction(action);
+        _publicReaction(id, reaction, isRemoveReaction);
+        break;
+
+      case ChatType.private:
+        sendPrivateAction(action, senderIdentity);
+        _privateReaction(id, senderIdentity, reaction, isRemoveReaction);
+        break;
+    }
+  }
+
+
+
+
 }

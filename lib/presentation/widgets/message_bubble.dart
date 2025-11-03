@@ -1,12 +1,14 @@
 import 'package:daakia_vc_flutter_sdk/enum/chat_type_enum.dart';
 import 'package:daakia_vc_flutter_sdk/model/edit_message.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/reaction_bar_widget.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/reply_message_widget.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
 import 'package:flutter/material.dart';
 
 import '../../utils/utils.dart';
 import '../bottom_sheets/message_action_sheet.dart';
+import '../bottom_sheets/reaction_details_sheet.dart';
 import 'file_preview.dart';
 
 class MessageBubble extends StatefulWidget {
@@ -118,7 +120,12 @@ class _MessageBubbleState extends State<MessageBubble> {
                                     widget.chat;
                           }
                         },
-                        onReact: (emoji) => (),
+                        onReact: (emoji) {
+                          final chatType = widget.isPrivateChat
+                              ? ChatType.private.name
+                              : ChatType.public.name;
+                          widget.viewModel.addReaction(chatType, emoji, widget.chat);
+                        },
                       ),
                     )
                   : null,
@@ -184,6 +191,24 @@ class _MessageBubbleState extends State<MessageBubble> {
                 ),
               ),
             ),
+            if ((widget.chat.reactions ?? []).isNotEmpty)
+              ReactionBarWidget(
+                reactions: widget.chat.reactions!,
+                onTapReaction: (emojiCode, list) {
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: const Color(0xFF1E1E1E),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(16)),
+                    ),
+                    builder: (_) => ReactionDetailsSheet(
+                      emojiCode: emojiCode,
+                      reactions: list,
+                    ),
+                  );
+                },
+              ),
           ],
         ),
       ),

@@ -1,8 +1,8 @@
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../resources/colors/color.dart';
+import '../../utils/reaction_emoji_map.dart';
 
 class MessageActionSheet extends StatelessWidget {
   final bool isMine;
@@ -25,8 +25,6 @@ class MessageActionSheet extends StatelessWidget {
     this.onDelete,
     this.onReact,
   });
-
-  static const _reactions = ['❤️', '😂', '😮', '😢', '👍', '👎'];
 
   @override
   Widget build(BuildContext context) {
@@ -51,12 +49,14 @@ class MessageActionSheet extends StatelessWidget {
             // Reaction bar
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: _reactions.map((emoji) {
+              children: ReactionEmojiMap.emojiReactionList.map((emoji) {
                 return GestureDetector(
                   onTap: () {
                     Navigator.pop(context);
-                    onReact?.call(emoji);
-                    HapticFeedback.lightImpact();
+                    // Convert emoji to Unicode code (for sending)
+                    final emojiCode =
+                        ReactionEmojiMap.emojiToCode[emoji] ?? emoji;
+                    onReact?.call(emojiCode);
                   },
                   child: AnimatedScale(
                     scale: 1.0,
@@ -102,11 +102,13 @@ class _MessageAction {
   final String label;
   final IconData icon;
   final VoidCallback? onTap;
+
   const _MessageAction(this.label, this.icon, this.onTap);
 }
 
 class _ActionButton extends StatelessWidget {
   final _MessageAction action;
+
   const _ActionButton({required this.action});
 
   @override

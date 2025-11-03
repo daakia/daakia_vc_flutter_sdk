@@ -1,3 +1,4 @@
+import 'package:daakia_vc_flutter_sdk/model/reaction_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/transcription_action_model.dart';
 
 import 'consent_participant.dart';
@@ -16,6 +17,9 @@ class ActionModel {
   final String? dispatchId;
   final String? id;
   final String? mode;
+  final String? messageId;
+  final Reaction? reaction;
+  final bool? removeReaction;
 
   // ✅ ADD NEW FIELD
 
@@ -33,6 +37,9 @@ class ActionModel {
     this.dispatchId,
     this.id,
     this.mode,
+    this.messageId,
+    this.reaction,
+    this.removeReaction = false,
     // ✅ ADD NEW FIELD
   });
 
@@ -71,6 +78,15 @@ class ActionModel {
     if (mode != null) {
       data['mode'] = mode;
     }
+    if (messageId != null) {
+      data['messageId'] = messageId;
+    }
+    if (reaction != null) {
+      data['reaction'] = reaction;
+    }
+    if (removeReaction != null) {
+      data['removeReaction'] = removeReaction;
+    }
     // ✅ ADD NEW FIELD
     return data;
   }
@@ -93,6 +109,11 @@ class ActionModel {
       dispatchId: json['dispatchId'] as String? ?? "",
       id: json['id'] as String? ?? "",
       mode: json['mode'] as String? ?? "",
+      messageId: json['messageId'] as String?,
+      reaction: json['reaction'] != null
+          ? Reaction.fromJson(json['reaction'] as Map<String, dynamic>)
+          : null,
+      removeReaction: json['removeReaction'] as bool? ?? false,
       // ✅ ADD NEW FIELD
     );
   }

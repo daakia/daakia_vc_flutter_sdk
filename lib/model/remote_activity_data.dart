@@ -1,3 +1,4 @@
+import 'package:daakia_vc_flutter_sdk/model/reaction_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/reply_message.dart';
 import 'package:daakia_vc_flutter_sdk/model/transcription_action_model.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -31,6 +32,10 @@ class RemoteActivityData {
   final bool isDeleted;
   final bool isEdited;
   final ReplyMessage? replyMessage;
+  final String? messageId;
+  final Reaction? reaction;
+  final List<Reaction>? reactions;
+  final bool removeReaction;
 
   // ✅ ADD NEW FIELD
 
@@ -61,6 +66,10 @@ class RemoteActivityData {
     this.isDeleted = false,
     this.isEdited = false,
     this.replyMessage,
+    this.messageId,
+    this.reaction,
+    this.reactions,
+    this.removeReaction = false,
     // ✅ ADD NEW FIELD
   });
 
@@ -100,6 +109,14 @@ class RemoteActivityData {
       replyMessage: json['replyMessage'] != null
           ? ReplyMessage.fromJson(json['replyMessage'] as Map<String, dynamic>)
           : null,
+      messageId: json['messageId'] as String?,
+      reaction: json['reaction'] != null
+          ? Reaction.fromJson(json['reaction'] as Map<String, dynamic>)
+          : null,
+      reactions: (json['reactions'] as List<dynamic>?)
+          ?.map((e) => Reaction.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      removeReaction: json['removeReaction'] as bool? ?? false,
       // ✅ ADD NEW FIELD
     );
   }
@@ -131,7 +148,11 @@ class RemoteActivityData {
       'mode': mode,
       'isDeleted': isDeleted,
       'isEdited': isEdited,
-      'replyMessage': replyMessage,
+      'replyMessage': replyMessage?.toJson(),
+      'messageId': messageId,
+      'reaction': reaction?.toJson(),
+      'reactions': reactions?.map((e) => e.toJson()).toList(),
+      'removeReaction': removeReaction,
       // ✅ ADD NEW FIELD
     };
   }
@@ -163,6 +184,10 @@ class RemoteActivityData {
     bool? isDeleted,
     bool? isEdited,
     ReplyMessage? replyMessage,
+    String? messageId,
+    Reaction? reaction,
+    List<Reaction>? reactions,
+    bool? removeReaction,
     // ✅ ADD NEW FIELD
   }) {
     return RemoteActivityData(
@@ -193,6 +218,10 @@ class RemoteActivityData {
       isDeleted: isDeleted ?? this.isDeleted,
       isEdited: isEdited ?? this.isEdited,
       replyMessage: replyMessage ?? this.replyMessage,
+      messageId: messageId ?? this.messageId,
+      reaction: reaction ?? this.reaction,
+      reactions: reactions ?? this.reactions,
+      removeReaction: removeReaction ?? this.removeReaction,
       // ✅ ADD NEW FIELD
     );
   }

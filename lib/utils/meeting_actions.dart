@@ -72,6 +72,8 @@ class MeetingActions {
 
   static const String editMessage = "edit-message";
 
+  static const String addReaction = "add-reaction";
+
   // ✅ Add new fields here
 
   // ✅ Method to check if an action is valid
@@ -123,6 +125,7 @@ class MeetingActions {
     finallyStopRecording,
     deleteMessage,
     editMessage,
+    addReaction,
     // ✅ Add new fields here
   };
 }
