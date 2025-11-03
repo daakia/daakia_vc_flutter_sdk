@@ -1948,4 +1948,62 @@ class RtcViewmodel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  bool shouldUpdateReaction(
+      List<Reaction> reactions,
+      String identity,
+      String newEmoji,
+      ) {
+    if (identity == "" || newEmoji == "") return true;
+    final existing = reactions.firstWhere(
+          (r) => r.reactor == identity,
+      orElse: () => Reaction(),
+    );
+
+    if (existing.reactor == null) {
+      // User hasn't reacted yet → adding
+      return true;
+    }
+
+    if (existing.emoji == newEmoji) {
+      // Same emoji → removing
+      return false;
+    }
+
+    // Different emoji → updating
+    return true;
+  }
+
+  void addReaction(String chatType, String emoji, RemoteActivityData chat) {
+    final mode = ChatTypeExtension.fromString(chatType);
+    final identityDetails = room.localParticipant;
+    final id = chat.id;
+    final reaction = Reaction(emoji: emoji, reactor: identityDetails?.identity, name: identityDetails?.name);
+    final reactions = chat.reactions ?? [];
+    final isRemoveReaction = !shouldUpdateReaction(reactions, identityDetails?.identity ?? "", emoji);
+    final senderIdentity = chat.identity?.identity; // who sent event
+    final action = ActionModel(
+      action: MeetingActions.addReaction,
+      mode: chatType,
+      messageId: id,
+      reaction: reaction,
+      removeReaction: isRemoveReaction
+    );
+
+    switch (mode) {
+      case ChatType.public:
+        sendAction(action);
+        _publicReaction(id, reaction, isRemoveReaction);
+        break;
+
+      case ChatType.private:
+        sendPrivateAction(action, senderIdentity);
+        _privateReaction(id, senderIdentity, reaction, isRemoveReaction);
+        break;
+    }
+  }
+
+
+
+
 }

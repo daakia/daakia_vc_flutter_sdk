@@ -120,7 +120,12 @@ class _MessageBubbleState extends State<MessageBubble> {
                                     widget.chat;
                           }
                         },
-                        onReact: (emoji) {},
+                        onReact: (emoji) {
+                          final chatType = widget.isPrivateChat
+                              ? ChatType.private.name
+                              : ChatType.public.name;
+                          widget.viewModel.addReaction(chatType, emoji, widget.chat);
+                        },
                       ),
                     )
                   : null,
