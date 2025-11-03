@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../resources/colors/color.dart';
+import '../../utils/reaction_emoji_map.dart';
 
 class MessageActionSheet extends StatelessWidget {
   final bool isMine;
@@ -25,8 +26,6 @@ class MessageActionSheet extends StatelessWidget {
     this.onDelete,
     this.onReact,
   });
-
-  static const _reactions = ['❤️', '😂', '😮', '😢', '👍', '👎'];
 
   @override
   Widget build(BuildContext context) {
@@ -51,11 +50,13 @@ class MessageActionSheet extends StatelessWidget {
             // Reaction bar
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: _reactions.map((emoji) {
+              children: ReactionEmojiMap.emojiReactionList.map((emoji) {
                 return GestureDetector(
                   onTap: () {
                     Navigator.pop(context);
-                    onReact?.call(emoji);
+                    // Convert emoji to Unicode code (for sending)
+                    final emojiCode = ReactionEmojiMap.emojiToCode[emoji] ?? emoji;
+                    onReact?.call(emojiCode);
                     HapticFeedback.lightImpact();
                   },
                   child: AnimatedScale(
