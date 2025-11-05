@@ -200,7 +200,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                 ),
               ),
             ),
-            if ((widget.chat.reactions ?? []).isNotEmpty)
+            if ((widget.chat.reactions ?? []).isNotEmpty && !widget.chat.isDeleted)
               ReactionBarWidget(
                 reactions: widget.chat.reactions!,
                 onTapReaction: (emojiCode, list) {
