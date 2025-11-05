@@ -17,6 +17,7 @@ class MessageBubble extends StatefulWidget {
   final RtcViewmodel viewModel;
   final bool isPrivateChat;
   final bool isHighlighted;
+  final VoidCallback? onNavigate;
 
   const MessageBubble({
     super.key,
@@ -24,6 +25,7 @@ class MessageBubble extends StatefulWidget {
     required this.viewModel,
     this.isPrivateChat = false,
     this.isHighlighted = false,
+    this.onNavigate,
   });
 
   @override
@@ -169,9 +171,12 @@ class _MessageBubbleState extends State<MessageBubble> {
                           // ✅ Reply message shown inside the bubble
                           if (widget.chat.replyMessage != null &&
                               !widget.chat.isDeleted)
-                            ReplyMessageWidget(
-                              reply: widget.chat.replyMessage!,
-                              isSender: isSender,
+                            GestureDetector(
+                              onTap: widget.onNavigate,
+                              child: ReplyMessageWidget(
+                                reply: widget.chat.replyMessage!,
+                                isSender: isSender,
+                              ),
                             ),
 
                           // Main message content
