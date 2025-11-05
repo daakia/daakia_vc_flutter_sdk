@@ -84,6 +84,9 @@ class _ChatState extends State<ChatPage> {
                       chat: message,
                       viewModel: widget.viewModel,
                       isHighlighted: _highlightedMessageId == message.id,
+                      onNavigate: () {
+                        _scrollToMessageById(message.replyMessage?.id);
+                      },
                     );
                   },
                 ),
