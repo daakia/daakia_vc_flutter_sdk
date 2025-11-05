@@ -40,6 +40,8 @@ class _ChatState extends State<ChatPage> {
   }
 
   final TextEditingController messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  String? _highlightedMessageId;
 
   @override
   Widget build(BuildContext context) {
@@ -64,13 +66,15 @@ class _ChatState extends State<ChatPage> {
                   onPinPressed: () {
                     widget.viewModel.pinnedPublicChat = null;
                   },
+                  onPinNavigatePressed: () {
+                    _scrollToMessageById(widget.viewModel.pinnedPublicChat?.id);
+                  },
                 ),
               Expanded(
                 child: ListView.builder(
+                  controller: _scrollController,
                   reverse: true,
-                  itemCount: widget.viewModel
-                      .getMessageList()
-                      .length, // Placeholder item count
+                  itemCount: widget.viewModel.getMessageList().length,
                   itemBuilder: (context, index) {
                     final reversedIndex =
                         widget.viewModel.getMessageList().length - 1 - index;
@@ -79,6 +83,7 @@ class _ChatState extends State<ChatPage> {
                     return MessageBubble(
                       chat: message,
                       viewModel: widget.viewModel,
+                      isHighlighted: _highlightedMessageId == message.id,
                     );
                   },
                 ),
@@ -265,12 +270,12 @@ class _ChatState extends State<ChatPage> {
                           if (widget.viewModel.publicEditDraft != null) {
                             // Edit existing message
                             widget.viewModel.editPublicMessage(
-                              messageController.text.trim()
-                            );
+                                messageController.text.trim());
                             widget.viewModel.publicEditDraft = null;
                           } else {
                             // Normal send
-                            widget.viewModel.sendPublicMessage(messageController.text.trim());
+                            widget.viewModel.sendPublicMessage(
+                                messageController.text.trim());
                           }
 
                           messageController.clear();
@@ -300,5 +305,36 @@ class _ChatState extends State<ChatPage> {
         }
       }
     });
+  }
+
+  /// Scrolls to a specific message by its [messageId] and highlights it temporarily.
+  /// Can be used for pinned messages, reply navigation, or any message jump.
+  void _scrollToMessageById(String? messageId) {
+    if (messageId == null) return;
+    final messages = widget.viewModel.getMessageList();
+    final index = messages.indexWhere((msg) => msg.id == messageId);
+
+    if (index != -1) {
+      final reversedIndex = messages.length - 1 - index;
+
+      setState(() {
+        _highlightedMessageId = messageId;
+      });
+
+      _scrollController.animateTo(
+        reversedIndex * 100.0, // Approximate height per item
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+
+      // Remove highlight after a short delay
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          setState(() {
+            _highlightedMessageId = null;
+          });
+        }
+      });
+    }
   }
 }
