@@ -60,6 +60,7 @@ class PrivateChantState extends State<PrivateChatPage> {
 
   final TextEditingController messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _messageFocusNode = FocusNode();
   String? _highlightedMessageId;
 
   @override
@@ -200,6 +201,20 @@ class PrivateChantState extends State<PrivateChatPage> {
                             isHighlighted: _highlightedMessageId == message.id,
                             onNavigate: () {
                               _scrollToMessageById(message.replyMessage?.id);
+                            },
+                            onEdit: () {
+                              final text = message.message ?? "";
+                              messageController.text = text;
+
+                              // Wait a frame so the text field updates before selecting
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                messageController.selection = TextSelection(
+                                  baseOffset: 0,
+                                  extentOffset: text.length,
+                                );
+                                FocusScope.of(context).requestFocus(FocusNode()); // clear old focus
+                                FocusScope.of(context).requestFocus(_messageFocusNode); // open keyboard
+                              });
                             },
                           );
                         },
@@ -389,6 +404,7 @@ class PrivateChantState extends State<PrivateChatPage> {
                             Expanded(
                               child: TextField(
                                 controller: messageController,
+                                focusNode: _messageFocusNode,
                                 decoration: const InputDecoration(
                                   hintText: "Type here...",
                                   hintStyle: TextStyle(color: Colors.white),
