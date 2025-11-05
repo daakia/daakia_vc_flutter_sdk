@@ -57,6 +57,7 @@ class MessageActionSheet extends StatelessWidget {
                     final emojiCode =
                         ReactionEmojiMap.emojiToCode[emoji] ?? emoji;
                     onReact?.call(emojiCode);
+                    Utils.hideKeyboard(context); // 👈 This line closes the keyboard
                   },
                   child: AnimatedScale(
                     scale: 1.0,
