@@ -18,6 +18,7 @@ class MessageBubble extends StatefulWidget {
   final bool isPrivateChat;
   final bool isHighlighted;
   final VoidCallback? onNavigate;
+  final VoidCallback? onEdit;
 
   const MessageBubble({
     super.key,
@@ -26,6 +27,7 @@ class MessageBubble extends StatefulWidget {
     this.isPrivateChat = false,
     this.isHighlighted = false,
     this.onNavigate,
+    this.onEdit,
   });
 
   @override
@@ -104,6 +106,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                             widget.viewModel.publicEditDraft = EditMessage(
                                 id: chat.id ?? "", message: chat.message ?? "");
                           }
+                          widget.onEdit?.call();
                         },
                         onDelete: () {
                           final chatType = widget.isPrivateChat
