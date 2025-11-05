@@ -156,7 +156,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // ✅ Reply message shown inside the bubble
-                        if (widget.chat.replyMessage != null)
+                        if (widget.chat.replyMessage != null && !widget.chat.isDeleted)
                           ReplyMessageWidget(
                             reply: widget.chat.replyMessage!,
                             isSender: isSender,
