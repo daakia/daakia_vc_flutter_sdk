@@ -198,6 +198,9 @@ class PrivateChantState extends State<PrivateChatPage> {
                             viewModel: widget.viewModel,
                             isPrivateChat: true,
                             isHighlighted: _highlightedMessageId == message.id,
+                            onNavigate: () {
+                              _scrollToMessageById(message.replyMessage?.id);
+                            },
                           );
                         },
                       ),
