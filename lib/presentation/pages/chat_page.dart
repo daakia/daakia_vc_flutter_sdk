@@ -41,6 +41,7 @@ class _ChatState extends State<ChatPage> {
 
   final TextEditingController messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _messageFocusNode = FocusNode();
   String? _highlightedMessageId;
 
   @override
@@ -86,6 +87,20 @@ class _ChatState extends State<ChatPage> {
                       isHighlighted: _highlightedMessageId == message.id,
                       onNavigate: () {
                         _scrollToMessageById(message.replyMessage?.id);
+                      },
+                      onEdit: () {
+                        final text = message.message ?? "";
+                        messageController.text = text;
+
+                        // Wait a frame so the text field updates before selecting
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          messageController.selection = TextSelection(
+                            baseOffset: 0,
+                            extentOffset: text.length,
+                          );
+                          FocusScope.of(context).requestFocus(FocusNode()); // clear old focus
+                          FocusScope.of(context).requestFocus(_messageFocusNode); // open keyboard
+                        });
                       },
                     );
                   },
@@ -253,6 +268,7 @@ class _ChatState extends State<ChatPage> {
                       Expanded(
                         child: TextField(
                           controller: messageController,
+                          focusNode: _messageFocusNode,
                           decoration: const InputDecoration(
                             hintText: "Type here...",
                             hintStyle: TextStyle(color: Colors.white),
