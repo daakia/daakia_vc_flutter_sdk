@@ -5,6 +5,7 @@ import 'package:daakia_vc_flutter_sdk/presentation/widgets/reaction_bar_widget.d
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/reply_message_widget.dart';
 import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../utils/utils.dart';
 import '../bottom_sheets/message_action_sheet.dart';
@@ -83,7 +84,15 @@ class _MessageBubbleState extends State<MessageBubble> {
                             widget.viewModel.publicReplyDraft = replyDraft;
                           }
                         },
-                        onCopy: () => (),
+                        onCopy: () {
+                          Clipboard.setData(
+                            ClipboardData(
+                              text: widget.chat.message ?? ""
+                            ),
+                          ).then((_) {
+                            widget.viewModel.sendMessageToUI("Copied");
+                          });
+                        },
                         onEdit: () {
                           final chat = widget.chat;
                           if (widget.isPrivateChat) {
