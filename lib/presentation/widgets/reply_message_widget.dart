@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:daakia_vc_flutter_sdk/model/reply_message.dart';
+import 'package:flutter/material.dart';
+
+import '../../utils/utils.dart';
+import 'file_type_preview_widget.dart';
 
 class ReplyMessageWidget extends StatelessWidget {
   final ReplyMessage reply;
@@ -24,9 +27,7 @@ class ReplyMessageWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         border: Border(
           left: BorderSide(
-            color: isSender
-                ? const Color(0xFFBBDEFB)
-                : Colors.white70,
+            color: isSender ? const Color(0xFFBBDEFB) : Colors.white70,
             width: 3,
           ),
         ),
@@ -45,15 +46,17 @@ class ReplyMessageWidget extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 2),
-          Text(
-            reply.message,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
+          (Utils.isOnlyLink(reply.message) || Utils.isLink(reply.message))
+              ? FileTypePreviewWidget(fileUrl: reply.message)
+              : Text(
+                  reply.message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
         ],
       ),
     );
