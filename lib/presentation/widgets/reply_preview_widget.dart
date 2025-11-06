@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../model/reply_message.dart'; // adjust import as per your structure
+
+import '../../../model/reply_message.dart';
+import '../../utils/utils.dart';
+import 'file_type_preview_widget.dart';
 
 class ReplyPreviewWidget extends StatelessWidget {
   final ReplyMessage reply;
@@ -48,15 +51,17 @@ class ReplyPreviewWidget extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 3),
-                Text(
-                  reply.message,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12.5,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                (Utils.isOnlyLink(reply.message) || Utils.isLink(reply.message))
+                    ? FileTypePreviewWidget(fileUrl: reply.message)
+                    : Text(
+                        reply.message,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12.5,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
               ],
             ),
           ),

@@ -15,14 +15,11 @@ import '../widgets/pinned_message_widget.dart';
 import '../widgets/reply_preview_widget.dart';
 
 class PrivateChatPage extends StatefulWidget {
-  PrivateChatPage(
-      {required this.viewModel, this.identity = "", this.name = "", super.key});
+  const PrivateChatPage({required this.viewModel, this.identity = "", this.name = "", super.key});
 
   final String identity;
   final String name;
   final RtcViewmodel viewModel;
-
-  final TextEditingController messageController = TextEditingController();
 
   @override
   State<StatefulWidget> createState() {
@@ -62,6 +59,9 @@ class PrivateChantState extends State<PrivateChatPage> {
   }
 
   final TextEditingController messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _messageFocusNode = FocusNode();
+  String? _highlightedMessageId;
 
   @override
   Widget build(BuildContext context) {
@@ -171,9 +171,14 @@ class PrivateChantState extends State<PrivateChatPage> {
                         onPinPressed: () {
                           widget.viewModel.pinnedPrivateChat = null;
                         },
+                        onPinNavigatePressed: () {
+                          _scrollToMessageById(
+                              widget.viewModel.pinnedPrivateChat?.id);
+                        },
                       ),
                     Expanded(
                       child: ListView.builder(
+                        controller: _scrollController,
                         reverse: true,
                         itemCount: widget.viewModel
                             .getPrivateChatForParticipant(
@@ -190,9 +195,28 @@ class PrivateChantState extends State<PrivateChatPage> {
                               .getPrivateChatForParticipant(widget.viewModel
                                   .getPrivateChatIdentity())[reversedIndex];
                           return MessageBubble(
-                              chat: message,
-                              viewModel: widget.viewModel,
-                              isPrivateChat: true);
+                            chat: message,
+                            viewModel: widget.viewModel,
+                            isPrivateChat: true,
+                            isHighlighted: _highlightedMessageId == message.id,
+                            onNavigate: () {
+                              _scrollToMessageById(message.replyMessage?.id);
+                            },
+                            onEdit: () {
+                              final text = message.message ?? "";
+                              messageController.text = text;
+
+                              // Wait a frame so the text field updates before selecting
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                messageController.selection = TextSelection(
+                                  baseOffset: 0,
+                                  extentOffset: text.length,
+                                );
+                                FocusScope.of(context).requestFocus(FocusNode()); // clear old focus
+                                FocusScope.of(context).requestFocus(_messageFocusNode); // open keyboard
+                              });
+                            },
+                          );
                         },
                       ),
                     ),
@@ -205,9 +229,11 @@ class PrivateChantState extends State<PrivateChatPage> {
                       ),
                     if (widget.viewModel.privateEditDraft != null)
                       EditPreviewWidget(
-                        originalMessage: widget.viewModel.privateEditDraft!.message,
+                        originalMessage:
+                            widget.viewModel.privateEditDraft!.message,
                         onCancel: () {
                           widget.viewModel.privateEditDraft = null;
+                          messageController.clear();
                         },
                       ),
                     // Message Input Section
@@ -379,6 +405,7 @@ class PrivateChantState extends State<PrivateChatPage> {
                             Expanded(
                               child: TextField(
                                 controller: messageController,
+                                focusNode: _messageFocusNode,
                                 decoration: const InputDecoration(
                                   hintText: "Type here...",
                                   hintStyle: TextStyle(color: Colors.white),
@@ -395,13 +422,16 @@ class PrivateChantState extends State<PrivateChatPage> {
                               color: Colors.white,
                               onPressed: () {
                                 Utils.hideKeyboard(context);
-                                final messageText = messageController.text.trim();
+                                final messageText =
+                                    messageController.text.trim();
                                 if (messageText.isEmpty) return;
 
                                 if (widget.viewModel.privateEditDraft != null) {
                                   // Edit existing private message
-                                  final identity = widget.viewModel.getPrivateChatIdentity();
-                                  widget.viewModel.editPrivateMessage(messageText, identity);
+                                  final identity =
+                                      widget.viewModel.getPrivateChatIdentity();
+                                  widget.viewModel.editPrivateMessage(
+                                      messageText, identity);
                                   widget.viewModel.privateEditDraft = null;
                                 } else {
                                   // Send new message
@@ -442,5 +472,37 @@ class PrivateChantState extends State<PrivateChatPage> {
         }
       }
     });
+  }
+
+  /// Scrolls to a specific message by its [messageId] and highlights it temporarily.
+  /// Can be used for pinned messages, reply navigation, or any message jump.
+  void _scrollToMessageById(String? messageId) {
+    if (messageId == null) return;
+    final messages = widget.viewModel.getPrivateChatForParticipant(
+        widget.viewModel.getPrivateChatIdentity());
+    final index = messages.indexWhere((msg) => msg.id == messageId);
+
+    if (index != -1) {
+      final reversedIndex = messages.length - 1 - index;
+
+      setState(() {
+        _highlightedMessageId = messageId;
+      });
+
+      _scrollController.animateTo(
+        reversedIndex * 100.0, // Approximate height per item
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+
+      // Remove highlight after a short delay
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          setState(() {
+            _highlightedMessageId = null;
+          });
+        }
+      });
+    }
   }
 }

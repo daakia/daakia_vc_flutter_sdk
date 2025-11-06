@@ -7,6 +7,7 @@ import '../../utils/reaction_emoji_map.dart';
 class MessageActionSheet extends StatelessWidget {
   final bool isMine;
   final bool isPinned;
+  final bool isFile;
   final VoidCallback? onReply;
   final VoidCallback? onCopy;
   final VoidCallback? onPin;
@@ -18,6 +19,7 @@ class MessageActionSheet extends StatelessWidget {
     super.key,
     this.isMine = false,
     this.isPinned = false,
+    this.isFile = false,
     this.onReply,
     this.onCopy,
     this.onPin,
@@ -57,6 +59,7 @@ class MessageActionSheet extends StatelessWidget {
                     final emojiCode =
                         ReactionEmojiMap.emojiToCode[emoji] ?? emoji;
                     onReact?.call(emojiCode);
+                    Utils.hideKeyboard(context); // 👈 This line closes the keyboard
                   },
                   child: AnimatedScale(
                     scale: 1.0,
@@ -82,9 +85,9 @@ class MessageActionSheet extends StatelessWidget {
   Widget _buildActionRow(BuildContext context) {
     final actions = <_MessageAction>[
       _MessageAction('Reply', Icons.reply, onReply),
-      _MessageAction('Copy', Icons.copy, onCopy),
+      if (!isFile) _MessageAction('Copy', Icons.copy, onCopy),
       _MessageAction(isPinned ? 'Unpin' : 'Pin', Icons.push_pin, onPin),
-      if (isMine) _MessageAction('Edit', Icons.edit, onEdit),
+      if (isMine && !isFile) _MessageAction('Edit', Icons.edit, onEdit),
       if (isMine) _MessageAction('Delete', Icons.delete, onDelete),
     ];
 

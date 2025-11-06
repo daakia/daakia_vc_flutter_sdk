@@ -196,6 +196,17 @@ class Utils {
     return packageInfo.appName;
   }
 
+  static bool isUrl(String text) {
+    final uri = Uri.tryParse(text.trim());
+    return uri != null && uri.hasScheme && uri.host.isNotEmpty;
+  }
+
+  static bool isFileLink(String url) {
+    if (!isUrl(url)) return false;
+    final mimeType = lookupMimeType(url);
+    return mimeType != null; // If MIME type exists → it's likely a file
+  }
+
   static bool isLink(String message) {
     final linkRegExp = RegExp(
       r'((https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?)',
