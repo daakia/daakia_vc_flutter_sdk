@@ -2004,6 +2004,13 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
 
+  //===============================[Chat Reaction]===============================
+  bool _isScreenShareEnable = true;
 
+  bool get isScreenShareEnable => _isScreenShareEnable;
 
+  set isScreenShareEnable(bool value) {
+    _isScreenShareEnable = value;
+    notifyListeners();
+  }
 }

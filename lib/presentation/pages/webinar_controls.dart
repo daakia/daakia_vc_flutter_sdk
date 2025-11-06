@@ -80,6 +80,13 @@ class WebinarControls extends StatelessWidget {
             ),
             // Divider
             const Divider(color: Colors.white),
+            HostControlSwitch(
+              title: 'Allow Screen Share',
+              subtitle: 'If turned ON, all participants will be able to share their screen without the permission of Host / Co-Host.',
+              value: viewModel.isScreenShareEnable,
+              isEnable: viewModel.meetingDetails.features?.isScreenShareRequestAllowed() == true,
+              onChanged: (value) => viewModel.isScreenShareEnable = value,
+            ),
           ],
         ),
       ),
