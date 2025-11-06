@@ -118,6 +118,7 @@ class _ChatState extends State<ChatPage> {
                   originalMessage: widget.viewModel.publicEditDraft!.message,
                   onCancel: () {
                     widget.viewModel.publicEditDraft = null;
+                    messageController.clear();
                   },
                 ),
 

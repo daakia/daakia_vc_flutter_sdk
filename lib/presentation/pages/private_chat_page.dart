@@ -233,6 +233,7 @@ class PrivateChantState extends State<PrivateChatPage> {
                             widget.viewModel.privateEditDraft!.message,
                         onCancel: () {
                           widget.viewModel.privateEditDraft = null;
+                          messageController.clear();
                         },
                       ),
                     // Message Input Section
