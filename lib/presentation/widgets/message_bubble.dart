@@ -76,6 +76,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                             widget.isPrivateChat
                                 ? widget.viewModel.pinnedPrivateChat
                                 : widget.viewModel.pinnedPublicChat),
+                        isFile: Utils.isFileLink(widget.chat.message ?? ""),
                         onReply: () {
                           final replyDraft = Utils.getReplyDraft(
                             widget.chat,
@@ -181,7 +182,6 @@ class _MessageBubbleState extends State<MessageBubble> {
                                 isSender: isSender,
                               ),
                             ),
-
                           // Main message content
                           if (Utils.isOnlyLink(message) ||
                               Utils.isLink(message))
