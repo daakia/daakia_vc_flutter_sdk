@@ -1,3 +1,4 @@
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/file_type_preview_widget.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/initials_circle.dart';
 import 'package:flutter/material.dart';
 
@@ -9,13 +10,12 @@ class PinnedMessageWidget extends StatelessWidget {
   final VoidCallback? onPinPressed;
   final VoidCallback? onPinNavigatePressed;
 
-  const PinnedMessageWidget({
-    super.key,
-    required this.name,
-    required this.message,
-    this.onPinPressed,
-    this.onPinNavigatePressed
-  });
+  const PinnedMessageWidget(
+      {super.key,
+      required this.name,
+      required this.message,
+      this.onPinPressed,
+      this.onPinNavigatePressed});
 
   @override
   Widget build(BuildContext context) {
@@ -42,20 +42,22 @@ class PinnedMessageWidget extends StatelessWidget {
                 backgroundColor: bgColor,
               ),
               const SizedBox(width: 10),
-      
+
               // Message text (single line, ellipsis)
               Expanded(
-                child: Text(
-                  message,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                  ),
-                ),
+                child: (Utils.isOnlyLink(message) || Utils.isLink(message))
+                    ? FileTypePreviewWidget(fileUrl: message)
+                    : Text(
+                        message,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                      ),
               ),
-      
+
               // Pinned icon button
               IconButton(
                 onPressed: onPinPressed,
