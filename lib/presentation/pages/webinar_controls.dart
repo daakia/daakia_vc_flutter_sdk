@@ -85,7 +85,10 @@ class WebinarControls extends StatelessWidget {
               subtitle: 'If turned ON, all participants will be able to share their screen without the permission of Host / Co-Host.',
               value: viewModel.isScreenShareEnable,
               isEnable: viewModel.meetingDetails.features?.isScreenShareRequestAllowed() == true,
-              onChanged: (value) => viewModel.isScreenShareEnable = value,
+              onChanged: (value) {
+                viewModel.isScreenShareEnable = value;
+                viewModel.updateScreenShareConsent(value);
+              },
             ),
           ],
         ),
