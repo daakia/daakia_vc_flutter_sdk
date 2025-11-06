@@ -2014,6 +2014,19 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void getScreenShareConsent() {
+    networkRequestHandler(
+        apiCall: ()=> apiClient.getScreenShareConsent(meetingDetails.meetingUid),
+        onSuccess: (data) {
+          isScreenShareEnable = data?.screenShareConsent == true;
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isScreenShareEnable = false;
+        }
+    );
+  }
+
   void updateScreenShareConsent(bool value) {
     Map<String, dynamic> body = {
       "meeting_id": meetingDetails.meetingUid,
