@@ -42,7 +42,7 @@ class FileTypePreviewWidget extends StatelessWidget {
         return const Icon(Icons.insert_drive_file,
             size: 25, color: Colors.white70);
       } else {
-        return const Icon(Icons.question_mark_rounded,
+        return const Icon(Icons.link,
             size: 25, color: Colors.white);
       }
     }
