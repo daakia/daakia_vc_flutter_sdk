@@ -74,6 +74,8 @@ class MeetingActions {
 
   static const String addReaction = "add-reaction";
 
+  static const String allowScreenShareForAll = "allow-screen-share-for-all";
+
   // ✅ Add new fields here
 
   // ✅ Method to check if an action is valid
@@ -126,6 +128,7 @@ class MeetingActions {
     deleteMessage,
     editMessage,
     addReaction,
+    allowScreenShareForAll,
     // ✅ Add new fields here
   };
 }
