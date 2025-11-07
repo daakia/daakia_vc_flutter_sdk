@@ -710,10 +710,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   }
 
   void _sortParticipants() {
+    final viewmodel = _livekitProviderKey.currentState?.viewModel;
     List<ParticipantTrack> userMediaTracks = [];
     List<ParticipantTrack> screenTracks = [];
     var coHostCount = 0;
-
+    viewmodel?.adminList = [];
     // Add remote participants
     for (var participant in widget.room.remoteParticipants.values) {
       bool hasVideoTrack = false;
@@ -721,6 +722,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       if (Utils.isCoHost(participant.metadata)) {
         coHostCount++;
       }
+
+      viewmodel?.updateAdminList(participant);
 
       for (var t in participant.videoTrackPublications) {
         if (t.isScreenShare) {
@@ -779,8 +782,6 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       return a.participant.joinedAt.millisecondsSinceEpoch -
           b.participant.joinedAt.millisecondsSinceEpoch;
     });
-
-    final viewmodel = _livekitProviderKey.currentState?.viewModel;
 
     // Handle pinned participant
     ParticipantTrack? pinnedTrack;

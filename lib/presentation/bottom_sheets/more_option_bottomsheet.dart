@@ -230,6 +230,11 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
   void _enableScreenShare(RtcViewmodel viewModel) async {
     final participant = viewModel.room.localParticipant;
 
+    if (viewModel.isScreenSharePermissionNeeded()) {
+      viewModel.sendMessageToUI("Screen share request sent to the ${viewModel.getAdminType()}.");
+      return;
+    }
+
     if (lkPlatformIsDesktop()) {
       try {
         final source = await showDialog<DesktopCapturerSource>(

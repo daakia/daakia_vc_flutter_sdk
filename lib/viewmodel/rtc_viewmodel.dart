@@ -2045,4 +2045,36 @@ class RtcViewmodel extends ChangeNotifier {
       }
     );
   }
+
+  bool isScreenSharePermissionNeeded() {
+    var localParticipant = room.localParticipant;
+    if (Utils.isCoHost(localParticipant?.metadata) || Utils.isCoHost(localParticipant?.metadata)) return false;
+    if (!_isScreenShareEnable) {
+      if(adminList.isEmpty) return true;
+      sendPrivateAction(ActionModel(action: MeetingActions.requestScreenSharePermission, requestBy: localParticipant?.identity, requestByName: localParticipant?.name), adminList[0]?.identity);
+      return true;
+    }
+    return false;
+  }
+
+  List<RemoteParticipant?> adminList = [];
+
+  void updateAdminList(RemoteParticipant participant) {
+    if (Utils.isHost(participant.metadata)) {
+      // Always keep host at 0 index
+      adminList.insert(0, participant);
+    } else if (Utils.isCoHost(participant.metadata)) {
+      // Add co-host normally
+      adminList.add(participant);
+    }
+  }
+
+  String getAdminType() {
+    if(adminList.isEmpty) return "Unknown";
+    final metadata = adminList[0]?.metadata;
+    if (Utils.isHost(metadata)) return "Host";
+    if (Utils.isCoHost(metadata)) return "Co-Host";
+    return "Unknown";
+  }
+
 }
