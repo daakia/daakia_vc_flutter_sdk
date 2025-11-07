@@ -78,6 +78,8 @@ class MeetingActions {
 
   static const String requestScreenSharePermission = "request-screen-share-permission";
 
+  static const String requestScreenSharePermissionResponse = "request-screen-share-permission-response";
+
   // ✅ Add new fields here
 
   // ✅ Method to check if an action is valid
@@ -132,6 +134,7 @@ class MeetingActions {
     addReaction,
     allowScreenShareForAll,
     requestScreenSharePermission,
+    requestScreenSharePermissionResponse,
     // ✅ Add new fields here
   };
 }
