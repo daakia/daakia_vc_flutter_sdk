@@ -76,6 +76,8 @@ class MeetingActions {
 
   static const String allowScreenShareForAll = "allow-screen-share-for-all";
 
+  static const String requestScreenSharePermission = "request-screen-share-permission";
+
   // ✅ Add new fields here
 
   // ✅ Method to check if an action is valid
@@ -129,6 +131,7 @@ class MeetingActions {
     editMessage,
     addReaction,
     allowScreenShareForAll,
+    requestScreenSharePermission,
     // ✅ Add new fields here
   };
 }

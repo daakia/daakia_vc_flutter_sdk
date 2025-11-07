@@ -20,6 +20,8 @@ class ActionModel {
   final String? messageId;
   final Reaction? reaction;
   final bool? removeReaction;
+  final String? requestBy;
+  final String? requestByName;
 
   // ✅ ADD NEW FIELD
 
@@ -40,6 +42,8 @@ class ActionModel {
     this.messageId,
     this.reaction,
     this.removeReaction = false,
+    this.requestBy,
+    this.requestByName,
     // ✅ ADD NEW FIELD
   });
 
@@ -87,6 +91,12 @@ class ActionModel {
     if (removeReaction != null) {
       data['removeReaction'] = removeReaction;
     }
+    if (requestBy != null) {
+      data['request_by'] = requestBy;
+    }
+    if (requestByName != null) {
+      data['request_by_name'] = requestByName;
+    }
     // ✅ ADD NEW FIELD
     return data;
   }
@@ -114,6 +124,8 @@ class ActionModel {
           ? Reaction.fromJson(json['reaction'] as Map<String, dynamic>)
           : null,
       removeReaction: json['removeReaction'] as bool? ?? false,
+      requestBy: json['request_by'] as String? ?? "",
+      requestByName: json['request_by_name'] as String? ?? "",
       // ✅ ADD NEW FIELD
     );
   }
