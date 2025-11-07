@@ -2037,6 +2037,7 @@ class RtcViewmodel extends ChangeNotifier {
       apiCall: ()=> apiClient.updateScreenShareConsent(meetingDetails.authorizationToken, body),
       onSuccess: (data) {
         isScreenShareEnable = data?.screenShareConsent == true;
+        sendAction(ActionModel(action: MeetingActions.allowScreenShareForAll, value: _isScreenShareEnable));
       },
       onError: (message) {
         sendMessageToUI(message);
