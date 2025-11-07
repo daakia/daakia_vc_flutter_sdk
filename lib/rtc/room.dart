@@ -655,6 +655,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         viewModel?.handleReaction(remoteData);
         break;
 
+      case MeetingActions.allowScreenShareForAll:
+        viewModel?.isScreenShareEnable = remoteData.value;
+        break;
+
       case MeetingActions.requestScreenSharePermissionResponse:
         viewModel?.isScreenShareRequestAccepted = remoteData.isScreenShareAllowed;
         showSnackBar(
