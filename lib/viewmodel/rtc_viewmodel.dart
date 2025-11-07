@@ -2046,10 +2046,13 @@ class RtcViewmodel extends ChangeNotifier {
     );
   }
 
+  bool isScreenShareRequestAccepted = false;
+
   bool isScreenSharePermissionNeeded() {
     var localParticipant = room.localParticipant;
     if (Utils.isCoHost(localParticipant?.metadata) || Utils.isCoHost(localParticipant?.metadata)) return false;
     if (!_isScreenShareEnable) {
+      if (isScreenShareRequestAccepted) return false;
       if(adminList.isEmpty) return true;
       sendPrivateAction(ActionModel(action: MeetingActions.requestScreenSharePermission, requestBy: localParticipant?.identity, requestByName: localParticipant?.name), adminList[0]?.identity);
       return true;
