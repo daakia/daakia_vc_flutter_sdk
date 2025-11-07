@@ -235,6 +235,8 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
       return;
     }
 
+    viewModel.isScreenShareRequestAccepted = false;
+
     if (lkPlatformIsDesktop()) {
       try {
         final source = await showDialog<DesktopCapturerSource>(
