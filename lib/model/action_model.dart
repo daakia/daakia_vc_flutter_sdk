@@ -22,6 +22,7 @@ class ActionModel {
   final bool? removeReaction;
   final String? requestBy;
   final String? requestByName;
+  final bool? isScreenShareAllowed;
 
   // ✅ ADD NEW FIELD
 
@@ -44,6 +45,7 @@ class ActionModel {
     this.removeReaction = false,
     this.requestBy,
     this.requestByName,
+    this.isScreenShareAllowed,
     // ✅ ADD NEW FIELD
   });
 
@@ -97,6 +99,9 @@ class ActionModel {
     if (requestByName != null) {
       data['request_by_name'] = requestByName;
     }
+    if (isScreenShareAllowed != null) {
+      data['is_screen_share_allowed'] = isScreenShareAllowed;
+    }
     // ✅ ADD NEW FIELD
     return data;
   }
@@ -126,6 +131,7 @@ class ActionModel {
       removeReaction: json['removeReaction'] as bool? ?? false,
       requestBy: json['request_by'] as String? ?? "",
       requestByName: json['request_by_name'] as String? ?? "",
+      isScreenShareAllowed: json['is_screen_share_allowed'] as bool? ?? false,
       // ✅ ADD NEW FIELD
     );
   }
