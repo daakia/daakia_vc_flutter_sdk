@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:daakia_vc_flutter_sdk/model/chat_attachment_consent_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/consent_status_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/egress_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/feature_data.dart';
@@ -182,6 +183,17 @@ abstract class RestClient {
 
   @PUT("rtc/screenShareConsent")
   Future<BaseResponse<ScreenShareConsentModel>> updateScreenShareConsent(
+    @Header("Authorization") String token,
+    @Body() Map<String, dynamic> body,
+  );
+
+  @GET("rtc/chatAttachmentDownloadConsent")
+  Future<BaseResponse<ChatAttachmentConsentModel>> getChatAttachmentConsent(
+    @Query("meeting_id") String meetingId,
+  );
+
+  @PUT("rtc/chatAttachmentDownloadConsent")
+  Future<BaseResponse<ChatAttachmentConsentModel>> updateChatAttachmentConsent(
     @Header("Authorization") String token,
     @Body() Map<String, dynamic> body,
   );
