@@ -2118,6 +2118,13 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
+  int get screenShareRequestCount {
+    final metadata = room.localParticipant?.metadata;
+    if (!Utils.isHost(metadata) && !Utils.isCoHost(metadata)) return 0;
+    if (_isScreenShareEnable) return 0;
+    return screenShareRequestList.length;
+  }
+
   void handleScreenShareRequest(bool allow, RemoteActivityData request) {
     sendPrivateAction(ActionModel(action: MeetingActions.requestScreenSharePermissionResponse, isScreenShareAllowed: allow), request.identity?.identity ?? "");
   }
