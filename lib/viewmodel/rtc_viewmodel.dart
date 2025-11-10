@@ -2117,4 +2117,9 @@ class RtcViewmodel extends ChangeNotifier {
     _isScreenShareDialogOpen = value;
     notifyListeners();
   }
+
+  void handleScreenShareRequest(bool allow, RemoteActivityData request) {
+    sendPrivateAction(ActionModel(action: MeetingActions.requestScreenSharePermissionResponse, isScreenShareAllowed: allow), request.identity?.identity ?? "");
+  }
+
 }

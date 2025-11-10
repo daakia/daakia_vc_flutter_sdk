@@ -1484,7 +1484,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
             return ScreenShareRequestDialog(
               viewModel: viewModel,
               onAction: (request, allow) {
-                // viewModel.handleScreenShareRequest(allow, request); //TODO:: need to implement
+                viewModel.handleScreenShareRequest(allow, request);
                 viewModel.removeScreenShareRequest(request);
 
                 if (viewModel.screenShareRequestList.isEmpty) {
