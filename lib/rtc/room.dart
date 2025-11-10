@@ -35,6 +35,7 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../model/emoji_message.dart';
 import '../model/remote_activity_data.dart';
+import '../presentation/dialog/screen_share_request_dialog.dart';
 import '../presentation/pages/transcription_screen.dart';
 import '../utils/consent_status_enum.dart';
 import '../utils/meeting_actions.dart';
@@ -657,6 +658,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
       case MeetingActions.allowScreenShareForAll:
         viewModel?.isScreenShareEnable = remoteData.value;
+        break;
+
+      case MeetingActions.requestScreenSharePermission:
+        viewModel?.addScreenShareRequest(remoteData);
+        showScreenShareDialog(context, viewModel!);
         break;
 
       case MeetingActions.requestScreenSharePermissionResponse:
@@ -1461,4 +1467,42 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     }
     viewModel?.isRecordingStartByMe = false;
   }
+
+  void showScreenShareDialog(BuildContext context, RtcViewmodel viewModel) {
+    if (viewModel.isScreenShareDialogOpen) return; // already open, skip
+
+    viewModel.isScreenShareDialogOpen = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        // 👇 Rebuilds automatically when notifyListeners() is called
+        return AnimatedBuilder(
+          animation: viewModel,
+          builder: (context, _) {
+            return ScreenShareRequestDialog(
+              viewModel: viewModel,
+              onAction: (request, allow) {
+                // viewModel.handleScreenShareRequest(allow, request); //TODO:: need to implement
+                viewModel.removeScreenShareRequest(request);
+
+                if (viewModel.screenShareRequestList.isEmpty) {
+                  Navigator.of(context).pop();
+                  viewModel.isScreenShareDialogOpen = false;
+                }
+              },
+              onClose: () {
+                Navigator.of(context).pop();
+                viewModel.isScreenShareDialogOpen = false;
+              },
+            );
+          },
+        );
+      },
+    ).then((_) {
+      viewModel.isScreenShareDialogOpen = false;
+    });
+  }
+
 }

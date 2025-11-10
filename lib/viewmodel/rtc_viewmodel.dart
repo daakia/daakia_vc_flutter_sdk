@@ -2109,4 +2109,12 @@ class RtcViewmodel extends ChangeNotifier {
     );
     notifyListeners();
   }
+
+  bool _isScreenShareDialogOpen = false;
+
+  bool get isScreenShareDialogOpen => _isScreenShareDialogOpen;
+  set isScreenShareDialogOpen(bool value) {
+    _isScreenShareDialogOpen = value;
+    notifyListeners();
+  }
 }
