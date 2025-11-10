@@ -16,6 +16,7 @@ import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import '../dialog/emoji_dialog.dart';
 import '../pages/all_participant_page.dart';
+import '../pages/permission_request_page.dart';
 import '../pages/transcription_screen.dart';
 
 class MoreOptionBottomSheet extends StatefulWidget {
@@ -155,6 +156,14 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                   showParticipantBottomSheet();
                 },
               ),
+              buildOption(context,
+                  icon: Icons.lock,
+                  text: 'Permissions',
+                  isVisible: viewModel.screenShareRequestCount > 0,
+                  setBadge: BadgeData(viewModel.screenShareRequestCount), onTap: () {
+                    Navigator.pop(context);
+                    showPermissionBottomSheet(viewModel);
+                  }),
               // Live Stream
               buildOption(
                 context,
@@ -223,6 +232,17 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
     Navigator.of(context).push(MaterialPageRoute<Null>(
         builder: (BuildContext context) {
           return TranscriptionScreen(viewModel);
+        },
+        fullscreenDialog: true));
+  }
+
+  void showPermissionBottomSheet(RtcViewmodel viewModel) {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(); // This will dismiss the BottomSheet
+    }
+    Navigator.of(context).push(MaterialPageRoute<Null>(
+        builder: (BuildContext context) {
+          return const PermissionRequestPage();
         },
         fullscreenDialog: true));
   }
