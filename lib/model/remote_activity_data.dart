@@ -36,6 +36,7 @@ class RemoteActivityData {
   final Reaction? reaction;
   final List<Reaction>? reactions;
   final bool removeReaction;
+  final bool isScreenShareAllowed;
 
   // ✅ ADD NEW FIELD
 
@@ -70,6 +71,7 @@ class RemoteActivityData {
     this.reaction,
     this.reactions,
     this.removeReaction = false,
+    this.isScreenShareAllowed = false,
     // ✅ ADD NEW FIELD
   });
 
@@ -117,6 +119,7 @@ class RemoteActivityData {
           ?.map((e) => Reaction.fromJson(e as Map<String, dynamic>))
           .toList(),
       removeReaction: json['removeReaction'] as bool? ?? false,
+      isScreenShareAllowed: json['is_screen_share_allowed'] as bool? ?? false,
       // ✅ ADD NEW FIELD
     );
   }
@@ -153,6 +156,7 @@ class RemoteActivityData {
       'reaction': reaction?.toJson(),
       'reactions': reactions?.map((e) => e.toJson()).toList(),
       'removeReaction': removeReaction,
+      'is_screen_share_allowed': isScreenShareAllowed,
       // ✅ ADD NEW FIELD
     };
   }
@@ -188,6 +192,7 @@ class RemoteActivityData {
     Reaction? reaction,
     List<Reaction>? reactions,
     bool? removeReaction,
+    bool? isScreenShareAllowed,
     // ✅ ADD NEW FIELD
   }) {
     return RemoteActivityData(
@@ -222,6 +227,7 @@ class RemoteActivityData {
       reaction: reaction ?? this.reaction,
       reactions: reactions ?? this.reactions,
       removeReaction: removeReaction ?? this.removeReaction,
+      isScreenShareAllowed: isScreenShareAllowed ?? this.isScreenShareAllowed,
       // ✅ ADD NEW FIELD
     );
   }

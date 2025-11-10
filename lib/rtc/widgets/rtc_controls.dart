@@ -146,11 +146,11 @@ class _RtcControlState extends State<RtcControls> {
             },
             icon: Badge(
               isLabelVisible: (viewModel.getUnReadCount() +
-                      viewModel.getUnreadCountPrivateChat()) >
+                      viewModel.getUnreadCountPrivateChat() + viewModel.screenShareRequestCount) >
                   0,
               label: Text(
                 (viewModel.getUnReadCount() +
-                        viewModel.getUnreadCountPrivateChat())
+                        viewModel.getUnreadCountPrivateChat() + viewModel.screenShareRequestCount)
                     .toString(),
                 style: const TextStyle(color: Colors.white),
               ),

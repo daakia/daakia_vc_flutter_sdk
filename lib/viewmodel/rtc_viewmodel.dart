@@ -2004,6 +2004,129 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
 
+  //===============================[Chat Reaction]===============================
+  bool _isScreenShareEnable = true;
 
+  bool get isScreenShareEnable => _isScreenShareEnable;
+
+  set isScreenShareEnable(bool value) {
+    _isScreenShareEnable = value;
+    notifyListeners();
+  }
+
+  void getScreenShareConsent() {
+    networkRequestHandler(
+        apiCall: ()=> apiClient.getScreenShareConsent(meetingDetails.meetingUid),
+        onSuccess: (data) {
+          isScreenShareEnable = data?.screenShareConsent == true;
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isScreenShareEnable = false;
+        }
+    );
+  }
+
+  void updateScreenShareConsent(bool value) {
+    Map<String, dynamic> body = {
+      "meeting_id": meetingDetails.meetingUid,
+      "permission_granted": value,
+    };
+
+    networkRequestHandler(
+      apiCall: ()=> apiClient.updateScreenShareConsent(meetingDetails.authorizationToken, body),
+      onSuccess: (data) {
+        isScreenShareEnable = data?.screenShareConsent == true;
+        sendAction(ActionModel(action: MeetingActions.allowScreenShareForAll, value: _isScreenShareEnable));
+      },
+      onError: (message) {
+        sendMessageToUI(message);
+        isScreenShareEnable = !isScreenShareEnable;
+      }
+    );
+  }
+
+  bool isScreenShareRequestAccepted = false;
+
+  bool isScreenSharePermissionNeeded() {
+    var localParticipant = room.localParticipant;
+    if (Utils.isCoHost(localParticipant?.metadata) || Utils.isCoHost(localParticipant?.metadata)) return false;
+    if (!_isScreenShareEnable) {
+      if (isScreenShareRequestAccepted) return false;
+      if(adminList.isEmpty) return true;
+      sendPrivateAction(ActionModel(action: MeetingActions.requestScreenSharePermission, requestBy: localParticipant?.identity, requestByName: localParticipant?.name), adminList[0]?.identity);
+      return true;
+    }
+    return false;
+  }
+
+  List<RemoteParticipant?> adminList = [];
+
+  void updateAdminList(RemoteParticipant participant) {
+    if (Utils.isHost(participant.metadata)) {
+      // Always keep host at 0 index
+      adminList.insert(0, participant);
+    } else if (Utils.isCoHost(participant.metadata)) {
+      // Add co-host normally
+      adminList.add(participant);
+    }
+  }
+
+  String getAdminType() {
+    if(adminList.isEmpty) return "Unknown";
+    final metadata = adminList[0]?.metadata;
+    if (Utils.isHost(metadata)) return "Host";
+    if (Utils.isCoHost(metadata)) return "Co-Host";
+    return "Unknown";
+  }
+
+  List<RemoteActivityData> _screenShareRequestList = [];
+
+  List<RemoteActivityData> get screenShareRequestList =>
+      _screenShareRequestList;
+
+  set screenShareRequestList(List<RemoteActivityData> value) {
+    _screenShareRequestList = value;
+    notifyListeners();
+  }
+
+
+  void addScreenShareRequest(RemoteActivityData data) {
+    // Check if the participant is already in the list
+    final exists = _screenShareRequestList.any(
+          (item) => item.identity == data.identity,
+    );
+
+    if (!exists) {
+      _screenShareRequestList.add(data);
+      notifyListeners();
+    }
+  }
+
+  void removeScreenShareRequest(RemoteActivityData data) {
+    _screenShareRequestList.removeWhere(
+          (item) => item.identity == data.identity,
+    );
+    notifyListeners();
+  }
+
+  bool _isScreenShareDialogOpen = false;
+
+  bool get isScreenShareDialogOpen => _isScreenShareDialogOpen;
+  set isScreenShareDialogOpen(bool value) {
+    _isScreenShareDialogOpen = value;
+    notifyListeners();
+  }
+
+  int get screenShareRequestCount {
+    final metadata = room.localParticipant?.metadata;
+    if (!Utils.isHost(metadata) && !Utils.isCoHost(metadata)) return 0;
+    if (_isScreenShareEnable) return 0;
+    return screenShareRequestList.length;
+  }
+
+  void handleScreenShareRequest(bool allow, RemoteActivityData request) {
+    sendPrivateAction(ActionModel(action: MeetingActions.requestScreenSharePermissionResponse, isScreenShareAllowed: allow), request.identity?.identity ?? "");
+  }
 
 }

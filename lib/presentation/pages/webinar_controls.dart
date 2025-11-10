@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../viewmodel/rtc_viewmodel.dart';
+import '../widgets/host_control_switch.dart';
 
 class WebinarControls extends StatelessWidget {
   const WebinarControls({super.key});
@@ -10,7 +11,8 @@ class WebinarControls extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = Provider.of<RtcViewmodel>(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF000000), // Replace with your desired background color
+      backgroundColor: const Color(0xFF000000),
+      // Replace with your desired background color
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
         child: Column(
@@ -48,59 +50,46 @@ class WebinarControls extends StatelessWidget {
               ),
             ),
             // Webinar Mode Switch
-            SwitchListTile(
+            HostControlSwitch(
+              title: 'Webinar mode',
+              subtitle:
+                  'If turned ON, all participants except Hosts / CoHosts stay muted with their camera off.',
               value: viewModel.isWebinarModeEnable,
-              onChanged: (value) {
-                viewModel.isWebinarModeEnable = value;
-              },
-              title: const Text(
-                'Webinar mode',
-                style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w600),
-              ),
-              subtitle: const Text(
-                'If turned ON, all participants except Hosts / CoHosts stay muted with their camera off.',
-                style: TextStyle(color: Colors.white, fontSize: 15),
-              ),
-              activeColor: Colors.greenAccent, // Customize based on your design
+              onChanged: (value) => viewModel.isWebinarModeEnable = value,
+              isDividerRequired: false,
             ),
-            // Divider
-            const Divider(color: Colors.white),
             // Participants Audio Switch
-            SwitchListTile(
+            HostControlSwitch(
+              title: 'Participants Audio',
+              subtitle: 'If turned off, participants can unmute themselves.',
               value: viewModel.isAudioModeEnable,
-              onChanged: (value) {
-                viewModel.isAudioModeEnable = value;
-              },
-              title: const Text(
-                'Participants Audio',
-                style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w600),
-              ),
-              subtitle: const Text(
-                'If turned off, participants can unmute themselves.',
-                style: TextStyle(color: Colors.white, fontSize: 15),
-              ),
-              activeColor: Colors.greenAccent, // Customize based on your design
+              onChanged: (value) => viewModel.isAudioModeEnable = value,
+              isChild: true,
+              // 👈 smaller + indented
+              isDividerRequired: false,
             ),
-            // Divider
-            const Divider(color: Colors.white),
             // Participants Video Switch
-            SwitchListTile(
+            HostControlSwitch(
+              title: 'Participants Video',
+              subtitle: 'If turned off, participants can turn their camera on.',
               value: viewModel.isVideoModeEnable,
-              onChanged: (value) {
-                viewModel.isVideoModeEnable = value;
-              },
-              title: const Text(
-                'Participants Video',
-                style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w600),
-              ),
-              subtitle: const Text(
-                'If turned off, participants can turn their camera on.',
-                style: TextStyle(color: Colors.white, fontSize: 15),
-              ),
-              activeColor: Colors.greenAccent, // Customize based on your design
+              onChanged: (value) => viewModel.isVideoModeEnable = value,
+              isChild: true,
+              // 👈 smaller + indented
+              isDividerRequired: false,
             ),
             // Divider
             const Divider(color: Colors.white),
+            HostControlSwitch(
+              title: 'Allow Screen Share',
+              subtitle: 'If turned ON, all participants will be able to share their screen without the permission of Host / Co-Host.',
+              value: viewModel.isScreenShareEnable,
+              isEnable: viewModel.meetingDetails.features?.isScreenShareRequestAllowed() == true,
+              onChanged: (value) {
+                viewModel.isScreenShareEnable = value;
+                viewModel.updateScreenShareConsent(value);
+              },
+            ),
           ],
         ),
       ),
