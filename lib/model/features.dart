@@ -35,6 +35,7 @@ class Features {
   int? videoTranslation;
   int? isBasic;
   int? screenSharePermission;
+  int? conferenceChatAttachment;
   FeatureConfiguration? configurations;
 
   Features(
@@ -73,6 +74,7 @@ class Features {
       this.isBasic,
       this.configurations,
       this.screenSharePermission,
+      this.conferenceChatAttachment,
       });
 
   Features.fromJson(Map<String, dynamic> json) {
@@ -110,6 +112,7 @@ class Features {
     videoTranslation = json['video_translation'];
     isBasic = json['is_basic'];
     screenSharePermission = json['screen_share_permission'];
+    conferenceChatAttachment = json['conference_chat_attachment'];
 
     configurations = json['configurations'] != null
         ? FeatureConfiguration.fromJson(json['configurations'])
@@ -152,6 +155,7 @@ class Features {
     data['video_translation'] = videoTranslation;
     data['is_basic'] = isBasic;
     data['screen_share_permission'] = screenSharePermission;
+    data['conference_chat_attachment'] = conferenceChatAttachment;
 
     if (configurations != null) {
       data['configurations'] = configurations!.toJson();
@@ -182,6 +186,8 @@ class Features {
   bool isBasicPlan() => isBasic == 1;
 
   bool isScreenShareRequestAllowed() => screenSharePermission == 1;
+
+  bool isConferenceChatAttachmentAllowed() => conferenceChatAttachment == 1;
 
   bool isAllowMultipleCoHost() => configurations?.allowMultipleCohost == 1;
 
