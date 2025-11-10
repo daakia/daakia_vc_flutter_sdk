@@ -2080,4 +2080,33 @@ class RtcViewmodel extends ChangeNotifier {
     return "Unknown";
   }
 
+  List<RemoteActivityData> _screenShareRequestList = [];
+
+  List<RemoteActivityData> get screenShareRequestList =>
+      _screenShareRequestList;
+
+  set screenShareRequestList(List<RemoteActivityData> value) {
+    _screenShareRequestList = value;
+    notifyListeners();
+  }
+
+
+  void addScreenShareRequest(RemoteActivityData data) {
+    // Check if the participant is already in the list
+    final exists = _screenShareRequestList.any(
+          (item) => item.identity == data.identity,
+    );
+
+    if (!exists) {
+      _screenShareRequestList.add(data);
+      notifyListeners();
+    }
+  }
+
+  void removeScreenShareRequest(RemoteActivityData data) {
+    _screenShareRequestList.removeWhere(
+          (item) => item.identity == data.identity,
+    );
+    notifyListeners();
+  }
 }
