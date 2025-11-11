@@ -2162,7 +2162,7 @@ class RtcViewmodel extends ChangeNotifier {
         apiCall: ()=> apiClient.updateChatAttachmentConsent(meetingDetails.authorizationToken, body),
         onSuccess: (data) {
           isChatAttachmentDownloadEnable = data?.chatAttachmentDownloadConsent == true;
-          sendAction(ActionModel(action: MeetingActions.allowScreenShareForAll, value: _isScreenShareEnable));
+          sendAction(ActionModel(action: MeetingActions.canDownloadChatAttachment, value: _isChatAttachmentDownloadEnable));
         },
         onError: (message) {
           sendMessageToUI(message);
