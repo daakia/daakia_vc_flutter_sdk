@@ -676,6 +676,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         );
         break;
 
+      case MeetingActions.canDownloadChatAttachment:
+        viewModel?.isChatAttachmentDownloadEnable = remoteData.value;
+        break;
+
       case "":
       // Handle empty action case if needed
         break;
