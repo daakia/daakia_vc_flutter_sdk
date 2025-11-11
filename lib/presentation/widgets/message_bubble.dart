@@ -193,7 +193,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                                 elevation: 0,
                                 shadowColor: Colors.transparent,
                                 color: Colors.transparent,
-                                child: FilePreviewWidget(fileUrl: message),
+                                child: FilePreviewWidget(fileUrl: message, isChatAttachmentDownloadEnable: widget.viewModel.isChatAttachmentDownloadEnable),
                               ),
                             )
                           else
