@@ -94,6 +94,7 @@ class WebinarControls extends StatelessWidget {
                     true,
                 onChanged: (value) {
                   viewModel.isChatAttachmentDownloadEnable = value;
+                  viewModel.updateChatAttachmentConsent(value);
                 },
               ),
 

@@ -2139,4 +2139,36 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void getChatAttachmentConsent() {
+    networkRequestHandler(
+        apiCall: ()=> apiClient.getChatAttachmentConsent(meetingDetails.meetingUid),
+        onSuccess: (data) {
+          isChatAttachmentDownloadEnable = data?.chatAttachmentDownloadConsent == true;
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isChatAttachmentDownloadEnable = false;
+        }
+    );
+  }
+
+  void updateChatAttachmentConsent(bool value) {
+    Map<String, dynamic> body = {
+      "meeting_id": meetingDetails.meetingUid,
+      "permission_granted": value,
+    };
+
+    networkRequestHandler(
+        apiCall: ()=> apiClient.updateChatAttachmentConsent(meetingDetails.authorizationToken, body),
+        onSuccess: (data) {
+          isChatAttachmentDownloadEnable = data?.chatAttachmentDownloadConsent == true;
+          sendAction(ActionModel(action: MeetingActions.allowScreenShareForAll, value: _isScreenShareEnable));
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isChatAttachmentDownloadEnable = !isChatAttachmentDownloadEnable;
+        }
+    );
+  }
+
 }

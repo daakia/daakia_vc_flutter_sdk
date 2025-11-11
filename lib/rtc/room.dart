@@ -148,6 +148,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         viewModel?.getScreenShareConsent();
       }
 
+      if (viewModel?.meetingDetails.features?.isConferenceChatAttachmentAllowed() == true) {
+        viewModel?.getChatAttachmentConsent();
+      }
+
       DaakiaPiP.createPipVideoCall(
           name: widget.room.localParticipant?.name ?? "Unknown",
           avatar: Utils.extractUserAvatar(widget.room.localParticipant?.metadata),
