@@ -2129,4 +2129,14 @@ class RtcViewmodel extends ChangeNotifier {
     sendPrivateAction(ActionModel(action: MeetingActions.requestScreenSharePermissionResponse, isScreenShareAllowed: allow), request.identity?.identity ?? "");
   }
 
+  //===============================[Chat Attachment Permission]===============================
+  bool _isChatAttachmentDownloadEnable = true;
+
+  bool get isChatAttachmentDownloadEnable => _isChatAttachmentDownloadEnable;
+
+  set isChatAttachmentDownloadEnable(bool value) {
+    _isChatAttachmentDownloadEnable = value;
+    notifyListeners();
+  }
+
 }
