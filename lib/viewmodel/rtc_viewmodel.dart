@@ -2004,7 +2004,7 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
 
-  //===============================[Chat Reaction]===============================
+  //===============================[ScreenShare Permission]===============================
   bool _isScreenShareEnable = true;
 
   bool get isScreenShareEnable => _isScreenShareEnable;
@@ -2127,6 +2127,48 @@ class RtcViewmodel extends ChangeNotifier {
 
   void handleScreenShareRequest(bool allow, RemoteActivityData request) {
     sendPrivateAction(ActionModel(action: MeetingActions.requestScreenSharePermissionResponse, isScreenShareAllowed: allow), request.identity?.identity ?? "");
+  }
+
+  //===============================[Chat Attachment Permission]===============================
+  bool _isChatAttachmentDownloadEnable = true;
+
+  bool get isChatAttachmentDownloadEnable => _isChatAttachmentDownloadEnable;
+
+  set isChatAttachmentDownloadEnable(bool value) {
+    _isChatAttachmentDownloadEnable = value;
+    notifyListeners();
+  }
+
+  void getChatAttachmentConsent() {
+    networkRequestHandler(
+        apiCall: ()=> apiClient.getChatAttachmentConsent(meetingDetails.meetingUid),
+        onSuccess: (data) {
+          isChatAttachmentDownloadEnable = data?.chatAttachmentDownloadConsent == true;
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isChatAttachmentDownloadEnable = false;
+        }
+    );
+  }
+
+  void updateChatAttachmentConsent(bool value) {
+    Map<String, dynamic> body = {
+      "meeting_id": meetingDetails.meetingUid,
+      "permission_granted": value,
+    };
+
+    networkRequestHandler(
+        apiCall: ()=> apiClient.updateChatAttachmentConsent(meetingDetails.authorizationToken, body),
+        onSuccess: (data) {
+          isChatAttachmentDownloadEnable = data?.chatAttachmentDownloadConsent == true;
+          sendAction(ActionModel(action: MeetingActions.canDownloadChatAttachment, value: _isChatAttachmentDownloadEnable));
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isChatAttachmentDownloadEnable = !isChatAttachmentDownloadEnable;
+        }
+    );
   }
 
 }

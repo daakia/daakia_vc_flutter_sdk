@@ -98,8 +98,10 @@ class _ChatState extends State<ChatPage> {
                             baseOffset: 0,
                             extentOffset: text.length,
                           );
-                          FocusScope.of(context).requestFocus(FocusNode()); // clear old focus
-                          FocusScope.of(context).requestFocus(_messageFocusNode); // open keyboard
+                          FocusScope.of(context)
+                              .requestFocus(FocusNode()); // clear old focus
+                          FocusScope.of(context)
+                              .requestFocus(_messageFocusNode); // open keyboard
                         });
                       },
                     );
@@ -140,130 +142,136 @@ class _ChatState extends State<ChatPage> {
                   ),
                   child: Row(
                     children: [
-                      // Attachment Button
-                      IconButton(
-                        icon: const Icon(Icons.attach_file),
-                        color: Colors.white,
-                        onPressed: () async {
-                          Utils.hideKeyboard(context);
-                          try {
-                            widget.viewModel
-                                .sendMainChatControllerEvent(ShowLoading());
-                            FilePickerResult? result =
-                                await FilePicker.platform.pickFiles(
-                              allowMultiple: false,
-                              type: FileType.custom,
-                              allowedExtensions: Constant.allowedExtensions(),
-                            );
-                            widget.viewModel
-                                .sendMainChatControllerEvent(StopLoading());
-                            if (result != null) {
-                              File? file = result.files.single.path != null
-                                  ? File(result.files.single.path!)
-                                  : null;
-                              var isValidFileSize =
-                                  await Utils.validateFile(file, (error) {
-                                widget.viewModel.sendMessageToUI(error);
-                              });
-                              if (!isValidFileSize) {
-                                return;
-                              }
-                              if (file != null) {
-                                if (!context.mounted) return;
-                                showModalBottomSheet(
-                                  context: context,
-                                  builder: (context) => Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Text(
-                                          "Selected File",
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        LocalFilePreview(
-                                            file: file,
-                                            progress: widget.viewModel
-                                                .publicMessageProgress,
-                                            viewModel: widget.viewModel),
-                                        const SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment
-                                              .center, // Center the buttons
-                                          children: [
-                                            // Delete button
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              decoration: BoxDecoration(
-                                                color: Colors.redAccent
-                                                    .withValues(alpha: 0.5),
-                                                // Button-like background
-                                                borderRadius:
-                                                    BorderRadius.circular(8.0),
-                                              ),
-                                              child: IconButton(
-                                                onPressed: () {
-                                                  Navigator.pop(context);
-                                                },
-                                                icon: const Icon(Icons.delete,
-                                                    color: Colors.redAccent),
-                                                tooltip: "Delete",
-                                              ),
-                                            ),
-                                            const SizedBox(width: 10),
-                                            // Spacing between buttons
-                                            // Upload button
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              decoration: BoxDecoration(
-                                                color: Colors.green
-                                                    .withValues(alpha: 0.5),
-                                                // Button-like background
-                                                borderRadius:
-                                                    BorderRadius.circular(8.0),
-                                              ),
-                                              child: IconButton(
-                                                onPressed: () {
-                                                  widget.viewModel
-                                                      .uploadAttachment(file,
-                                                          () {
+                      if (widget.viewModel.meetingDetails.features
+                              ?.isConferenceChatAttachmentAllowed() ==
+                          true)
+                        // Attachment Button
+                        IconButton(
+                          icon: const Icon(Icons.attach_file),
+                          color: Colors.white,
+                          onPressed: () async {
+                            Utils.hideKeyboard(context);
+                            try {
+                              widget.viewModel
+                                  .sendMainChatControllerEvent(ShowLoading());
+                              FilePickerResult? result =
+                                  await FilePicker.platform.pickFiles(
+                                allowMultiple: false,
+                                type: FileType.custom,
+                                allowedExtensions: Constant.allowedExtensions(),
+                              );
+                              widget.viewModel
+                                  .sendMainChatControllerEvent(StopLoading());
+                              if (result != null) {
+                                File? file = result.files.single.path != null
+                                    ? File(result.files.single.path!)
+                                    : null;
+                                var isValidFileSize =
+                                    await Utils.validateFile(file, (error) {
+                                  widget.viewModel.sendMessageToUI(error);
+                                });
+                                if (!isValidFileSize) {
+                                  return;
+                                }
+                                if (file != null) {
+                                  if (!context.mounted) return;
+                                  showModalBottomSheet(
+                                    context: context,
+                                    builder: (context) => Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Text(
+                                            "Selected File",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          LocalFilePreview(
+                                              file: file,
+                                              progress: widget.viewModel
+                                                  .publicMessageProgress,
+                                              viewModel: widget.viewModel),
+                                          const SizedBox(height: 10),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            // Center the buttons
+                                            children: [
+                                              // Delete button
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.redAccent
+                                                      .withValues(alpha: 0.5),
+                                                  // Button-like background
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          8.0),
+                                                ),
+                                                child: IconButton(
+                                                  onPressed: () {
                                                     Navigator.pop(context);
-                                                  });
-                                                },
-                                                icon: const Icon(Icons.upload,
-                                                    color: Colors.green),
-                                                tooltip: "Upload",
+                                                  },
+                                                  icon: const Icon(Icons.delete,
+                                                      color: Colors.redAccent),
+                                                  tooltip: "Delete",
+                                                ),
                                               ),
-                                            ),
-                                          ],
-                                        )
-                                      ],
+                                              const SizedBox(width: 10),
+                                              // Spacing between buttons
+                                              // Upload button
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.green
+                                                      .withValues(alpha: 0.5),
+                                                  // Button-like background
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          8.0),
+                                                ),
+                                                child: IconButton(
+                                                  onPressed: () {
+                                                    widget.viewModel
+                                                        .uploadAttachment(file,
+                                                            () {
+                                                      Navigator.pop(context);
+                                                    });
+                                                  },
+                                                  icon: const Icon(Icons.upload,
+                                                      color: Colors.green),
+                                                  tooltip: "Upload",
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  backgroundColor: Colors.black,
-                                );
+                                    backgroundColor: Colors.black,
+                                  );
+                                } else {
+                                  widget.viewModel
+                                      .sendMessageToUI("File not found!");
+                                }
                               } else {
                                 widget.viewModel
-                                    .sendMessageToUI("File not found!");
+                                    .sendMessageToUI("File not selected!");
                               }
-                            } else {
+                            } catch (e) {
                               widget.viewModel
-                                  .sendMessageToUI("File not selected!");
+                                  .sendMessageToUI(e.runtimeType.toString());
+                            } finally {
+                              widget.viewModel
+                                  .sendMainChatControllerEvent(StopLoading());
                             }
-                          } catch (e) {
-                            widget.viewModel
-                                .sendMessageToUI(e.runtimeType.toString());
-                          } finally {
-                            widget.viewModel
-                                .sendMainChatControllerEvent(StopLoading());
-                          }
-                        },
-                      ),
+                          },
+                        ),
 
                       // Message input field
                       Expanded(

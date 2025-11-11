@@ -80,6 +80,8 @@ class MeetingActions {
 
   static const String requestScreenSharePermissionResponse = "request-screen-share-permission-response";
 
+  static const String canDownloadChatAttachment = "can-download-chat-attachment";
+
   // ✅ Add new fields here
 
   // ✅ Method to check if an action is valid
@@ -135,6 +137,7 @@ class MeetingActions {
     allowScreenShareForAll,
     requestScreenSharePermission,
     requestScreenSharePermissionResponse,
+    canDownloadChatAttachment,
     // ✅ Add new fields here
   };
 }
