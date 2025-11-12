@@ -1112,14 +1112,14 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<BaseResponse<ChatAttachmentConsentModel>> getAudioPermission(
+  Future<BaseResponse<WebinarPermissionModel>> getAudioPermission(
     String meetingId,
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'meeting_id': meetingId};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<BaseResponse<ChatAttachmentConsentModel>>(
+    final _options = _setStreamType<BaseResponse<WebinarPermissionModel>>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -1130,12 +1130,11 @@ class _RestClient implements RestClient {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late BaseResponse<ChatAttachmentConsentModel> _value;
+    late BaseResponse<WebinarPermissionModel> _value;
     try {
-      _value = BaseResponse<ChatAttachmentConsentModel>.fromJson(
+      _value = BaseResponse<WebinarPermissionModel>.fromJson(
         _result.data!,
-        (json) =>
-            ChatAttachmentConsentModel.fromJson(json as Map<String, dynamic>),
+        (json) => WebinarPermissionModel.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -1145,7 +1144,7 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<BaseResponse<ChatAttachmentConsentModel>> updateAudioPermission(
+  Future<BaseResponse<WebinarPermissionModel>> updateAudioPermission(
     String token,
     Map<String, dynamic> body,
   ) async {
@@ -1155,7 +1154,7 @@ class _RestClient implements RestClient {
     _headers.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
     _data.addAll(body);
-    final _options = _setStreamType<BaseResponse<ChatAttachmentConsentModel>>(
+    final _options = _setStreamType<BaseResponse<WebinarPermissionModel>>(
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -1166,12 +1165,11 @@ class _RestClient implements RestClient {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late BaseResponse<ChatAttachmentConsentModel> _value;
+    late BaseResponse<WebinarPermissionModel> _value;
     try {
-      _value = BaseResponse<ChatAttachmentConsentModel>.fromJson(
+      _value = BaseResponse<WebinarPermissionModel>.fromJson(
         _result.data!,
-        (json) =>
-            ChatAttachmentConsentModel.fromJson(json as Map<String, dynamic>),
+        (json) => WebinarPermissionModel.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -1181,14 +1179,14 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<BaseResponse<ChatAttachmentConsentModel>> getVideoPermission(
+  Future<BaseResponse<WebinarPermissionModel>> getVideoPermission(
     String meetingId,
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{r'meeting_id': meetingId};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<BaseResponse<ChatAttachmentConsentModel>>(
+    final _options = _setStreamType<BaseResponse<WebinarPermissionModel>>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -1199,12 +1197,11 @@ class _RestClient implements RestClient {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late BaseResponse<ChatAttachmentConsentModel> _value;
+    late BaseResponse<WebinarPermissionModel> _value;
     try {
-      _value = BaseResponse<ChatAttachmentConsentModel>.fromJson(
+      _value = BaseResponse<WebinarPermissionModel>.fromJson(
         _result.data!,
-        (json) =>
-            ChatAttachmentConsentModel.fromJson(json as Map<String, dynamic>),
+        (json) => WebinarPermissionModel.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -1214,7 +1211,7 @@ class _RestClient implements RestClient {
   }
 
   @override
-  Future<BaseResponse<ChatAttachmentConsentModel>> updateVideoPermission(
+  Future<BaseResponse<WebinarPermissionModel>> updateVideoPermission(
     String token,
     Map<String, dynamic> body,
   ) async {
@@ -1224,7 +1221,7 @@ class _RestClient implements RestClient {
     _headers.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
     _data.addAll(body);
-    final _options = _setStreamType<BaseResponse<ChatAttachmentConsentModel>>(
+    final _options = _setStreamType<BaseResponse<WebinarPermissionModel>>(
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -1235,12 +1232,11 @@ class _RestClient implements RestClient {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late BaseResponse<ChatAttachmentConsentModel> _value;
+    late BaseResponse<WebinarPermissionModel> _value;
     try {
-      _value = BaseResponse<ChatAttachmentConsentModel>.fromJson(
+      _value = BaseResponse<WebinarPermissionModel>.fromJson(
         _result.data!,
-        (json) =>
-            ChatAttachmentConsentModel.fromJson(json as Map<String, dynamic>),
+        (json) => WebinarPermissionModel.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
