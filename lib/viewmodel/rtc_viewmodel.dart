@@ -715,7 +715,6 @@ class RtcViewmodel extends ChangeNotifier {
   set isAudioModeEnable(bool value) {
     _isAudioModeEnable = value;
     _isWebinarModeEnable = (_isAudioModeEnable && _isVideoModeEnable);
-    sendAction(ActionModel(action: MeetingActions.forceMuteAll, value: value));
     notifyListeners();
   }
 
@@ -2167,6 +2166,44 @@ class RtcViewmodel extends ChangeNotifier {
         onError: (message) {
           sendMessageToUI(message);
           isChatAttachmentDownloadEnable = !isChatAttachmentDownloadEnable;
+        }
+    );
+  }
+
+  //===============================[Webinar Control]===============================
+
+  void getAudioPermission() {
+    networkRequestHandler(
+        apiCall: ()=> apiClient.getAudioPermission(meetingDetails.meetingUid),
+        onSuccess: (data) {
+          isAudioModeEnable = !(data?.audioPermission == true);
+          isAudioPermissionEnable = data?.audioPermission == true;
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isAudioModeEnable = false;
+          isAudioPermissionEnable = false;
+        }
+    );
+  }
+
+  void updateAudioPermission(bool value) {
+    Map<String, dynamic> body = {
+      "meeting_id": meetingDetails.meetingUid,
+      "permission_granted": !value,
+    };
+
+    networkRequestHandler(
+        apiCall: ()=> apiClient.updateAudioPermission(meetingDetails.authorizationToken, body),
+        onSuccess: (data) {
+          isAudioModeEnable = !(data?.audioPermission == true);
+          isAudioPermissionEnable = data?.audioPermission == true;
+          sendAction(ActionModel(action: MeetingActions.forceMuteAll, value: _isAudioModeEnable));
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isAudioModeEnable = !isAudioModeEnable;
+          isAudioPermissionEnable = !isAudioPermissionEnable;
         }
     );
   }
