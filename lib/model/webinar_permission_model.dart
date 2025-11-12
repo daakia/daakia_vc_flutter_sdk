@@ -1,18 +1,18 @@
 class WebinarPermissionModel {
-  bool videoPermission = false;
-  bool audioPermission = false;
+  bool? videoPermission;
+  bool? audioPermission;
 
-  WebinarPermissionModel({required this.videoPermission, required this.audioPermission});
+  WebinarPermissionModel({this.videoPermission, this.audioPermission});
 
   factory WebinarPermissionModel.fromJson(Map<String, dynamic> json) {
     return WebinarPermissionModel(
-      videoPermission: json['video_permission'],
-      audioPermission: json['audio_permission'],
+      videoPermission: json['video_permission'] as bool?,
+      audioPermission: json['audio_permission'] as bool?,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'video_permission': videoPermission,
-    'audio_permission': audioPermission,
+    if (videoPermission != null) 'video_permission': videoPermission,
+    if (audioPermission != null) 'audio_permission': audioPermission,
   };
 }
