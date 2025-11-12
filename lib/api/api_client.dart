@@ -197,4 +197,26 @@ abstract class RestClient {
     @Header("Authorization") String token,
     @Body() Map<String, dynamic> body,
   );
+
+  @GET("rtc/audioPermission")
+  Future<BaseResponse<ChatAttachmentConsentModel>> getAudioPermission(
+    @Query("meeting_id") String meetingId,
+  );
+
+  @PUT("rtc/audioPermission")
+  Future<BaseResponse<ChatAttachmentConsentModel>> updateAudioPermission(
+    @Header("Authorization") String token,
+    @Body() Map<String, dynamic> body,
+  );
+
+  @GET("rtc/videoPermission")
+  Future<BaseResponse<ChatAttachmentConsentModel>> getVideoPermission(
+    @Query("meeting_id") String meetingId,
+  );
+
+  @PUT("rtc/videoPermission")
+  Future<BaseResponse<ChatAttachmentConsentModel>> updateVideoPermission(
+    @Header("Authorization") String token,
+    @Body() Map<String, dynamic> body,
+  );
 }
