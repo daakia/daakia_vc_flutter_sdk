@@ -9,6 +9,7 @@ import 'package:daakia_vc_flutter_sdk/model/participant_attendance_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/screen_share_consent_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/session_details_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/translation_data.dart';
+import 'package:daakia_vc_flutter_sdk/model/webinar_permission_model.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
@@ -194,6 +195,28 @@ abstract class RestClient {
 
   @PUT("rtc/chatAttachmentDownloadConsent")
   Future<BaseResponse<ChatAttachmentConsentModel>> updateChatAttachmentConsent(
+    @Header("Authorization") String token,
+    @Body() Map<String, dynamic> body,
+  );
+
+  @GET("rtc/audioPermission")
+  Future<BaseResponse<WebinarPermissionModel>> getAudioPermission(
+    @Query("meeting_id") String meetingId,
+  );
+
+  @PUT("rtc/audioPermission")
+  Future<BaseResponse<WebinarPermissionModel>> updateAudioPermission(
+    @Header("Authorization") String token,
+    @Body() Map<String, dynamic> body,
+  );
+
+  @GET("rtc/videoPermission")
+  Future<BaseResponse<WebinarPermissionModel>> getVideoPermission(
+    @Query("meeting_id") String meetingId,
+  );
+
+  @PUT("rtc/videoPermission")
+  Future<BaseResponse<WebinarPermissionModel>> updateVideoPermission(
     @Header("Authorization") String token,
     @Body() Map<String, dynamic> body,
   );

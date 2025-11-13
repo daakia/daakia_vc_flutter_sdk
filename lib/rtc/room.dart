@@ -152,6 +152,9 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         viewModel?.getChatAttachmentConsent();
       }
 
+      viewModel?.getAudioPermission();
+      viewModel?.getVideoPermission();
+
       DaakiaPiP.createPipVideoCall(
           name: widget.room.localParticipant?.name ?? "Unknown",
           avatar: Utils.extractUserAvatar(widget.room.localParticipant?.metadata),
@@ -538,9 +541,6 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         viewModel?.isAudioPermissionEnable = !remoteData.value;
         if (!(viewModel?.isAudioPermissionEnable ?? false)) {
           viewModel?.disableAudio();
-          viewModel?.setMicAlpha(0.8);
-        } else {
-          viewModel?.setMicAlpha(1.0);
         }
         break;
 
@@ -548,9 +548,6 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         viewModel?.isVideoPermissionEnable = !remoteData.value;
         if (!(viewModel?.isVideoPermissionEnable ?? false)) {
           viewModel?.disableVideo();
-          viewModel?.setCameraAlpha(0.8);
-        } else {
-          viewModel?.setCameraAlpha(1.0);
         }
         break;
 
