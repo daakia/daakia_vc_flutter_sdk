@@ -1964,18 +1964,27 @@ class RtcViewmodel extends ChangeNotifier {
 
   void addReaction(String chatType, String emoji, RemoteActivityData chat) {
     final mode = ChatTypeExtension.fromString(chatType);
-    final identityDetails = room.localParticipant;
+    final localIdentity = room.localParticipant?.identity;
     final id = chat.id;
-    final reaction = Reaction(emoji: emoji, reactor: identityDetails?.identity, name: identityDetails?.name);
+    final reaction = Reaction(
+      emoji: emoji,
+      reactor: localIdentity,
+      name: room.localParticipant?.name,
+    );
+
     final reactions = chat.reactions ?? [];
-    final isRemoveReaction = !shouldUpdateReaction(reactions, identityDetails?.identity ?? "", emoji);
-    final senderIdentity = chat.identity?.identity; // who sent event
+    final isRemoveReaction =
+    !shouldUpdateReaction(reactions, localIdentity ?? "", emoji);
+
+    // 🧠 Determine correct chat identity
+    String? targetIdentity = chat.identity?.identity ?? _privateChatIdentity;
+
     final action = ActionModel(
       action: MeetingActions.addReaction,
       mode: chatType,
       messageId: id,
       reaction: reaction,
-      removeReaction: isRemoveReaction
+      removeReaction: isRemoveReaction,
     );
 
     switch (mode) {
@@ -1985,8 +1994,8 @@ class RtcViewmodel extends ChangeNotifier {
         break;
 
       case ChatType.private:
-        sendPrivateAction(action, senderIdentity);
-        _privateReaction(id, senderIdentity, reaction, isRemoveReaction);
+        sendPrivateAction(action, targetIdentity);
+        _privateReaction(id, targetIdentity, reaction, isRemoveReaction);
         break;
     }
   }
