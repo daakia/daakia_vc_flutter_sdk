@@ -28,30 +28,52 @@ class _ChatControllerState extends State<ChatController>
   void initState() {
     super.initState();
 
-    // Initialize TabController manually
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      collectChatEvents(widget.viewModel);
+    });
+
     final isPublicChatAllowed =
-        widget.viewModel.meetingDetails.features!.isPublicChatAllowed();
+    widget.viewModel.meetingDetails.features!.isPublicChatAllowed();
     final isPrivateChatAllowed =
-        widget.viewModel.meetingDetails.features!.isPrivateChatAllowed();
+    widget.viewModel.meetingDetails.features!.isPrivateChatAllowed();
 
     final tabCount =
         (isPublicChatAllowed ? 1 : 0) + (isPrivateChatAllowed ? 1 : 0);
     final initialIndex = (widget.identity.isEmpty || tabCount == 1) ? 0 : 1;
 
+    widget.viewModel.isChatOpen = !isPrivateChatInitiallyOpen;
+    widget.viewModel.isPrivateChatOpen = isPrivateChatInitiallyOpen;
+
     _tabController = TabController(
         length: tabCount, vsync: this, initialIndex: initialIndex);
 
-    // Setup listener for tab change
     _tabController.addListener(_onTabChanged);
-
-    // Set initial tab state
     _updateTabStates(_tabController.index);
   }
+
 
   void _onTabChanged() {
     if (!_tabController.indexIsChanging) {
       _updateTabStates(_tabController.index);
     }
+  }
+
+  bool get isPrivateChatInitiallyOpen {
+    final isPublicChatAllowed =
+    widget.viewModel.meetingDetails.features!.isPublicChatAllowed();
+    final isPrivateChatAllowed =
+    widget.viewModel.meetingDetails.features!.isPrivateChatAllowed();
+
+    final tabCount =
+        (isPublicChatAllowed ? 1 : 0) + (isPrivateChatAllowed ? 1 : 0);
+    final initialIndex = (widget.identity.isEmpty || tabCount == 1) ? 0 : 1;
+
+    // If index 1 or only private chat is allowed → private chat is open
+    if (tabCount == 1 && isPrivateChatAllowed && !isPublicChatAllowed) {
+      return true;
+    }
+
+    return initialIndex == 1;
   }
 
   void _updateTabStates(int index) {
@@ -70,6 +92,7 @@ class _ChatControllerState extends State<ChatController>
     } else if (index == 1) {
       widget.viewModel.isPrivateChatOpen = true;
     }
+    setState(() {});
   }
 
   @override
@@ -82,7 +105,6 @@ class _ChatControllerState extends State<ChatController>
 
   @override
   Widget build(BuildContext context) {
-    collectChatEvents(widget.viewModel);
 
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(statusBarColor: Colors.black),
@@ -230,6 +252,7 @@ class _ChatControllerState extends State<ChatController>
   void collectChatEvents(RtcViewmodel? viewModel) {
     if (isEventAdded) return;
     isEventAdded = true;
+    setState(() {});
     viewModel?.mainChatController.listen((event) {
       if (event is ShowLoading) {
         if (mounted) {
@@ -243,6 +266,8 @@ class _ChatControllerState extends State<ChatController>
             _isLoading = false;
           });
         }
+      } else if (event is UpdateView) {
+        setState(() {});
       }
     });
   }

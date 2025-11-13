@@ -80,11 +80,13 @@ class RtcViewmodel extends ChangeNotifier {
   void increaseUnreadCount() {
     if (isChatOpen) return;
     _unreadMessageCount++;
+    sendMainChatControllerEvent(UpdateView());
     notifyListeners();
   }
 
   void resetUnreadCount() {
     _unreadMessageCount = 0;
+    sendMainChatControllerEvent(UpdateView());
     notifyListeners();
   }
 
@@ -94,6 +96,7 @@ class RtcViewmodel extends ChangeNotifier {
 
   void increaseUnreadPrivateChatCount() {
     _unreadMessageCountPrivateChat++;
+    sendMainChatControllerEvent(UpdateView());
     notifyListeners();
   }
 
@@ -101,6 +104,7 @@ class RtcViewmodel extends ChangeNotifier {
     if (_unreadMessageCountPrivateChat == 0) return;
     _unreadMessageCountPrivateChat -= person.unreadCount;
     person.unreadCount = 0;
+    sendMainChatControllerEvent(UpdateView());
     notifyListeners();
   }
 
