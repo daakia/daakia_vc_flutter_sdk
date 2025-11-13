@@ -99,7 +99,10 @@ class _RtcControlState extends State<RtcControls> {
           ),
           IconButton(
             onPressed: () {
-              if (viewModel.isVideoPermissionEnable) {
+              final isHostOrCoHost = viewModel.isHost() ||
+                  viewModel.isCoHost();
+
+              if (isHostOrCoHost || viewModel.isVideoPermissionEnable) {
                 participant.isCameraEnabled()
                     ? viewModel.disableVideo()
                     : viewModel.enableVideo();
@@ -115,7 +118,10 @@ class _RtcControlState extends State<RtcControls> {
           ),
           IconButton(
             onPressed: () {
-              if (viewModel.isAudioPermissionEnable) {
+              final isHostOrCoHost = viewModel.isHost() ||
+                  viewModel.isCoHost();
+
+              if (isHostOrCoHost || viewModel.isAudioPermissionEnable) {
                 participant.isMicrophoneEnabled()
                     ? viewModel.disableAudio()
                     : viewModel.enableAudio();
