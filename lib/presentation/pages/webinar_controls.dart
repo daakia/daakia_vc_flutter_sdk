@@ -52,10 +52,13 @@ class WebinarControls extends StatelessWidget {
               HostControlSwitch(
                 title: 'Webinar mode',
                 subtitle:
-                'If turned ON, all participants except Hosts / CoHosts stay muted with their camera off.',
+                    'If turned ON, all participants except Hosts / CoHosts stay muted with their camera off.',
                 value: viewModel.isWebinarModeEnable,
-                onChanged: (value) =>
-                viewModel.isWebinarModeEnable = value,
+                onChanged: (value) {
+                  viewModel.isWebinarModeEnable = value;
+                  viewModel.updateAudioPermission(value);
+                  viewModel.updateVideoPermission(value);
+                },
                 isDividerRequired: false,
               ),
 
@@ -64,8 +67,10 @@ class WebinarControls extends StatelessWidget {
                 title: 'Participants Audio',
                 subtitle: 'If turned off, participants can unmute themselves.',
                 value: viewModel.isAudioModeEnable,
-                onChanged: (value) =>
-                viewModel.isAudioModeEnable = value,
+                onChanged: (value) {
+                  viewModel.isAudioModeEnable = value;
+                  viewModel.updateAudioPermission(value);
+                },
                 isChild: true,
                 isDividerRequired: false,
               ),
@@ -73,10 +78,13 @@ class WebinarControls extends StatelessWidget {
               // Participants Video Switch
               HostControlSwitch(
                 title: 'Participants Video',
-                subtitle: 'If turned off, participants can turn their camera on.',
+                subtitle:
+                    'If turned off, participants can turn their camera on.',
                 value: viewModel.isVideoModeEnable,
-                onChanged: (value) =>
-                viewModel.isVideoModeEnable = value,
+                onChanged: (value) {
+                  viewModel.isVideoModeEnable = value;
+                  viewModel.updateVideoPermission(value);
+                },
                 isChild: true,
                 isDividerRequired: false,
               ),
@@ -87,10 +95,10 @@ class WebinarControls extends StatelessWidget {
               HostControlSwitch(
                 title: 'Chat attachment download',
                 subtitle:
-                'If turned ON, all participants will be able to download attachments sent in chat.',
+                    'If turned ON, all participants will be able to download attachments sent in chat.',
                 value: viewModel.isChatAttachmentDownloadEnable,
                 isEnable: viewModel.meetingDetails.features
-                    ?.isConferenceChatAttachmentAllowed() ==
+                        ?.isConferenceChatAttachmentAllowed() ==
                     true,
                 onChanged: (value) {
                   viewModel.isChatAttachmentDownloadEnable = value;
@@ -102,10 +110,10 @@ class WebinarControls extends StatelessWidget {
               HostControlSwitch(
                 title: 'Allow Screen Share',
                 subtitle:
-                'If turned ON, all participants can share their screen without host permission.',
+                    'If turned ON, all participants can share their screen without host permission.',
                 value: viewModel.isScreenShareEnable,
                 isEnable: viewModel.meetingDetails.features
-                    ?.isScreenShareRequestAllowed() ==
+                        ?.isScreenShareRequestAllowed() ==
                     true,
                 onChanged: (value) {
                   viewModel.isScreenShareEnable = value;
