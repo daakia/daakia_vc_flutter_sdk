@@ -376,8 +376,6 @@ class RtcViewmodel extends ChangeNotifier {
 
   bool _isAudioPermissionEnable = true;
   bool _isVideoPermissionEnable = true;
-  double _micAlpha = 1.0;
-  double _cameraAlpha = 1.0;
 
   LocalParticipant get participant => room.localParticipant!;
 
@@ -401,19 +399,15 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setMicAlpha(double alpha) {
-    _micAlpha = alpha;
-    notifyListeners();
+  double getMicAlpha() {
+    if (isHost() || isCoHost()) return 1.0;
+    return isAudioPermissionEnable ? 1.0 : 0.5;
   }
 
-  double getMicAlpha() => _micAlpha;
-
-  void setCameraAlpha(double alpha) {
-    _cameraAlpha = alpha;
-    notifyListeners();
+  double getCameraAlpha() {
+    if (isHost() || isCoHost()) return 1.0;
+    return isVideoPermissionEnable ? 1.0 : 0.5;
   }
-
-  double getCameraAlpha() => _cameraAlpha;
 
   bool isVisibleForHost(String role, String targetRole) {
     return role == "moderator";
@@ -704,9 +698,6 @@ class RtcViewmodel extends ChangeNotifier {
     _isAudioModeEnable = value;
     _isVideoModeEnable = value;
     notifyListeners();
-    sendAction(ActionModel(action: MeetingActions.forceMuteAll, value: value));
-    sendAction(
-        ActionModel(action: MeetingActions.forceVideoOffAll, value: value));
   }
 
 // Getter and Setter for _isAudioModeEnable
@@ -724,8 +715,6 @@ class RtcViewmodel extends ChangeNotifier {
   set isVideoModeEnable(bool value) {
     _isVideoModeEnable = value;
     _isWebinarModeEnable = (_isAudioModeEnable && _isVideoModeEnable);
-    sendAction(
-        ActionModel(action: MeetingActions.forceVideoOffAll, value: value));
     notifyListeners();
   }
 
@@ -2176,8 +2165,8 @@ class RtcViewmodel extends ChangeNotifier {
     networkRequestHandler(
         apiCall: ()=> apiClient.getAudioPermission(meetingDetails.meetingUid),
         onSuccess: (data) {
-          isAudioModeEnable = !(data?.audioPermission == true);
-          isAudioPermissionEnable = data?.audioPermission == true;
+          isAudioModeEnable = (data?.audioPermission == true);
+          isAudioPermissionEnable = !(data?.audioPermission == true);
         },
         onError: (message) {
           sendMessageToUI(message);
@@ -2190,20 +2179,54 @@ class RtcViewmodel extends ChangeNotifier {
   void updateAudioPermission(bool value) {
     Map<String, dynamic> body = {
       "meeting_id": meetingDetails.meetingUid,
-      "permission_granted": !value,
+      "permission_granted": value,
     };
-
     networkRequestHandler(
         apiCall: ()=> apiClient.updateAudioPermission(meetingDetails.authorizationToken, body),
         onSuccess: (data) {
-          isAudioModeEnable = !(data?.audioPermission == true);
-          isAudioPermissionEnable = data?.audioPermission == true;
+          isAudioModeEnable = (data?.audioPermission == true);
+          isAudioPermissionEnable = !(data?.audioPermission == true);
           sendAction(ActionModel(action: MeetingActions.forceMuteAll, value: _isAudioModeEnable));
         },
         onError: (message) {
           sendMessageToUI(message);
           isAudioModeEnable = !isAudioModeEnable;
           isAudioPermissionEnable = !isAudioPermissionEnable;
+        }
+    );
+  }
+
+  void getVideoPermission() {
+    networkRequestHandler(
+        apiCall: ()=> apiClient.getVideoPermission(meetingDetails.meetingUid),
+        onSuccess: (data) {
+          isVideoModeEnable = (data?.videoPermission == true);
+          isVideoPermissionEnable = !(data?.videoPermission == true);
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isVideoModeEnable = false;
+          isVideoPermissionEnable = false;
+        }
+    );
+  }
+
+  void updateVideoPermission(bool value) {
+    Map<String, dynamic> body = {
+      "meeting_id": meetingDetails.meetingUid,
+      "permission_granted": value,
+    };
+    networkRequestHandler(
+        apiCall: ()=> apiClient.updateVideoPermission(meetingDetails.authorizationToken, body),
+        onSuccess: (data) {
+          isVideoModeEnable = (data?.videoPermission == true);
+          isVideoPermissionEnable = !(data?.videoPermission == true);
+          sendAction(ActionModel(action: MeetingActions.forceVideoOffAll, value: _isVideoModeEnable));
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isVideoModeEnable = !isVideoModeEnable;
+          isVideoPermissionEnable = !isVideoPermissionEnable;
         }
     );
   }
