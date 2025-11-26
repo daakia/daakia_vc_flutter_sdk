@@ -23,6 +23,7 @@ import 'package:uuid/uuid.dart';
 
 import '../enum/chat_type_enum.dart';
 import '../model/action_model.dart';
+import '../model/caption_data.dart';
 import '../model/emoji_message.dart';
 import '../model/language_model.dart';
 import '../model/meeting_details.dart';
@@ -30,6 +31,7 @@ import '../model/private_chat_model.dart';
 import '../model/send_message_model.dart';
 import '../rtc/widgets/participant_info.dart';
 import '../utils/consent_status_enum.dart';
+import '../utils/constants.dart';
 import '../utils/meeting_actions.dart';
 
 class RtcViewmodel extends ChangeNotifier {
@@ -2244,4 +2246,104 @@ class RtcViewmodel extends ChangeNotifier {
     );
   }
 
+  //===============================[Live Caption]===============================
+
+  void handleCaptionTranscription(CaptionData data) {
+    final name = getParticipantNameByIdentity(data.participantIdentity);
+
+    final isFinal = data.speechEventType == Constant.captionAgentFinalTranscript;
+    final isPartial = data.speechEventType == Constant.captionAgentInterimTranscript;
+
+    if (isFinal) {
+      if (particalTranscription != null) {
+        // Finalize previous partial
+        particalTranscription = particalTranscription!.copyWith(
+          name: name,
+          transcription: data.text,
+          isFinal: true,
+          sourceLang: transcriptionLanguageData?.sourceLang ?? data.language,
+          targetLang: translationLanguage?.code ??
+              transcriptionLanguageData?.sourceLang ??
+              data.language,
+        );
+
+        _updateTranscriptionInList(particalTranscription!);
+
+        if (particalTranscription!.sourceLang !=
+            particalTranscription!.targetLang) {
+          translateText(particalTranscription!);
+        }
+      } else {
+        final newTranscription = TranscriptionModel(
+          id: const Uuid().v4(),
+          name: name,
+          transcription: data.text,
+          timestamp: Utils.formatTimestampToTime(
+              DateTime.now().millisecondsSinceEpoch),
+          isFinal: true,
+          sourceLang: transcriptionLanguageData?.sourceLang ?? data.language,
+          targetLang: translationLanguage?.code ??
+              transcriptionLanguageData?.sourceLang ??
+              data.language,
+        );
+
+        addTranscription(newTranscription);
+
+        if (newTranscription.sourceLang != newTranscription.targetLang) {
+          translateText(newTranscription);
+        }
+      }
+
+      particalTranscription = null;
+    }
+
+    // -------------------- PARTIAL ---------------------
+    else if (isPartial) {
+      if (particalTranscription != null) {
+        // Update existing partial
+        particalTranscription = particalTranscription!.copyWith(
+          name: name,
+          transcription: data.text,
+          isFinal: false,
+          sourceLang: transcriptionLanguageData?.sourceLang ?? data.language,
+          targetLang: translationLanguage?.code ??
+              transcriptionLanguageData?.sourceLang ??
+              data.language,
+        );
+
+        _updateTranscriptionInList(particalTranscription!);
+      } else {
+        // Create new partial
+        particalTranscription = TranscriptionModel(
+          id: const Uuid().v4(),
+          name: name,
+          transcription: data.text,
+          timestamp: Utils.formatTimestampToTime(
+              DateTime.now().millisecondsSinceEpoch),
+          isFinal: false,
+          sourceLang: transcriptionLanguageData?.sourceLang ?? data.language,
+          targetLang: translationLanguage?.code ??
+              transcriptionLanguageData?.sourceLang ??
+              data.language,
+        );
+
+        addTranscription(particalTranscription!);
+      }
+    }
+  }
+
+  void registerCaption() {
+    room.registerTextStreamHandler(Constant.liveCaptionAgent, (TextStreamReader reader, String participantIdentity) async {
+        final raw = await reader.readAll();
+        try {
+          final jsonData = jsonDecode(raw);
+          final caption = CaptionData.fromJson(jsonData);
+
+          handleCaptionTranscription(caption);
+        } catch (e) {
+          debugPrint("[ERROR] Failed to parse caption: $e");
+        }
+      },
+    );
+  }
 }
