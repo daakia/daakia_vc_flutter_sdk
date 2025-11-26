@@ -1457,6 +1457,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
   void clearMemory(RtcViewmodel? viewModel) {
     viewModel?.disposeScreenShare();
+    viewModel?.unregisterCaption();
     handleAndroidNotification(enable: false);
     _disposePip();
   }

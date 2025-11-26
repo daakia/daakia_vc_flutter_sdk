@@ -2346,4 +2346,9 @@ class RtcViewmodel extends ChangeNotifier {
       },
     );
   }
+
+  void unregisterCaption() {
+    room.unregisterTextStreamHandler(Constant.liveCaptionAgent);
+  }
+
 }
