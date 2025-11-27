@@ -1095,6 +1095,10 @@ class RtcViewmodel extends ChangeNotifier {
     transcriptionLanguageData = liveCaptionsData;
   }
 
+  @Deprecated(
+    'Use handleCaptionTranscription instead. '
+        'This method is scheduled for removal and should not be used.',
+  )
   void collectTranscriptionData(RemoteActivityData remoteData) {
     // Check if the incoming data is a final transcription
     if (remoteData.finalTranscription?.isNotEmpty == true) {
