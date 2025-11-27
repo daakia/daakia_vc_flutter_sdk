@@ -159,6 +159,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           name: widget.room.localParticipant?.name ?? "Unknown",
           avatar: Utils.extractUserAvatar(widget.room.localParticipant?.metadata),
       );
+
+      viewModel?.registerCaption();
     });
 
     if (lkPlatformIs(PlatformType.android)) {
@@ -1455,6 +1457,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
   void clearMemory(RtcViewmodel? viewModel) {
     viewModel?.disposeScreenShare();
+    viewModel?.unregisterCaption();
     handleAndroidNotification(enable: false);
     _disposePip();
   }
