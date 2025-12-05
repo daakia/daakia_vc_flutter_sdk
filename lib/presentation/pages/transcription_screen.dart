@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/loader.dart';
@@ -33,7 +32,7 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       fetchTranscriptionLanguage();
       _searchController.addListener(_filterLanguages);
-      _startPolling();
+      _startTranscription();
     });
     super.initState();
   }
@@ -45,23 +44,10 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
     super.dispose();
   }
 
-  void _startPolling() {
-    // Define the polling logic in a single reusable method
-    Future<void> poll() async {
-      try {
-        if (widget.viewModel.isTranscriptionLanguageSelected) {
-          widget.viewModel.startTranscription();
-        }
-      } catch (e) {
-        debugger(message: "Error during polling: $e");
-      }
+  void _startTranscription() {
+    if (widget.viewModel.isTranscriptionLanguageSelected) {
+      widget.viewModel.startTranscription();
     }
-
-    // Execute immediately for the first time
-    poll();
-
-    // Set up the periodic timer for subsequent polling
-    _pollingTimer = Timer.periodic(const Duration(seconds: 10), (_) => poll());
   }
 
   void fetchTranscriptionLanguage() async {
@@ -161,7 +147,7 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
 
   void _handleLanguageSelection(LanguageModel selectedLanguage) {
     widget.viewModel.setTranscriptionLanguage(selectedLanguage, () {
-      _startPolling();
+      _startTranscription();
     });
   }
 

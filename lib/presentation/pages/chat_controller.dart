@@ -19,12 +19,93 @@ class ChatController extends StatefulWidget {
   State<ChatController> createState() => _ChatControllerState();
 }
 
-class _ChatControllerState extends State<ChatController> {
+class _ChatControllerState extends State<ChatController>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = false;
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      collectChatEvents(widget.viewModel);
+    });
+
+    final isPublicChatAllowed =
+    widget.viewModel.meetingDetails.features!.isPublicChatAllowed();
+    final isPrivateChatAllowed =
+    widget.viewModel.meetingDetails.features!.isPrivateChatAllowed();
+
+    final tabCount =
+        (isPublicChatAllowed ? 1 : 0) + (isPrivateChatAllowed ? 1 : 0);
+    final initialIndex = (widget.identity.isEmpty || tabCount == 1) ? 0 : 1;
+
+    widget.viewModel.isChatOpen = !isPrivateChatInitiallyOpen;
+    widget.viewModel.isPrivateChatOpen = isPrivateChatInitiallyOpen;
+
+    _tabController = TabController(
+        length: tabCount, vsync: this, initialIndex: initialIndex);
+
+    _tabController.addListener(_onTabChanged);
+    _updateTabStates(_tabController.index);
+  }
+
+
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging) {
+      _updateTabStates(_tabController.index);
+    }
+  }
+
+  bool get isPrivateChatInitiallyOpen {
+    final isPublicChatAllowed =
+    widget.viewModel.meetingDetails.features!.isPublicChatAllowed();
+    final isPrivateChatAllowed =
+    widget.viewModel.meetingDetails.features!.isPrivateChatAllowed();
+
+    final tabCount =
+        (isPublicChatAllowed ? 1 : 0) + (isPrivateChatAllowed ? 1 : 0);
+    final initialIndex = (widget.identity.isEmpty || tabCount == 1) ? 0 : 1;
+
+    // If index 1 or only private chat is allowed → private chat is open
+    if (tabCount == 1 && isPrivateChatAllowed && !isPublicChatAllowed) {
+      return true;
+    }
+
+    return initialIndex == 1;
+  }
+
+  void _updateTabStates(int index) {
+    // Both start false
+    widget.viewModel.isChatOpen = false;
+    widget.viewModel.isPrivateChatOpen = false;
+
+    // Determine which is open
+    if (index == 0) {
+      // If public chat exists first
+      if (widget.viewModel.meetingDetails.features!.isPublicChatAllowed()) {
+        widget.viewModel.isChatOpen = true;
+      } else {
+        widget.viewModel.isPrivateChatOpen = true;
+      }
+    } else if (index == 1) {
+      widget.viewModel.isPrivateChatOpen = true;
+    }
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _tabController.removeListener(_onTabChanged);
+    _tabController.dispose();
+    widget.viewModel.cancelMainChatControllerEvent();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    collectChatEvents(widget.viewModel);
+
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(statusBarColor: Colors.black),
     );
@@ -34,15 +115,91 @@ class _ChatControllerState extends State<ChatController> {
     final isPrivateChatAllowed =
         widget.viewModel.meetingDetails.features!.isPrivateChatAllowed();
 
+    final totalPrivateUnread = widget.viewModel.getUnreadCountPrivateChat();
+    final totalPublicUnread = widget.viewModel.getUnReadCount();
+
     final tabs = <Tab>[];
     final views = <Widget>[];
 
     if (isPublicChatAllowed) {
-      tabs.add(const Tab(text: "All Chat"));
+      tabs.add(
+        Tab(
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              const Align(
+                alignment: Alignment.center,
+                child: Text("All Chat"),
+              ),
+              if (totalPublicUnread > 0)
+                Positioned(
+                  right: -15,
+                  top: -5,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    constraints:
+                        const BoxConstraints(minWidth: 18, minHeight: 18),
+                    child: Text(
+                      '$totalPublicUnread',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
       views.add(ChatPage(viewModel: widget.viewModel));
     }
+
     if (isPrivateChatAllowed) {
-      tabs.add(const Tab(text: "Private Chat"));
+      tabs.add(
+        Tab(
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              const Align(
+                alignment: Alignment.center,
+                child: Text("Private Chat"),
+              ),
+              if (totalPrivateUnread > 0)
+                Positioned(
+                  right: -15,
+                  top: -5,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    constraints:
+                        const BoxConstraints(minWidth: 18, minHeight: 18),
+                    child: Text(
+                      '$totalPrivateUnread',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
       views.add(PrivateChatPage(
         viewModel: widget.viewModel,
         identity: widget.identity,
@@ -67,36 +224,27 @@ class _ChatControllerState extends State<ChatController> {
       );
     }
 
-    return DefaultTabController(
-      length: tabs.length,
-      initialIndex: (widget.identity.isEmpty || tabs.length == 1) ? 0 : 1,
-      child: Scaffold(
-        backgroundColor: const Color(0xFF000000),
-        appBar: AppBar(
-          title: const Text("Chats", style: TextStyle(color: Colors.white)),
-          backgroundColor: Colors.black,
-          iconTheme: const IconThemeData(color: Colors.white),
-          bottom: TabBar(
-            indicatorColor: Colors.white,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.grey,
-            tabs: tabs,
-          ),
-        ),
-        body: Stack(
-          children: [
-            TabBarView(children: views),
-            if (_isLoading) const CustomLoader(),
-          ],
+    return Scaffold(
+      backgroundColor: const Color(0xFF000000),
+      appBar: AppBar(
+        title: const Text("Chats", style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.grey,
+          tabs: tabs,
         ),
       ),
+      body: Stack(
+        children: [
+          TabBarView(controller: _tabController, children: views),
+          if (_isLoading) const CustomLoader(),
+        ],
+      ),
     );
-  }
-
-  @override
-  void dispose() {
-    widget.viewModel.cancelMainChatControllerEvent();
-    super.dispose();
   }
 
   bool isEventAdded = false;
@@ -104,6 +252,7 @@ class _ChatControllerState extends State<ChatController> {
   void collectChatEvents(RtcViewmodel? viewModel) {
     if (isEventAdded) return;
     isEventAdded = true;
+    setState(() {});
     viewModel?.mainChatController.listen((event) {
       if (event is ShowLoading) {
         if (mounted) {
@@ -117,6 +266,8 @@ class _ChatControllerState extends State<ChatController> {
             _isLoading = false;
           });
         }
+      } else if (event is UpdateView) {
+        setState(() {});
       }
     });
   }

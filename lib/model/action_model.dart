@@ -1,3 +1,4 @@
+import 'package:daakia_vc_flutter_sdk/model/reaction_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/transcription_action_model.dart';
 
 import 'consent_participant.dart';
@@ -12,7 +13,16 @@ class ActionModel {
   final List<ConsentParticipant>? participants;
   final Map<String, dynamic>? user;
   final int? timeStamp;
+  final int? timestamp; //specially for edit message
   final String? dispatchId;
+  final String? id;
+  final String? mode;
+  final String? messageId;
+  final Reaction? reaction;
+  final bool? removeReaction;
+  final String? requestBy;
+  final String? requestByName;
+  final bool? isScreenShareAllowed;
 
   // ✅ ADD NEW FIELD
 
@@ -26,7 +36,16 @@ class ActionModel {
     this.participants,
     this.user,
     this.timeStamp,
+    this.timestamp,
     this.dispatchId,
+    this.id,
+    this.mode,
+    this.messageId,
+    this.reaction,
+    this.removeReaction = false,
+    this.requestBy,
+    this.requestByName,
+    this.isScreenShareAllowed,
     // ✅ ADD NEW FIELD
   });
 
@@ -53,8 +72,35 @@ class ActionModel {
     if (timeStamp != null) {
       data['timeStamp'] = timeStamp;
     }
+    if (timestamp != null) {
+      data['timestamp'] = timestamp;
+    }
     if (dispatchId != null) {
       data['dispatchId'] = dispatchId;
+    }
+    if (id != null) {
+      data['id'] = id;
+    }
+    if (mode != null) {
+      data['mode'] = mode;
+    }
+    if (messageId != null) {
+      data['messageId'] = messageId;
+    }
+    if (reaction != null) {
+      data['reaction'] = reaction;
+    }
+    if (removeReaction != null) {
+      data['removeReaction'] = removeReaction;
+    }
+    if (requestBy != null) {
+      data['request_by'] = requestBy;
+    }
+    if (requestByName != null) {
+      data['request_by_name'] = requestByName;
+    }
+    if (isScreenShareAllowed != null) {
+      data['is_screen_share_allowed'] = isScreenShareAllowed;
     }
     // ✅ ADD NEW FIELD
     return data;
@@ -74,7 +120,18 @@ class ActionModel {
           .toList(),
       user: json['user'] as Map<String, dynamic>?,
       timeStamp: json['timeStamp'] as int?,
+      timestamp: json['timestamp'] as int?,
       dispatchId: json['dispatchId'] as String? ?? "",
+      id: json['id'] as String? ?? "",
+      mode: json['mode'] as String? ?? "",
+      messageId: json['messageId'] as String?,
+      reaction: json['reaction'] != null
+          ? Reaction.fromJson(json['reaction'] as Map<String, dynamic>)
+          : null,
+      removeReaction: json['removeReaction'] as bool? ?? false,
+      requestBy: json['request_by'] as String? ?? "",
+      requestByName: json['request_by_name'] as String? ?? "",
+      isScreenShareAllowed: json['is_screen_share_allowed'] as bool? ?? false,
       // ✅ ADD NEW FIELD
     );
   }

@@ -1,5 +1,8 @@
+import 'package:daakia_vc_flutter_sdk/model/reaction_model.dart';
+import 'package:daakia_vc_flutter_sdk/model/reply_message.dart';
 import 'package:daakia_vc_flutter_sdk/model/transcription_action_model.dart';
 import 'package:livekit_client/livekit_client.dart';
+
 import 'consent_participant.dart';
 
 class RemoteActivityData {
@@ -25,6 +28,16 @@ class RemoteActivityData {
   final String? consent;
   final List<ConsentParticipant>? participants;
   final String? dispatchId;
+  final String? mode;
+  final bool isDeleted;
+  final bool isEdited;
+  final ReplyMessage? replyMessage;
+  final String? messageId;
+  final Reaction? reaction;
+  final List<Reaction>? reactions;
+  final bool removeReaction;
+  final bool isScreenShareAllowed;
+
   // ✅ ADD NEW FIELD
 
   RemoteActivityData({
@@ -50,12 +63,22 @@ class RemoteActivityData {
     this.consent,
     this.participants,
     this.dispatchId,
+    this.mode,
+    this.isDeleted = false,
+    this.isEdited = false,
+    this.replyMessage,
+    this.messageId,
+    this.reaction,
+    this.reactions,
+    this.removeReaction = false,
+    this.isScreenShareAllowed = false,
     // ✅ ADD NEW FIELD
   });
 
   factory RemoteActivityData.fromJson(Map<String, dynamic> json) {
     return RemoteActivityData(
-      identity: json['identity'], // If needed, parse manually
+      identity: json['identity'],
+      // If needed, parse manually
       id: json['id'] as String?,
       message: json['message'] as String?,
       timestamp: json['timestamp'] as int?,
@@ -70,7 +93,8 @@ class RemoteActivityData {
       userIdentity: json['user_identity'] as String? ?? "",
       userName: json['user_name'] as String? ?? "",
       liveCaptionsData: json['liveCaptionsData'] != null
-          ? TranscriptionActionModel.fromJson(json['liveCaptionsData'] as Map<String, dynamic>)
+          ? TranscriptionActionModel.fromJson(
+              json['liveCaptionsData'] as Map<String, dynamic>)
           : null,
       partialTranscription: json['partial'] as String?,
       finalTranscription: json['final'] as String?,
@@ -81,6 +105,21 @@ class RemoteActivityData {
           ?.map((e) => ConsentParticipant.fromJson(e as Map<String, dynamic>))
           .toList(),
       dispatchId: json['dispatchId'] as String?,
+      mode: json['mode'] as String?,
+      isDeleted: json['isDeleted'] as bool? ?? false,
+      isEdited: json['isEdited'] as bool? ?? false,
+      replyMessage: json['replyMessage'] != null
+          ? ReplyMessage.fromJson(json['replyMessage'] as Map<String, dynamic>)
+          : null,
+      messageId: json['messageId'] as String?,
+      reaction: json['reaction'] != null
+          ? Reaction.fromJson(json['reaction'] as Map<String, dynamic>)
+          : null,
+      reactions: (json['reactions'] as List<dynamic>?)
+          ?.map((e) => Reaction.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      removeReaction: json['removeReaction'] as bool? ?? false,
+      isScreenShareAllowed: json['is_screen_share_allowed'] as bool? ?? false,
       // ✅ ADD NEW FIELD
     );
   }
@@ -108,7 +147,16 @@ class RemoteActivityData {
       'whiteboardId': whiteboardId,
       'consent': consent,
       'participants': participants?.map((e) => e.toJson()).toList(),
-      'dispatchId': dispatchId
+      'dispatchId': dispatchId,
+      'mode': mode,
+      'isDeleted': isDeleted,
+      'isEdited': isEdited,
+      'replyMessage': replyMessage?.toJson(),
+      'messageId': messageId,
+      'reaction': reaction?.toJson(),
+      'reactions': reactions?.map((e) => e.toJson()).toList(),
+      'removeReaction': removeReaction,
+      'is_screen_share_allowed': isScreenShareAllowed,
       // ✅ ADD NEW FIELD
     };
   }
@@ -135,7 +183,16 @@ class RemoteActivityData {
     int? whiteboardId,
     String? consent,
     List<ConsentParticipant>? participants,
-    String? dispatchId
+    String? dispatchId,
+    String? mode,
+    bool? isDeleted,
+    bool? isEdited,
+    ReplyMessage? replyMessage,
+    String? messageId,
+    Reaction? reaction,
+    List<Reaction>? reactions,
+    bool? removeReaction,
+    bool? isScreenShareAllowed,
     // ✅ ADD NEW FIELD
   }) {
     return RemoteActivityData(
@@ -148,7 +205,8 @@ class RemoteActivityData {
       requestId: requestId ?? this.requestId,
       meetingUid: meetingUid ?? this.meetingUid,
       displayName: displayName ?? this.displayName,
-      participantLobbyStatus: participantLobbyStatus ?? this.participantLobbyStatus,
+      participantLobbyStatus:
+          participantLobbyStatus ?? this.participantLobbyStatus,
       token: token ?? this.token,
       value: value ?? this.value,
       userIdentity: userIdentity ?? this.userIdentity,
@@ -160,7 +218,16 @@ class RemoteActivityData {
       whiteboardId: whiteboardId ?? this.whiteboardId,
       consent: consent ?? this.consent,
       participants: participants ?? this.participants,
-      dispatchId: dispatchId ?? this.dispatchId
+      dispatchId: dispatchId ?? this.dispatchId,
+      mode: mode ?? this.mode,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isEdited: isEdited ?? this.isEdited,
+      replyMessage: replyMessage ?? this.replyMessage,
+      messageId: messageId ?? this.messageId,
+      reaction: reaction ?? this.reaction,
+      reactions: reactions ?? this.reactions,
+      removeReaction: removeReaction ?? this.removeReaction,
+      isScreenShareAllowed: isScreenShareAllowed ?? this.isScreenShareAllowed,
       // ✅ ADD NEW FIELD
     );
   }

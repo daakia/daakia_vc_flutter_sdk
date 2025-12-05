@@ -1,20 +1,33 @@
+import 'package:daakia_vc_flutter_sdk/enum/chat_type_enum.dart';
+import 'package:daakia_vc_flutter_sdk/model/edit_message.dart';
+import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/reaction_bar_widget.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/reply_message_widget.dart';
+import 'package:daakia_vc_flutter_sdk/viewmodel/rtc_viewmodel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../utils/utils.dart';
+import '../bottom_sheets/message_action_sheet.dart';
+import '../bottom_sheets/reaction_details_sheet.dart';
 import 'file_preview.dart';
 
 class MessageBubble extends StatefulWidget {
-  final String userName;
-  final String message;
-  final String time;
-  final bool isSender;
+  final RemoteActivityData chat;
+  final RtcViewmodel viewModel;
+  final bool isPrivateChat;
+  final bool isHighlighted;
+  final VoidCallback? onNavigate;
+  final VoidCallback? onEdit;
 
   const MessageBubble({
     super.key,
-    required this.userName,
-    required this.message,
-    required this.time,
-    this.isSender = false,
+    required this.chat,
+    required this.viewModel,
+    this.isPrivateChat = false,
+    this.isHighlighted = false,
+    this.onNavigate,
+    this.onEdit,
   });
 
   @override
@@ -24,18 +37,23 @@ class MessageBubble extends StatefulWidget {
 class _MessageBubbleState extends State<MessageBubble> {
   @override
   Widget build(BuildContext context) {
+    final String userName = widget.chat.identity?.name ?? "Unknown";
+    final String message = widget.chat.message ?? "";
+    final String time = Utils.formatTimestampToTime(widget.chat.timestamp);
+    final bool isSender = widget.chat.isSender;
+    final bool isEdited = widget.chat.isEdited;
     return Align(
-      alignment: widget.isSender ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
         child: Column(
           crossAxisAlignment:
-          widget.isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             // Display username for the receiver only
-            if (!widget.isSender)
+            if (!isSender)
               Text(
-                widget.userName,
+                userName,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -43,61 +61,186 @@ class _MessageBubbleState extends State<MessageBubble> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-            if (!widget.isSender) const SizedBox(height: 5.0),
+            if (!isSender) const SizedBox(height: 5.0),
 
             // Message Card
             GestureDetector(
-              child: Card(
-                color: widget.isSender
-                    ? const Color(0xFF2196F3)
-                    : const Color(0xFF303030), // Different colors for sender and receiver
-                shape: RoundedRectangleBorder(
+              onLongPress: () => !widget.chat.isDeleted
+                  ? showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => MessageActionSheet(
+                        isMine: isSender,
+                        isPinned: Utils.isPinned(
+                            widget.chat,
+                            widget.isPrivateChat
+                                ? widget.viewModel.pinnedPrivateChat
+                                : widget.viewModel.pinnedPublicChat),
+                        isFile: Utils.isFileLink(widget.chat.message ?? ""),
+                        onReply: () {
+                          final replyDraft = Utils.getReplyDraft(
+                            widget.chat,
+                            name: isSender
+                                ? widget.viewModel.room.localParticipant?.name
+                                : null,
+                          );
+
+                          if (widget.isPrivateChat) {
+                            widget.viewModel.privateReplyDraft = replyDraft;
+                          } else {
+                            widget.viewModel.publicReplyDraft = replyDraft;
+                          }
+                        },
+                        onCopy: () {
+                          Clipboard.setData(
+                            ClipboardData(text: widget.chat.message ?? ""),
+                          ).then((_) {
+                            widget.viewModel.sendMessageToUI("Copied");
+                          });
+                        },
+                        onEdit: () {
+                          final chat = widget.chat;
+                          if (widget.isPrivateChat) {
+                            widget.viewModel.privateEditDraft = EditMessage(
+                                id: chat.id ?? "", message: chat.message ?? "");
+                          } else {
+                            widget.viewModel.publicEditDraft = EditMessage(
+                                id: chat.id ?? "", message: chat.message ?? "");
+                          }
+                          widget.onEdit?.call();
+                        },
+                        onDelete: () {
+                          final chatType = widget.isPrivateChat
+                              ? ChatType.private.name
+                              : ChatType.public.name;
+                          widget.viewModel.deleteMessage(chatType,
+                              widget.chat.id, widget.chat.userIdentity);
+                          widget.viewModel
+                              .sendDeleteMessageAction(chatType, widget.chat);
+                        },
+                        onPin: () {
+                          if (Utils.isPinned(
+                              widget.chat,
+                              widget.isPrivateChat
+                                  ? widget.viewModel.pinnedPrivateChat
+                                  : widget.viewModel.pinnedPublicChat)) {
+                            !widget.isPrivateChat
+                                ? widget.viewModel.pinnedPublicChat = null
+                                : widget.viewModel.pinnedPrivateChat = null;
+                          } else {
+                            !widget.isPrivateChat
+                                ? widget.viewModel.pinnedPublicChat =
+                                    widget.chat
+                                : widget.viewModel.pinnedPrivateChat =
+                                    widget.chat;
+                          }
+                        },
+                        onReact: (emoji) {
+                          final chatType = widget.isPrivateChat
+                              ? ChatType.private.name
+                              : ChatType.public.name;
+                          widget.viewModel
+                              .addReaction(chatType, emoji, widget.chat);
+                        },
+                      ),
+                    )
+                  : null,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeInOut,
+                decoration: BoxDecoration(
+                  color: widget.isHighlighted
+                      ? Colors.greenAccent
+                          .withValues(alpha: 0.3) // 👈 highlight color
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(8.0),
                 ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 200, minWidth: 100),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if(Utils.isOnlyLink(widget.message) || Utils.isLink(widget.message))
-                          Center(
-                            child: Card(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12), // Rounded corners
+                child: Card(
+                  color: isSender
+                      ? const Color(0xFF2196F3)
+                      : const Color(0xFF303030),
+                  // Different colors for sender and receiver
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: ConstrainedBox(
+                    constraints:
+                        const BoxConstraints(maxWidth: 200, minWidth: 100),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10.0, vertical: 5.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ✅ Reply message shown inside the bubble
+                          if (widget.chat.replyMessage != null &&
+                              !widget.chat.isDeleted)
+                            GestureDetector(
+                              onTap: widget.onNavigate,
+                              child: ReplyMessageWidget(
+                                reply: widget.chat.replyMessage!,
+                                isSender: isSender,
                               ),
-                              elevation: 0, // Zero elevation
-                              shadowColor: Colors.transparent, // Transparent shadow
-                              color: Colors.transparent, // Transparent background
-                              child: FilePreviewWidget(fileUrl: (widget.message), // Replace with your widget
+                            ),
+                          // Main message content
+                          if (Utils.isOnlyLink(message) ||
+                              Utils.isLink(message))
+                            Center(
+                              child: Card(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                                shadowColor: Colors.transparent,
+                                color: Colors.transparent,
+                                child: FilePreviewWidget(fileUrl: message, isChatAttachmentDownloadEnable: widget.viewModel.isChatAttachmentDownloadEnable),
+                              ),
+                            )
+                          else
+                            Text(
+                              Utils.extractNonLinkText(message),
+                              style: const TextStyle(color: Colors.white),
+                            ),
+
+                          const SizedBox(height: 5.0),
+
+                          // Sent Time
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              isEdited ? "Edited  $time" : time,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 8.0,
+                              ),
                             ),
                           ),
-                          ),
-                        if(!Utils.isOnlyLink(widget.message) || !Utils.isLink(widget.message))
-                          Text(
-                            Utils.extractNonLinkText(widget.message),
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        const SizedBox(height: 5.0),
-              
-                        // Sent Time
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            widget.time,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 8.0,
-                            ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
+            if ((widget.chat.reactions ?? []).isNotEmpty &&
+                !widget.chat.isDeleted)
+              ReactionBarWidget(
+                reactions: widget.chat.reactions!,
+                onTapReaction: (emojiCode, list) {
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: const Color(0xFF1E1E1E),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(16)),
+                    ),
+                    builder: (_) => ReactionDetailsSheet(
+                      emojiCode: emojiCode,
+                      reactions: list,
+                    ),
+                  );
+                },
+              ),
           ],
         ),
       ),

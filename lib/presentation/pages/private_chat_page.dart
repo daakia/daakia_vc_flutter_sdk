@@ -9,17 +9,18 @@ import '../../utils/constants.dart';
 import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import '../widgets/compact_file_preview.dart';
+import '../widgets/edit_preview_widget.dart';
 import '../widgets/message_bubble.dart';
+import '../widgets/pinned_message_widget.dart';
+import '../widgets/reply_preview_widget.dart';
 
 class PrivateChatPage extends StatefulWidget {
-  PrivateChatPage(
+  const PrivateChatPage(
       {required this.viewModel, this.identity = "", this.name = "", super.key});
 
   final String identity;
   final String name;
   final RtcViewmodel viewModel;
-
-  final TextEditingController messageController = TextEditingController();
 
   @override
   State<StatefulWidget> createState() {
@@ -38,7 +39,6 @@ class PrivateChantState extends State<PrivateChatPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.viewModel.isPrivateChatOpen = true;
-      widget.viewModel.resetUnreadPrivateChatCount();
       setState(() {
         if (widget.identity.isEmpty &&
             widget.viewModel.getPrivateMessage().isNotEmpty) {
@@ -47,15 +47,22 @@ class PrivateChantState extends State<PrivateChatPage> {
           var person = privateMessages[0];
           widget.viewModel.setPrivateChatIdentity(person.identity);
           widget.viewModel.setPrivateChatUserName(person.name);
+          widget.viewModel.resetUnreadPrivateChatCount(person);
         } else {
           widget.viewModel.setPrivateChatIdentity(widget.identity);
           widget.viewModel.setPrivateChatUserName(widget.name);
+          var person = widget.viewModel.getPrivateMessage()[widget.identity];
+          if (person == null) return;
+          widget.viewModel.resetUnreadPrivateChatCount(person);
         }
       });
     });
   }
 
   final TextEditingController messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _messageFocusNode = FocusNode();
+  String? _highlightedMessageId;
 
   @override
   Widget build(BuildContext context) {
@@ -109,6 +116,8 @@ class PrivateChantState extends State<PrivateChatPage> {
                                       .setPrivateChatIdentity(person.identity);
                                   widget.viewModel
                                       .setPrivateChatUserName(person.name);
+                                  widget.viewModel
+                                      .resetUnreadPrivateChatCount(person);
                                 });
                               },
                               child: Center(
@@ -124,6 +133,7 @@ class PrivateChantState extends State<PrivateChatPage> {
                                       isSelected: (person.identity ==
                                           widget.viewModel
                                               .getPrivateChatIdentity()),
+                                      unreadCount: person.unreadCount,
                                     ),
                                     Text(
                                       person.name,
@@ -150,8 +160,26 @@ class PrivateChantState extends State<PrivateChatPage> {
                         fontSize: 16.0, // Adjust font size
                       ),
                     ),
+                    if (widget.viewModel.pinnedPrivateChat != null)
+                      PinnedMessageWidget(
+                        name:
+                            widget.viewModel.pinnedPrivateChat?.isSender == true
+                                ? widget.viewModel.room.localParticipant?.name
+                                : widget.viewModel.pinnedPrivateChat?.identity
+                                    ?.name,
+                        message:
+                            widget.viewModel.pinnedPrivateChat?.message ?? "",
+                        onPinPressed: () {
+                          widget.viewModel.pinnedPrivateChat = null;
+                        },
+                        onPinNavigatePressed: () {
+                          _scrollToMessageById(
+                              widget.viewModel.pinnedPrivateChat?.id);
+                        },
+                      ),
                     Expanded(
                       child: ListView.builder(
+                        controller: _scrollController,
                         reverse: true,
                         itemCount: widget.viewModel
                             .getPrivateChatForParticipant(
@@ -168,135 +196,231 @@ class PrivateChantState extends State<PrivateChatPage> {
                               .getPrivateChatForParticipant(widget.viewModel
                                   .getPrivateChatIdentity())[reversedIndex];
                           return MessageBubble(
-                              userName: message.identity?.name ?? "Unknown",
-                              message: message.message ?? "",
-                              time: Utils.formatTimestampToTime(
-                                  message.timestamp),
-                              isSender: message.isSender);
+                            chat: message,
+                            viewModel: widget.viewModel,
+                            isPrivateChat: true,
+                            isHighlighted: _highlightedMessageId == message.id,
+                            onNavigate: () {
+                              _scrollToMessageById(message.replyMessage?.id);
+                            },
+                            onEdit: () {
+                              final text = message.message ?? "";
+                              messageController.text = text;
+
+                              // Wait a frame so the text field updates before selecting
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                messageController.selection = TextSelection(
+                                  baseOffset: 0,
+                                  extentOffset: text.length,
+                                );
+                                FocusScope.of(context).requestFocus(
+                                    FocusNode()); // clear old focus
+                                FocusScope.of(context).requestFocus(
+                                    _messageFocusNode); // open keyboard
+                              });
+                            },
+                          );
                         },
                       ),
                     ),
+                    if (widget.viewModel.privateReplyDraft != null)
+                      ReplyPreviewWidget(
+                        reply: widget.viewModel.privateReplyDraft!,
+                        onCancel: () {
+                          widget.viewModel.privateReplyDraft = null;
+                        },
+                      ),
+                    if (widget.viewModel.privateEditDraft != null)
+                      EditPreviewWidget(
+                        originalMessage:
+                            widget.viewModel.privateEditDraft!.message,
+                        onCancel: () {
+                          widget.viewModel.privateEditDraft = null;
+                          messageController.clear();
+                        },
+                      ),
                     // Message Input Section
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10.0, vertical: 10.0),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10.0, vertical: 5.0),
                         decoration: BoxDecoration(
-                          color: Colors.grey[800], // Adjust the background color as needed
-                          borderRadius: BorderRadius.circular(30.0), // Rounded corners
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.3)), // Optional border
+                          color: Colors.grey[800],
+                          // Adjust the background color as needed
+                          borderRadius: BorderRadius.circular(30.0),
+                          // Rounded corners
+                          border: Border.all(
+                              color: Colors.white
+                                  .withValues(alpha: 0.3)), // Optional border
                         ),
                         child: Row(
                           children: [
-                            // Attachment Button
-                            IconButton(
-                              icon: const Icon(Icons.attach_file),
-                              color: Colors.white,
-                              onPressed: () async {
-                                Utils.hideKeyboard(context);
-                                try {
-                                  widget.viewModel.sendMainChatControllerEvent(ShowLoading());
-                                  FilePickerResult? result = await FilePicker.platform.pickFiles(
-                                    allowMultiple: false,
-                                    type: FileType.custom,
-                                    allowedExtensions: Constant.allowedExtensions(),
-                                  );
-                                  widget.viewModel.sendMainChatControllerEvent(StopLoading());
-                                  if (result != null) {
-                                    File? file = result.files.single.path != null ? File(result.files.single.path!) : null;
-                                    var isValidFileSize = await Utils.validateFile(file, (error){
-                                      widget.viewModel.sendMessageToUI(error);
-                                    });
-                                    if(!isValidFileSize) {
-                                      return;
-                                    }
-                                    if(file != null) {
-                                      if(!context.mounted) return;
-                                      showModalBottomSheet(
-                                        context: context,
-                                        builder: (context) => Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Text(
-                                                "Selected File",
-                                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              LocalFilePreview(file: file, progress: widget.viewModel.privateMessageProgress, viewModel: widget.viewModel),
-                                              const SizedBox(height: 10),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.center, // Center the buttons
-                                                children: [
-                                                  // Delete button
-                                                  Container(
-                                                    padding: const EdgeInsets.all(8.0),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.redAccent.withValues(alpha: 0.5), // Button-like background
-                                                      borderRadius: BorderRadius.circular(8.0),
+                            if (widget.viewModel.meetingDetails.features
+                                    ?.isConferenceChatAttachmentAllowed() ==
+                                true)
+                              // Attachment Button
+                              IconButton(
+                                icon: const Icon(Icons.attach_file),
+                                color: Colors.white,
+                                onPressed: () async {
+                                  Utils.hideKeyboard(context);
+                                  try {
+                                    widget.viewModel
+                                        .sendMainChatControllerEvent(
+                                            ShowLoading());
+                                    FilePickerResult? result =
+                                        await FilePicker.platform.pickFiles(
+                                      allowMultiple: false,
+                                      type: FileType.custom,
+                                      allowedExtensions:
+                                          Constant.allowedExtensions(),
+                                    );
+                                    widget.viewModel
+                                        .sendMainChatControllerEvent(
+                                            StopLoading());
+                                    if (result != null) {
+                                      File? file =
+                                          result.files.single.path != null
+                                              ? File(result.files.single.path!)
+                                              : null;
+                                      var isValidFileSize =
+                                          await Utils.validateFile(file,
+                                              (error) {
+                                        widget.viewModel.sendMessageToUI(error);
+                                      });
+                                      if (!isValidFileSize) {
+                                        return;
+                                      }
+                                      if (file != null) {
+                                        if (!context.mounted) return;
+                                        showModalBottomSheet(
+                                          context: context,
+                                          builder: (context) => Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Text(
+                                                  "Selected File",
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                                const SizedBox(height: 10),
+                                                LocalFilePreview(
+                                                    file: file,
+                                                    progress: widget.viewModel
+                                                        .privateMessageProgress,
+                                                    viewModel:
+                                                        widget.viewModel),
+                                                const SizedBox(height: 10),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  // Center the buttons
+                                                  children: [
+                                                    // Delete button
+                                                    Container(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              8.0),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.redAccent
+                                                            .withValues(
+                                                                alpha: 0.5),
+                                                        // Button-like background
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(8.0),
+                                                      ),
+                                                      child: IconButton(
+                                                        onPressed: () {
+                                                          Navigator.pop(
+                                                              context);
+                                                        },
+                                                        icon: const Icon(
+                                                            Icons.delete,
+                                                            color: Colors
+                                                                .redAccent),
+                                                        tooltip: "Delete",
+                                                      ),
                                                     ),
-                                                    child: IconButton(
-                                                      onPressed: () {
-                                                        Navigator.pop(context);
-                                                      },
-                                                      icon: const Icon(Icons.delete, color: Colors.redAccent),
-                                                      tooltip: "Delete",
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 10), // Spacing between buttons
-                                                  // Upload button
-                                                  Container(
-                                                    padding: const EdgeInsets.all(8.0),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.green.withValues(alpha: 0.5), // Button-like background
-                                                      borderRadius: BorderRadius.circular(8.0),
-                                                    ),
-                                                    child: IconButton(
-                                                      onPressed: () {
-                                                        setState(() {
-                                                          widget.viewModel.uploadPrivateAttachment(
-                                                              widget.viewModel.getPrivateChatIdentity(),
-                                                              widget.viewModel.getPrivateChatUserName(),
-                                                              file, () {
-                                                            Navigator.pop(context);
+                                                    const SizedBox(width: 10),
+                                                    // Spacing between buttons
+                                                    // Upload button
+                                                    Container(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              8.0),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.green
+                                                            .withValues(
+                                                                alpha: 0.5),
+                                                        // Button-like background
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(8.0),
+                                                      ),
+                                                      child: IconButton(
+                                                        onPressed: () {
+                                                          setState(() {
+                                                            widget.viewModel.uploadPrivateAttachment(
+                                                                widget.viewModel
+                                                                    .getPrivateChatIdentity(),
+                                                                widget.viewModel
+                                                                    .getPrivateChatUserName(),
+                                                                file, () {
+                                                              Navigator.pop(
+                                                                  context);
+                                                            });
                                                           });
-                                                        });
-                                                      },
-                                                      icon: const Icon(Icons.upload, color: Colors.green),
-                                                      tooltip: "Upload",
+                                                        },
+                                                        icon: const Icon(
+                                                            Icons.upload,
+                                                            color:
+                                                                Colors.green),
+                                                        tooltip: "Upload",
+                                                      ),
                                                     ),
-                                                  ),
-                                                ],
-                                              )
-
-                                            ],
+                                                  ],
+                                                )
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                        backgroundColor: Colors.black,
-                                      );
+                                          backgroundColor: Colors.black,
+                                        );
+                                      } else {
+                                        widget.viewModel
+                                            .sendMessageToUI("File not found!");
+                                      }
                                     } else {
-                                      widget.viewModel.sendMessageToUI("File not found!");
+                                      widget.viewModel.sendMessageToUI(
+                                          "File not selected!");
                                     }
-                                  } else {
-                                    widget.viewModel.sendMessageToUI("File not selected!");
+                                  } catch (e) {
+                                    widget.viewModel.sendMessageToUI(
+                                        e.runtimeType.toString());
+                                  } finally {
+                                    widget.viewModel
+                                        .sendMainChatControllerEvent(
+                                            StopLoading());
                                   }
-                                } catch (e){
-                                  widget.viewModel.sendMessageToUI(e.runtimeType.toString());
-                                } finally {
-                                  widget.viewModel.sendMainChatControllerEvent(StopLoading());
-                                }
-                              },
-                            ),
+                                },
+                              ),
 
                             // Message input field
                             Expanded(
                               child: TextField(
                                 controller: messageController,
+                                focusNode: _messageFocusNode,
                                 decoration: const InputDecoration(
                                   hintText: "Type here...",
                                   hintStyle: TextStyle(color: Colors.white),
-                                  border: InputBorder.none, // Removes default borders
+                                  border: InputBorder
+                                      .none, // Removes default borders
                                 ),
                                 style: const TextStyle(color: Colors.white),
                               ),
@@ -308,14 +432,28 @@ class PrivateChantState extends State<PrivateChatPage> {
                               color: Colors.white,
                               onPressed: () {
                                 Utils.hideKeyboard(context);
-                                setState(() {
-                                  if (messageController.text.trim().isEmpty) return;
+                                final messageText =
+                                    messageController.text.trim();
+                                if (messageText.isEmpty) return;
+
+                                if (widget.viewModel.privateEditDraft != null) {
+                                  // Edit existing private message
+                                  final identity =
+                                      widget.viewModel.getPrivateChatIdentity();
+                                  widget.viewModel.editPrivateMessage(
+                                      messageText, identity);
+                                  widget.viewModel.privateEditDraft = null;
+                                } else {
+                                  // Send new message
                                   widget.viewModel.sendPrivateMessage(
-                                      widget.viewModel.getPrivateChatIdentity(),
-                                      widget.viewModel.getPrivateChatUserName(),
-                                      messageController.text);
-                                  messageController.clear();
-                                });
+                                    widget.viewModel.getPrivateChatIdentity(),
+                                    widget.viewModel.getPrivateChatUserName(),
+                                    messageText,
+                                  );
+                                }
+
+                                messageController.clear();
+                                setState(() {});
                               },
                             ),
                           ],
@@ -344,5 +482,37 @@ class PrivateChantState extends State<PrivateChatPage> {
         }
       }
     });
+  }
+
+  /// Scrolls to a specific message by its [messageId] and highlights it temporarily.
+  /// Can be used for pinned messages, reply navigation, or any message jump.
+  void _scrollToMessageById(String? messageId) {
+    if (messageId == null) return;
+    final messages = widget.viewModel.getPrivateChatForParticipant(
+        widget.viewModel.getPrivateChatIdentity());
+    final index = messages.indexWhere((msg) => msg.id == messageId);
+
+    if (index != -1) {
+      final reversedIndex = messages.length - 1 - index;
+
+      setState(() {
+        _highlightedMessageId = messageId;
+      });
+
+      _scrollController.animateTo(
+        reversedIndex * 100.0, // Approximate height per item
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+
+      // Remove highlight after a short delay
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          setState(() {
+            _highlightedMessageId = null;
+          });
+        }
+      });
+    }
   }
 }

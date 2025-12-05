@@ -16,6 +16,7 @@ import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import '../dialog/emoji_dialog.dart';
 import '../pages/all_participant_page.dart';
+import '../pages/permission_request_page.dart';
 import '../pages/transcription_screen.dart';
 
 class MoreOptionBottomSheet extends StatefulWidget {
@@ -155,6 +156,14 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
                   showParticipantBottomSheet();
                 },
               ),
+              buildOption(context,
+                  icon: Icons.lock,
+                  text: 'Permissions',
+                  isVisible: viewModel.screenShareRequestCount > 0,
+                  setBadge: BadgeData(viewModel.screenShareRequestCount), onTap: () {
+                    Navigator.pop(context);
+                    showPermissionBottomSheet(viewModel);
+                  }),
               // Live Stream
               buildOption(
                 context,
@@ -227,8 +236,26 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
         fullscreenDialog: true));
   }
 
+  void showPermissionBottomSheet(RtcViewmodel viewModel) {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(); // This will dismiss the BottomSheet
+    }
+    Navigator.of(context).push(MaterialPageRoute<Null>(
+        builder: (BuildContext context) {
+          return const PermissionRequestPage();
+        },
+        fullscreenDialog: true));
+  }
+
   void _enableScreenShare(RtcViewmodel viewModel) async {
     final participant = viewModel.room.localParticipant;
+
+    if (viewModel.isScreenSharePermissionNeeded()) {
+      viewModel.sendMessageToUI("Screen share request sent to the ${viewModel.getAdminType()}.");
+      return;
+    }
+
+    viewModel.isScreenShareRequestAccepted = false;
 
     if (lkPlatformIsDesktop()) {
       try {
@@ -325,9 +352,6 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
     }
 
     await participant?.setScreenShareEnabled(true, captureScreenAudio: true);
-    viewModel.sendAction(ActionModel(
-        action: MeetingActions.screenShareStarted,
-        timeStamp: DateTime.now().microsecondsSinceEpoch));
   }
 
   void _disableScreenShare(RtcViewmodel viewModel) async {

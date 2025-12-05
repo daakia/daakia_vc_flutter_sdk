@@ -6,8 +6,11 @@ import 'package:collection/collection.dart';
 import 'package:daakia_vc_flutter_sdk/api/injection.dart';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/model/consent_participant.dart';
+import 'package:daakia_vc_flutter_sdk/model/edit_message.dart';
 import 'package:daakia_vc_flutter_sdk/model/participant_attendance_data.dart';
+import 'package:daakia_vc_flutter_sdk/model/reaction_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
+import 'package:daakia_vc_flutter_sdk/model/reply_message.dart';
 import 'package:daakia_vc_flutter_sdk/model/transcription_action_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/transcription_model.dart';
 import 'package:daakia_vc_flutter_sdk/resources/json/language_json.dart';
@@ -18,7 +21,9 @@ import 'package:flutter_background/flutter_background.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:uuid/uuid.dart';
 
+import '../enum/chat_type_enum.dart';
 import '../model/action_model.dart';
+import '../model/caption_data.dart';
 import '../model/emoji_message.dart';
 import '../model/language_model.dart';
 import '../model/meeting_details.dart';
@@ -26,6 +31,7 @@ import '../model/private_chat_model.dart';
 import '../model/send_message_model.dart';
 import '../rtc/widgets/participant_info.dart';
 import '../utils/consent_status_enum.dart';
+import '../utils/constants.dart';
 import '../utils/meeting_actions.dart';
 
 class RtcViewmodel extends ChangeNotifier {
@@ -76,11 +82,13 @@ class RtcViewmodel extends ChangeNotifier {
   void increaseUnreadCount() {
     if (isChatOpen) return;
     _unreadMessageCount++;
+    sendMainChatControllerEvent(UpdateView());
     notifyListeners();
   }
 
   void resetUnreadCount() {
     _unreadMessageCount = 0;
+    sendMainChatControllerEvent(UpdateView());
     notifyListeners();
   }
 
@@ -89,13 +97,16 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
   void increaseUnreadPrivateChatCount() {
-    if (isPrivateChatOpen) return;
     _unreadMessageCountPrivateChat++;
+    sendMainChatControllerEvent(UpdateView());
     notifyListeners();
   }
 
-  void resetUnreadPrivateChatCount() {
-    _unreadMessageCountPrivateChat = 0;
+  void resetUnreadPrivateChatCount(PrivateChatModel person) {
+    if (_unreadMessageCountPrivateChat == 0) return;
+    _unreadMessageCountPrivateChat -= person.unreadCount;
+    person.unreadCount = 0;
+    sendMainChatControllerEvent(UpdateView());
     notifyListeners();
   }
 
@@ -119,22 +130,36 @@ class RtcViewmodel extends ChangeNotifier {
   }
 
   void addPrivateMessage(RemoteActivityData message) {
-    // Check if the key exists; if not, initialize it with an empty list
     if (message.identity != null) {
-      checkAndCreatePrivateChat(
-          message.identity?.identity, message.identity?.name);
-      _privateChat[message.identity?.identity ?? ""]?.chats.add(message);
+      final identity = message.identity?.identity ?? "";
+      final name = message.identity?.name ?? "Unknown";
+
+      checkAndCreatePrivateChat(identity, name);
+      _privateChat[identity]?.chats.add(message);
+
+      final chatModel = _privateChat[identity];
+      if (chatModel == null) return;
+
+      // ✅ FIXED LOGIC
+      // Increase unread if:
+      // - Chat page is closed (normal case)
+      // - OR Chat page is open but this particular chat is not selected
+      if ((chatModel.identity != _privateChatIdentity) || !isPrivateChatOpen) {
+        chatModel.unreadCount++;
+        increaseUnreadPrivateChatCount();
+      }
     } else {
+      final identity = message.userIdentity ?? "Unknown";
+      final name = message.userName ?? "Unknown";
+
       _privateChat.putIfAbsent(
-          message.userIdentity ?? "",
-          () => PrivateChatModel(
-              identity: message.userIdentity ?? "Unknown",
-              name: message.userName ?? "Unknown",
-              chats: []));
-      _privateChat[message.userIdentity ?? ""]?.chats.add(message);
+        identity,
+        () => PrivateChatModel(identity: identity, name: name, chats: []),
+      );
+      _privateChat[identity]?.chats.add(message);
     }
+
     notifyListeners();
-    increaseUnreadPrivateChatCount();
     sendPrivateChatEvent(UpdateView());
   }
 
@@ -165,9 +190,13 @@ class RtcViewmodel extends ChangeNotifier {
     // Create a message
     final message = SendMessageModel(
       action: MeetingActions.sendPublicMessage,
-      id: const Uuid().v4(), // Generate a unique ID
+      id: const Uuid().v4(),
+      // Generate a unique ID
       message: userMessage,
-      timestamp: DateTime.now().millisecondsSinceEpoch, // Current timestamp
+      timestamp: DateTime.now().millisecondsSinceEpoch,
+      // Current timestamp
+      isReplied: _publicReplyDraft != null,
+      replyMessage: _publicReplyDraft,
     );
 
     // Publish the data to the LiveKit room
@@ -179,15 +208,17 @@ class RtcViewmodel extends ChangeNotifier {
     // Update the message list
     addMessage(
       RemoteActivityData(
-        identity: null,
-        id: message.id,
-        message: message.message,
-        timestamp: message.timestamp,
-        action: MeetingActions.sendPublicMessage,
-        // Assuming no action is provided
-        isSender: true, // isSender
-      ),
+          identity: null,
+          id: message.id,
+          message: message.message,
+          timestamp: message.timestamp,
+          action: MeetingActions.sendPublicMessage,
+          // Assuming no action is provided
+          isSender: true,
+          // isSender
+          replyMessage: message.replyMessage),
     );
+    publicReplyDraft = null;
   }
 
   Future<void> sendPrivateMessage(
@@ -199,9 +230,13 @@ class RtcViewmodel extends ChangeNotifier {
     // Create a message
     final message = SendMessageModel(
       action: MeetingActions.sendPrivateMessage,
-      id: const Uuid().v4(), // Generate a unique ID
+      id: const Uuid().v4(),
+      // Generate a unique ID
       message: userMessage,
-      timestamp: DateTime.now().millisecondsSinceEpoch, // Current timestamp
+      timestamp: DateTime.now().millisecondsSinceEpoch,
+      // Current timestamp
+      isReplied: privateReplyDraft != null,
+      replyMessage: privateReplyDraft,
     );
 
     if (identity != null) {
@@ -226,8 +261,10 @@ class RtcViewmodel extends ChangeNotifier {
               isSender: true,
               // isSender
               userIdentity: identity,
-              userName: name),
+              userName: name,
+              replyMessage: message.replyMessage),
         );
+        privateReplyDraft = null;
       } catch (e) {
         if (kDebugMode) {
           print('Error sending private action: $e');
@@ -345,8 +382,6 @@ class RtcViewmodel extends ChangeNotifier {
 
   bool _isAudioPermissionEnable = true;
   bool _isVideoPermissionEnable = true;
-  double _micAlpha = 1.0;
-  double _cameraAlpha = 1.0;
 
   LocalParticipant get participant => room.localParticipant!;
 
@@ -370,19 +405,15 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setMicAlpha(double alpha) {
-    _micAlpha = alpha;
-    notifyListeners();
+  double getMicAlpha() {
+    if (isHost() || isCoHost()) return 1.0;
+    return isAudioPermissionEnable ? 1.0 : 0.5;
   }
 
-  double getMicAlpha() => _micAlpha;
-
-  void setCameraAlpha(double alpha) {
-    _cameraAlpha = alpha;
-    notifyListeners();
+  double getCameraAlpha() {
+    if (isHost() || isCoHost()) return 1.0;
+    return isVideoPermissionEnable ? 1.0 : 0.5;
   }
-
-  double getCameraAlpha() => _cameraAlpha;
 
   bool isVisibleForHost(String role, String targetRole) {
     return role == "moderator";
@@ -463,7 +494,6 @@ class RtcViewmodel extends ChangeNotifier {
     notifyListeners();
   }
 
-
   bool isRecordingStartByMe = false;
 
   String? dispatchId;
@@ -506,7 +536,8 @@ class RtcViewmodel extends ChangeNotifier {
           } else {
             isRecordingActionInProgress = false;
             if (isNeedToShowError) {
-              sendMessageToUI("Unable to stop recording: dispatch ID not found.");
+              sendMessageToUI(
+                  "Unable to stop recording: dispatch ID not found.");
             }
           }
         },
@@ -552,7 +583,8 @@ class RtcViewmodel extends ChangeNotifier {
                 _attemptStopRecording(isNeedToShowError: isNeedToShowError);
               } else {
                 isRecordingActionInProgress = false;
-                sendMessageToUI("Unable to stop recording: dispatch ID not found.");
+                sendMessageToUI(
+                    "Unable to stop recording: dispatch ID not found.");
               }
             },
           );
@@ -589,7 +621,6 @@ class RtcViewmodel extends ChangeNotifier {
     );
   }
 
-
   Timer? _resetTimer;
 
   void resetRecordingActionInProgressAfterDelay([int seconds = 30]) {
@@ -608,7 +639,6 @@ class RtcViewmodel extends ChangeNotifier {
     _resetTimer?.cancel();
     _resetTimer = null;
   }
-
 
   bool isHost() {
     return Utils.isHost(room.localParticipant?.metadata);
@@ -674,9 +704,6 @@ class RtcViewmodel extends ChangeNotifier {
     _isAudioModeEnable = value;
     _isVideoModeEnable = value;
     notifyListeners();
-    sendAction(ActionModel(action: MeetingActions.forceMuteAll, value: value));
-    sendAction(
-        ActionModel(action: MeetingActions.forceVideoOffAll, value: value));
   }
 
 // Getter and Setter for _isAudioModeEnable
@@ -685,7 +712,6 @@ class RtcViewmodel extends ChangeNotifier {
   set isAudioModeEnable(bool value) {
     _isAudioModeEnable = value;
     _isWebinarModeEnable = (_isAudioModeEnable && _isVideoModeEnable);
-    sendAction(ActionModel(action: MeetingActions.forceMuteAll, value: value));
     notifyListeners();
   }
 
@@ -695,8 +721,6 @@ class RtcViewmodel extends ChangeNotifier {
   set isVideoModeEnable(bool value) {
     _isVideoModeEnable = value;
     _isWebinarModeEnable = (_isAudioModeEnable && _isVideoModeEnable);
-    sendAction(
-        ActionModel(action: MeetingActions.forceVideoOffAll, value: value));
     notifyListeners();
   }
 
@@ -1071,6 +1095,10 @@ class RtcViewmodel extends ChangeNotifier {
     transcriptionLanguageData = liveCaptionsData;
   }
 
+  @Deprecated(
+    'Use handleCaptionTranscription instead. '
+        'This method is scheduled for removal and should not be used.',
+  )
   void collectTranscriptionData(RemoteActivityData remoteData) {
     // Check if the incoming data is a final transcription
     if (remoteData.finalTranscription?.isNotEmpty == true) {
@@ -1627,4 +1655,704 @@ class RtcViewmodel extends ChangeNotifier {
     _pinnedParticipantId = value;
     notifyListeners();
   }
+
+  //===============================[Pin Chat]===============================
+  RemoteActivityData? _pinnedPublicChat;
+
+  set pinnedPublicChat(RemoteActivityData? chat) {
+    _pinnedPublicChat = chat;
+    notifyListeners();
+  }
+
+  RemoteActivityData? get pinnedPublicChat => _pinnedPublicChat;
+
+  set pinnedPrivateChat(RemoteActivityData? chat) {
+    getPrivateMessage()[getPrivateChatIdentity()]?.pinnedChat = chat;
+    notifyListeners();
+  }
+
+  RemoteActivityData? get pinnedPrivateChat =>
+      getPrivateMessage()[getPrivateChatIdentity()]?.pinnedChat;
+
+  void deleteMessage(String mode, String? id, String? identity) {
+    final chatType = ChatTypeExtension.fromString(mode);
+    switch (chatType) {
+      case ChatType.public:
+        _deletePublicMessage(id);
+        break;
+
+      case ChatType.private:
+        _deletePrivateMessage(id, identity);
+        break;
+    }
+  }
+
+  void _deletePublicMessage(String? id) {
+    if (id == null) return;
+
+    final index = _messageList.indexWhere((message) => message.id == id);
+    if (index != -1) {
+      _messageList[index] = _messageList[index].copyWith(
+        message: "[Message deleted]",
+        isDeleted: true,
+      );
+      notifyListeners();
+    }
+  }
+
+  void _deletePrivateMessage(String? id, String? identity) {
+    if (id == null || identity == null) return;
+    final privateChats = _privateChat[identity]?.chats;
+    if (privateChats == null) return;
+    final index = privateChats.indexWhere((message) => message.id == id);
+    if (index != -1) {
+      privateChats[index] = privateChats[index].copyWith(
+        message: "[Message deleted]",
+        isDeleted: true,
+      );
+      notifyListeners();
+    }
+  }
+
+  void sendDeleteMessageAction(String mode, RemoteActivityData chat) {
+    final chatType = ChatTypeExtension.fromString(mode);
+    switch (chatType) {
+      case ChatType.public:
+        sendAction(ActionModel(
+            action: MeetingActions.deleteMessage, id: chat.id, mode: mode));
+        break;
+
+      case ChatType.private:
+        sendPrivateAction(
+            ActionModel(
+                action: MeetingActions.deleteMessage, id: chat.id, mode: mode),
+            chat.userIdentity);
+        break;
+    }
+  }
+
+  //===============================[Reply Chat]===============================
+  ReplyMessage? _publicReplyDraft;
+
+  ReplyMessage? get publicReplyDraft => _publicReplyDraft;
+
+  set publicReplyDraft(ReplyMessage? value) {
+    _publicReplyDraft = value;
+    notifyListeners();
+  }
+
+  set privateReplyDraft(ReplyMessage? replyChat) {
+    getPrivateMessage()[getPrivateChatIdentity()]?.replyMessage = replyChat;
+    notifyListeners();
+  }
+
+  ReplyMessage? get privateReplyDraft =>
+      getPrivateMessage()[getPrivateChatIdentity()]?.replyMessage;
+
+  //===============================[Reply Chat]===============================
+  void editMessage(String mode, String? id, String? identity, String? message) {
+    final chatType = ChatTypeExtension.fromString(mode);
+    switch (chatType) {
+      case ChatType.public:
+        _editPublicMessage(id, message);
+        break;
+
+      case ChatType.private:
+        _editPrivateMessage(id, identity, message);
+        break;
+    }
+  }
+
+  void _editPublicMessage(String? id, String? message) {
+    if (id == null) return;
+
+    final index = _messageList.indexWhere((message) => message.id == id);
+    if (index != -1) {
+      _messageList[index] = _messageList[index].copyWith(
+        message: message,
+        isEdited: true,
+      );
+      notifyListeners();
+    }
+  }
+
+  void _editPrivateMessage(String? id, String? identity, String? message) {
+    if (id == null || identity == null) return;
+    final privateChats = _privateChat[identity]?.chats;
+    if (privateChats == null) return;
+    final index = privateChats.indexWhere((message) => message.id == id);
+    if (index != -1) {
+      privateChats[index] = privateChats[index].copyWith(
+        message: message,
+        isEdited: true,
+      );
+      notifyListeners();
+    }
+  }
+
+  EditMessage? _publicEditDraft;
+
+  EditMessage? get publicEditDraft => _publicEditDraft;
+
+  set publicEditDraft(EditMessage? value) {
+    _publicEditDraft = value;
+    notifyListeners();
+  }
+
+  set privateEditDraft(EditMessage? editMessage) {
+    getPrivateMessage()[getPrivateChatIdentity()]?.editMessage = editMessage;
+    notifyListeners();
+  }
+
+  EditMessage? get privateEditDraft =>
+      getPrivateMessage()[getPrivateChatIdentity()]?.editMessage;
+
+  void editPublicMessage(String updatedMessage) {
+    sendAction(ActionModel(
+        action: MeetingActions.editMessage,
+        id: _publicEditDraft?.id,
+        message: updatedMessage,
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+        mode: ChatType.public.name));
+
+    editMessage(ChatType.public.name, _publicEditDraft?.id,
+        room.localParticipant?.identity, updatedMessage);
+  }
+
+  void editPrivateMessage(String updatedMessage, String identity) {
+    final draft = privateEditDraft;
+    if (draft == null) return;
+
+    sendPrivateAction(
+      ActionModel(
+        action: MeetingActions.editMessage,
+        id: draft.id,
+        message: updatedMessage,
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+        mode: ChatType.private.name,
+      ),
+      identity,
+    );
+
+    editMessage(ChatType.private.name, draft.id, identity, updatedMessage);
+  }
+
+  //===============================[Chat Reaction]===============================
+  void handleReaction(RemoteActivityData remoteData) {
+    final chatType = ChatTypeExtension.fromString(remoteData.mode ?? "");
+    final id = remoteData.messageId;
+    final reaction = remoteData.reaction;
+    final isRemoveReaction = remoteData.removeReaction;
+    final senderIdentity = remoteData.identity?.identity; // who sent event
+
+    switch (chatType) {
+      case ChatType.public:
+        _publicReaction(id, reaction, isRemoveReaction);
+        break;
+
+      case ChatType.private:
+        _privateReaction(id, senderIdentity, reaction, isRemoveReaction);
+        break;
+    }
+  }
+
+  void _publicReaction(
+    String? id,
+    Reaction? reaction,
+    bool isRemoveReaction,
+  ) {
+    if (id == null || reaction == null) return;
+
+    final index = _messageList.indexWhere((message) => message.id == id);
+    if (index == -1) return;
+
+    final message = _messageList[index];
+
+    // Copy existing reactions or use empty list if null
+    final reactions = List<Reaction>.from(message.reactions ?? []);
+
+    // Reactor = user who actually reacted (from reaction model)
+    final reactorId = reaction.reactor;
+    if (reactorId == null) return;
+
+    // Check if this user already reacted
+    final existingIndex = reactions.indexWhere((r) => r.reactor == reactorId);
+
+    if (isRemoveReaction) {
+      // 🔹 Remove reaction if user already reacted
+      if (existingIndex != -1) {
+        reactions.removeAt(existingIndex);
+      }
+    } else {
+      if (existingIndex != -1) {
+        // 🔹 Replace old reaction (update emoji)
+        reactions[existingIndex] = reaction;
+      } else {
+        // 🔹 Add new reaction
+        reactions.add(reaction);
+      }
+    }
+
+    // Update message in list
+    _messageList[index] = message.copyWith(reactions: reactions);
+
+    notifyListeners();
+  }
+
+  void _privateReaction(
+    String? id,
+    String? identity,
+    Reaction? reaction,
+    bool isRemoveReaction,
+  ) {
+    if (id == null || identity == null || reaction == null) return;
+    final privateChats = _privateChat[identity]?.chats;
+    if (privateChats == null) return;
+
+    final index = privateChats.indexWhere((message) => message.id == id);
+    if (index == -1) return;
+
+    final message = privateChats[index];
+
+    // Copy existing reactions or use empty list if null
+    final reactions = List<Reaction>.from(message.reactions ?? []);
+
+    // Reactor = user who actually reacted (from reaction model)
+    final reactorId = reaction.reactor;
+    if (reactorId == null) return;
+
+    // Check if this user already reacted
+    final existingIndex = reactions.indexWhere((r) => r.reactor == reactorId);
+
+    if (isRemoveReaction) {
+      // 🔹 Remove reaction if user already reacted
+      if (existingIndex != -1) {
+        reactions.removeAt(existingIndex);
+      }
+    } else {
+      if (existingIndex != -1) {
+        // 🔹 Replace old reaction (update emoji)
+        reactions[existingIndex] = reaction;
+      } else {
+        // 🔹 Add new reaction
+        reactions.add(reaction);
+      }
+    }
+
+    if (index != -1) {
+      privateChats[index] = privateChats[index].copyWith(
+        reactions: reactions
+      );
+      notifyListeners();
+    }
+  }
+
+  bool shouldUpdateReaction(
+      List<Reaction> reactions,
+      String identity,
+      String newEmoji,
+      ) {
+    if (identity == "" || newEmoji == "") return true;
+    final existing = reactions.firstWhere(
+          (r) => r.reactor == identity,
+      orElse: () => Reaction(),
+    );
+
+    if (existing.reactor == null) {
+      // User hasn't reacted yet → adding
+      return true;
+    }
+
+    if (existing.emoji == newEmoji) {
+      // Same emoji → removing
+      return false;
+    }
+
+    // Different emoji → updating
+    return true;
+  }
+
+  void addReaction(String chatType, String emoji, RemoteActivityData chat) {
+    final mode = ChatTypeExtension.fromString(chatType);
+    final localIdentity = room.localParticipant?.identity;
+    final id = chat.id;
+    final reaction = Reaction(
+      emoji: emoji,
+      reactor: localIdentity,
+      name: room.localParticipant?.name,
+    );
+
+    final reactions = chat.reactions ?? [];
+    final isRemoveReaction =
+    !shouldUpdateReaction(reactions, localIdentity ?? "", emoji);
+
+    // 🧠 Determine correct chat identity
+    String? targetIdentity = chat.identity?.identity ?? _privateChatIdentity;
+
+    final action = ActionModel(
+      action: MeetingActions.addReaction,
+      mode: chatType,
+      messageId: id,
+      reaction: reaction,
+      removeReaction: isRemoveReaction,
+    );
+
+    switch (mode) {
+      case ChatType.public:
+        sendAction(action);
+        _publicReaction(id, reaction, isRemoveReaction);
+        break;
+
+      case ChatType.private:
+        sendPrivateAction(action, targetIdentity);
+        _privateReaction(id, targetIdentity, reaction, isRemoveReaction);
+        break;
+    }
+  }
+
+
+  //===============================[ScreenShare Permission]===============================
+  bool _isScreenShareEnable = true;
+
+  bool get isScreenShareEnable => _isScreenShareEnable;
+
+  set isScreenShareEnable(bool value) {
+    _isScreenShareEnable = value;
+    notifyListeners();
+  }
+
+  void getScreenShareConsent() {
+    networkRequestHandler(
+        apiCall: ()=> apiClient.getScreenShareConsent(meetingDetails.meetingUid),
+        onSuccess: (data) {
+          isScreenShareEnable = data?.screenShareConsent == true;
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isScreenShareEnable = false;
+        }
+    );
+  }
+
+  void updateScreenShareConsent(bool value) {
+    Map<String, dynamic> body = {
+      "meeting_id": meetingDetails.meetingUid,
+      "permission_granted": value,
+    };
+
+    networkRequestHandler(
+      apiCall: ()=> apiClient.updateScreenShareConsent(meetingDetails.authorizationToken, body),
+      onSuccess: (data) {
+        isScreenShareEnable = data?.screenShareConsent == true;
+        sendAction(ActionModel(action: MeetingActions.allowScreenShareForAll, value: _isScreenShareEnable));
+      },
+      onError: (message) {
+        sendMessageToUI(message);
+        isScreenShareEnable = !isScreenShareEnable;
+      }
+    );
+  }
+
+  bool isScreenShareRequestAccepted = false;
+
+  bool isScreenSharePermissionNeeded() {
+    var localParticipant = room.localParticipant;
+    if (Utils.isCoHost(localParticipant?.metadata) || Utils.isCoHost(localParticipant?.metadata)) return false;
+    if (!_isScreenShareEnable) {
+      if (isScreenShareRequestAccepted) return false;
+      if(adminList.isEmpty) return true;
+      sendPrivateAction(ActionModel(action: MeetingActions.requestScreenSharePermission, requestBy: localParticipant?.identity, requestByName: localParticipant?.name), adminList[0]?.identity);
+      return true;
+    }
+    return false;
+  }
+
+  List<RemoteParticipant?> adminList = [];
+
+  void updateAdminList(RemoteParticipant participant) {
+    if (Utils.isHost(participant.metadata)) {
+      // Always keep host at 0 index
+      adminList.insert(0, participant);
+    } else if (Utils.isCoHost(participant.metadata)) {
+      // Add co-host normally
+      adminList.add(participant);
+    }
+  }
+
+  String getAdminType() {
+    if(adminList.isEmpty) return "Unknown";
+    final metadata = adminList[0]?.metadata;
+    if (Utils.isHost(metadata)) return "Host";
+    if (Utils.isCoHost(metadata)) return "Co-Host";
+    return "Unknown";
+  }
+
+  List<RemoteActivityData> _screenShareRequestList = [];
+
+  List<RemoteActivityData> get screenShareRequestList =>
+      _screenShareRequestList;
+
+  set screenShareRequestList(List<RemoteActivityData> value) {
+    _screenShareRequestList = value;
+    notifyListeners();
+  }
+
+
+  void addScreenShareRequest(RemoteActivityData data) {
+    // Check if the participant is already in the list
+    final exists = _screenShareRequestList.any(
+          (item) => item.identity == data.identity,
+    );
+
+    if (!exists) {
+      _screenShareRequestList.add(data);
+      notifyListeners();
+    }
+  }
+
+  void removeScreenShareRequest(RemoteActivityData data) {
+    _screenShareRequestList.removeWhere(
+          (item) => item.identity == data.identity,
+    );
+    notifyListeners();
+  }
+
+  bool _isScreenShareDialogOpen = false;
+
+  bool get isScreenShareDialogOpen => _isScreenShareDialogOpen;
+  set isScreenShareDialogOpen(bool value) {
+    _isScreenShareDialogOpen = value;
+    notifyListeners();
+  }
+
+  int get screenShareRequestCount {
+    final metadata = room.localParticipant?.metadata;
+    if (!Utils.isHost(metadata) && !Utils.isCoHost(metadata)) return 0;
+    if (_isScreenShareEnable) return 0;
+    return screenShareRequestList.length;
+  }
+
+  void handleScreenShareRequest(bool allow, RemoteActivityData request) {
+    sendPrivateAction(ActionModel(action: MeetingActions.requestScreenSharePermissionResponse, isScreenShareAllowed: allow), request.identity?.identity ?? "");
+  }
+
+  //===============================[Chat Attachment Permission]===============================
+  bool _isChatAttachmentDownloadEnable = true;
+
+  bool get isChatAttachmentDownloadEnable => _isChatAttachmentDownloadEnable;
+
+  set isChatAttachmentDownloadEnable(bool value) {
+    _isChatAttachmentDownloadEnable = value;
+    notifyListeners();
+  }
+
+  void getChatAttachmentConsent() {
+    networkRequestHandler(
+        apiCall: ()=> apiClient.getChatAttachmentConsent(meetingDetails.meetingUid),
+        onSuccess: (data) {
+          isChatAttachmentDownloadEnable = data?.chatAttachmentDownloadConsent == true;
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isChatAttachmentDownloadEnable = false;
+        }
+    );
+  }
+
+  void updateChatAttachmentConsent(bool value) {
+    Map<String, dynamic> body = {
+      "meeting_id": meetingDetails.meetingUid,
+      "permission_granted": value,
+    };
+
+    networkRequestHandler(
+        apiCall: ()=> apiClient.updateChatAttachmentConsent(meetingDetails.authorizationToken, body),
+        onSuccess: (data) {
+          isChatAttachmentDownloadEnable = data?.chatAttachmentDownloadConsent == true;
+          sendAction(ActionModel(action: MeetingActions.canDownloadChatAttachment, value: _isChatAttachmentDownloadEnable));
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isChatAttachmentDownloadEnable = !isChatAttachmentDownloadEnable;
+        }
+    );
+  }
+
+  //===============================[Webinar Control]===============================
+
+  void getAudioPermission() {
+    networkRequestHandler(
+        apiCall: ()=> apiClient.getAudioPermission(meetingDetails.meetingUid),
+        onSuccess: (data) {
+          isAudioModeEnable = (data?.audioPermission == true);
+          isAudioPermissionEnable = !(data?.audioPermission == true);
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isAudioModeEnable = false;
+          isAudioPermissionEnable = false;
+        }
+    );
+  }
+
+  void updateAudioPermission(bool value) {
+    Map<String, dynamic> body = {
+      "meeting_id": meetingDetails.meetingUid,
+      "permission_granted": value,
+    };
+    networkRequestHandler(
+        apiCall: ()=> apiClient.updateAudioPermission(meetingDetails.authorizationToken, body),
+        onSuccess: (data) {
+          isAudioModeEnable = (data?.audioPermission == true);
+          isAudioPermissionEnable = !(data?.audioPermission == true);
+          sendAction(ActionModel(action: MeetingActions.forceMuteAll, value: _isAudioModeEnable));
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isAudioModeEnable = !isAudioModeEnable;
+          isAudioPermissionEnable = !isAudioPermissionEnable;
+        }
+    );
+  }
+
+  void getVideoPermission() {
+    networkRequestHandler(
+        apiCall: ()=> apiClient.getVideoPermission(meetingDetails.meetingUid),
+        onSuccess: (data) {
+          isVideoModeEnable = (data?.videoPermission == true);
+          isVideoPermissionEnable = !(data?.videoPermission == true);
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isVideoModeEnable = false;
+          isVideoPermissionEnable = false;
+        }
+    );
+  }
+
+  void updateVideoPermission(bool value) {
+    Map<String, dynamic> body = {
+      "meeting_id": meetingDetails.meetingUid,
+      "permission_granted": value,
+    };
+    networkRequestHandler(
+        apiCall: ()=> apiClient.updateVideoPermission(meetingDetails.authorizationToken, body),
+        onSuccess: (data) {
+          isVideoModeEnable = (data?.videoPermission == true);
+          isVideoPermissionEnable = !(data?.videoPermission == true);
+          sendAction(ActionModel(action: MeetingActions.forceVideoOffAll, value: _isVideoModeEnable));
+        },
+        onError: (message) {
+          sendMessageToUI(message);
+          isVideoModeEnable = !isVideoModeEnable;
+          isVideoPermissionEnable = !isVideoPermissionEnable;
+        }
+    );
+  }
+
+  //===============================[Live Caption]===============================
+
+  void handleCaptionTranscription(CaptionData data) {
+    final name = getParticipantNameByIdentity(data.participantIdentity);
+
+    final isFinal = data.speechEventType == Constant.captionAgentFinalTranscript;
+    final isPartial = data.speechEventType == Constant.captionAgentInterimTranscript;
+
+    if (isFinal) {
+      if (particalTranscription != null) {
+        // Finalize previous partial
+        particalTranscription = particalTranscription!.copyWith(
+          name: name,
+          transcription: data.text,
+          isFinal: true,
+          sourceLang: transcriptionLanguageData?.sourceLang ?? data.language,
+          targetLang: translationLanguage?.code ??
+              transcriptionLanguageData?.sourceLang ??
+              data.language,
+        );
+
+        _updateTranscriptionInList(particalTranscription!);
+
+        if (particalTranscription!.sourceLang !=
+            particalTranscription!.targetLang) {
+          translateText(particalTranscription!);
+        }
+      } else {
+        final newTranscription = TranscriptionModel(
+          id: const Uuid().v4(),
+          name: name,
+          transcription: data.text,
+          timestamp: Utils.formatTimestampToTime(
+              DateTime.now().millisecondsSinceEpoch),
+          isFinal: true,
+          sourceLang: transcriptionLanguageData?.sourceLang ?? data.language,
+          targetLang: translationLanguage?.code ??
+              transcriptionLanguageData?.sourceLang ??
+              data.language,
+        );
+
+        addTranscription(newTranscription);
+
+        if (newTranscription.sourceLang != newTranscription.targetLang) {
+          translateText(newTranscription);
+        }
+      }
+
+      particalTranscription = null;
+    }
+
+    // -------------------- PARTIAL ---------------------
+    else if (isPartial) {
+      if (particalTranscription != null) {
+        // Update existing partial
+        particalTranscription = particalTranscription!.copyWith(
+          name: name,
+          transcription: data.text,
+          isFinal: false,
+          sourceLang: transcriptionLanguageData?.sourceLang ?? data.language,
+          targetLang: translationLanguage?.code ??
+              transcriptionLanguageData?.sourceLang ??
+              data.language,
+        );
+
+        _updateTranscriptionInList(particalTranscription!);
+      } else {
+        // Create new partial
+        particalTranscription = TranscriptionModel(
+          id: const Uuid().v4(),
+          name: name,
+          transcription: data.text,
+          timestamp: Utils.formatTimestampToTime(
+              DateTime.now().millisecondsSinceEpoch),
+          isFinal: false,
+          sourceLang: transcriptionLanguageData?.sourceLang ?? data.language,
+          targetLang: translationLanguage?.code ??
+              transcriptionLanguageData?.sourceLang ??
+              data.language,
+        );
+
+        addTranscription(particalTranscription!);
+      }
+    }
+  }
+
+  void registerCaption() {
+    room.registerTextStreamHandler(Constant.liveCaptionAgent, (TextStreamReader reader, String participantIdentity) async {
+        final raw = await reader.readAll();
+        try {
+          final jsonData = jsonDecode(raw);
+          final caption = CaptionData.fromJson(jsonData);
+
+          handleCaptionTranscription(caption);
+        } catch (e) {
+          debugPrint("[ERROR] Failed to parse caption: $e");
+        }
+      },
+    );
+  }
+
+  void unregisterCaption() {
+    room.unregisterTextStreamHandler(Constant.liveCaptionAgent);
+  }
+
 }

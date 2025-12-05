@@ -35,12 +35,13 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import '../model/emoji_message.dart';
 import '../model/remote_activity_data.dart';
+import '../presentation/dialog/screen_share_request_dialog.dart';
 import '../presentation/pages/transcription_screen.dart';
 import '../utils/consent_status_enum.dart';
 import '../utils/meeting_actions.dart';
 import '../utils/utils.dart';
 import 'meeting_manager.dart';
-import 'method_channels/reply_kit.dart';
+import 'method_channels/daakia_pip.dart';
 
 class RoomPage extends StatefulWidget {
   final Room room;
@@ -142,14 +143,28 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
               showRecordingConsentDialog(viewModel);
             });
       }
+
+      if (viewModel?.meetingDetails.features?.isScreenShareRequestAllowed() == true) {
+        viewModel?.getScreenShareConsent();
+      }
+
+      if (viewModel?.meetingDetails.features?.isConferenceChatAttachmentAllowed() == true) {
+        viewModel?.getChatAttachmentConsent();
+      }
+
+      viewModel?.getAudioPermission();
+      viewModel?.getVideoPermission();
+
+      DaakiaPiP.createPipVideoCall(
+          name: widget.room.localParticipant?.name ?? "Unknown",
+          avatar: Utils.extractUserAvatar(widget.room.localParticipant?.metadata),
+      );
+
+      viewModel?.registerCaption();
     });
 
     if (lkPlatformIs(PlatformType.android)) {
       Hardware.instance.setSpeakerphoneOn(false);
-    }
-
-    if (lkPlatformIs(PlatformType.iOS)) {
-      ReplayKitChannel.listenMethodChannel(widget.room);
     }
 
     if (lkPlatformIsDesktop()) {
@@ -211,9 +226,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     handleAndroidNotification(enable: false);
     // always dispose listener
     (() async {
-      if (lkPlatformIs(PlatformType.iOS)) {
-        ReplayKitChannel.closeReplayKit();
-      }
+      DaakiaPiP.disposePiP();
       widget.room.removeListener(_onRoomDidUpdate);
       await _listener.dispose();
       await widget.room.dispose();
@@ -386,8 +399,19 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         }
       }
     })
-    ..on<LocalTrackPublishedEvent>((_) => _sortParticipants())
-    ..on<LocalTrackUnpublishedEvent>((_) => _sortParticipants())
+    ..on<LocalTrackPublishedEvent>((track){
+      var viewModel = _livekitProviderKey.currentState?.viewModel;
+      final localParticipant = widget.room.localParticipant;
+      if (localParticipant?.isScreenShareEnabled() == true) {
+        viewModel?.sendAction(ActionModel(
+            action: MeetingActions.screenShareStarted,
+            timeStamp: DateTime.now().microsecondsSinceEpoch));
+      }
+      _sortParticipants();
+    })
+    ..on<LocalTrackUnpublishedEvent>((track){
+      _sortParticipants();
+    })
     ..on<TrackSubscribedEvent>((_) => _sortParticipants())
     ..on<TrackUnsubscribedEvent>((_) => _sortParticipants())
     ..on<TrackE2EEStateEvent>(_onE2EEStateEvent)
@@ -519,9 +543,6 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         viewModel?.isAudioPermissionEnable = !remoteData.value;
         if (!(viewModel?.isAudioPermissionEnable ?? false)) {
           viewModel?.disableAudio();
-          viewModel?.setMicAlpha(0.8);
-        } else {
-          viewModel?.setMicAlpha(1.0);
         }
         break;
 
@@ -529,9 +550,6 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         viewModel?.isVideoPermissionEnable = !remoteData.value;
         if (!(viewModel?.isVideoPermissionEnable ?? false)) {
           viewModel?.disableVideo();
-          viewModel?.setCameraAlpha(0.8);
-        } else {
-          viewModel?.setCameraAlpha(1.0);
         }
         break;
 
@@ -629,6 +647,38 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         viewModel?.isRecordingActionInProgress = false;
         break;
 
+      case MeetingActions.deleteMessage:
+        viewModel?.deleteMessage(remoteData.mode??"", remoteData.id, remoteData.identity?.identity);
+        break;
+
+      case MeetingActions.editMessage:
+        viewModel?.editMessage(remoteData.mode??"", remoteData.id, remoteData.identity?.identity, remoteData.message);
+        break;
+
+      case MeetingActions.addReaction:
+        viewModel?.handleReaction(remoteData);
+        break;
+
+      case MeetingActions.allowScreenShareForAll:
+        viewModel?.isScreenShareEnable = remoteData.value;
+        break;
+
+      case MeetingActions.requestScreenSharePermission:
+        viewModel?.addScreenShareRequest(remoteData);
+        showScreenShareDialog(context, viewModel!);
+        break;
+
+      case MeetingActions.requestScreenSharePermissionResponse:
+        viewModel?.isScreenShareRequestAccepted = remoteData.isScreenShareAllowed;
+        showSnackBar(
+            message: remoteData.isScreenShareAllowed ? "Screen share permission granted. Now you can share your screen." : "Screen share permission denied."
+        );
+        break;
+
+      case MeetingActions.canDownloadChatAttachment:
+        viewModel?.isChatAttachmentDownloadEnable = remoteData.value;
+        break;
+
       case "":
       // Handle empty action case if needed
         break;
@@ -684,10 +734,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   }
 
   void _sortParticipants() {
+    final viewmodel = _livekitProviderKey.currentState?.viewModel;
     List<ParticipantTrack> userMediaTracks = [];
     List<ParticipantTrack> screenTracks = [];
     var coHostCount = 0;
-
+    viewmodel?.adminList = [];
     // Add remote participants
     for (var participant in widget.room.remoteParticipants.values) {
       bool hasVideoTrack = false;
@@ -695,6 +746,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       if (Utils.isCoHost(participant.metadata)) {
         coHostCount++;
       }
+
+      viewmodel?.updateAdminList(participant);
 
       for (var t in participant.videoTrackPublications) {
         if (t.isScreenShare) {
@@ -753,8 +806,6 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       return a.participant.joinedAt.millisecondsSinceEpoch -
           b.participant.joinedAt.millisecondsSinceEpoch;
     });
-
-    final viewmodel = _livekitProviderKey.currentState?.viewModel;
 
     // Handle pinned participant
     ParticipantTrack? pinnedTrack;
@@ -1406,6 +1457,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
   void clearMemory(RtcViewmodel? viewModel) {
     viewModel?.disposeScreenShare();
+    viewModel?.unregisterCaption();
     handleAndroidNotification(enable: false);
     _disposePip();
   }
@@ -1423,4 +1475,42 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     }
     viewModel?.isRecordingStartByMe = false;
   }
+
+  void showScreenShareDialog(BuildContext context, RtcViewmodel viewModel) {
+    if (viewModel.isScreenShareDialogOpen) return; // already open, skip
+
+    viewModel.isScreenShareDialogOpen = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        // 👇 Rebuilds automatically when notifyListeners() is called
+        return AnimatedBuilder(
+          animation: viewModel,
+          builder: (context, _) {
+            return ScreenShareRequestDialog(
+              viewModel: viewModel,
+              onAction: (request, allow) {
+                viewModel.handleScreenShareRequest(allow, request);
+                viewModel.removeScreenShareRequest(request);
+
+                if (viewModel.screenShareRequestList.isEmpty) {
+                  Navigator.of(context).pop();
+                  viewModel.isScreenShareDialogOpen = false;
+                }
+              },
+              onClose: () {
+                Navigator.of(context).pop();
+                viewModel.isScreenShareDialogOpen = false;
+              },
+            );
+          },
+        );
+      },
+    ).then((_) {
+      viewModel.isScreenShareDialogOpen = false;
+    });
+  }
+
 }

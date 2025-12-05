@@ -1,12 +1,15 @@
 import 'dart:io';
 
+import 'package:daakia_vc_flutter_sdk/model/chat_attachment_consent_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/consent_status_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/egress_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/feature_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/licence_verify_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/participant_attendance_data.dart';
+import 'package:daakia_vc_flutter_sdk/model/screen_share_consent_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/session_details_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/translation_data.dart';
+import 'package:daakia_vc_flutter_sdk/model/webinar_permission_model.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
@@ -97,9 +100,8 @@ abstract class RestClient {
 
   @GET("rtc/recording/dispatchId")
   Future<BaseResponse<RecordingDispatchData>> getRecordingDispatchedId(
-    @Header("Authorization") String token,
-    @Query("meeting_id") String meetingUid
-  );
+      @Header("Authorization") String token,
+      @Query("meeting_id") String meetingUid);
 
   @POST("rtc/meeting/addParticipant/toLobby")
   Future<BaseResponse<RtcData>> addParticipantToLobby(
@@ -173,5 +175,49 @@ abstract class RestClient {
   Future<BaseListResponse<RemoteParticipantConsent>> getParticipantConsentList(
     @Query("meeting_uid") String meetingId,
     @Query("session_id") String sessionId,
+  );
+
+  @GET("rtc/screenShareConsent")
+  Future<BaseResponse<ScreenShareConsentModel>> getScreenShareConsent(
+    @Query("meeting_id") String meetingId,
+  );
+
+  @PUT("rtc/screenShareConsent")
+  Future<BaseResponse<ScreenShareConsentModel>> updateScreenShareConsent(
+    @Header("Authorization") String token,
+    @Body() Map<String, dynamic> body,
+  );
+
+  @GET("rtc/chatAttachmentDownloadConsent")
+  Future<BaseResponse<ChatAttachmentConsentModel>> getChatAttachmentConsent(
+    @Query("meeting_id") String meetingId,
+  );
+
+  @PUT("rtc/chatAttachmentDownloadConsent")
+  Future<BaseResponse<ChatAttachmentConsentModel>> updateChatAttachmentConsent(
+    @Header("Authorization") String token,
+    @Body() Map<String, dynamic> body,
+  );
+
+  @GET("rtc/audioPermission")
+  Future<BaseResponse<WebinarPermissionModel>> getAudioPermission(
+    @Query("meeting_id") String meetingId,
+  );
+
+  @PUT("rtc/audioPermission")
+  Future<BaseResponse<WebinarPermissionModel>> updateAudioPermission(
+    @Header("Authorization") String token,
+    @Body() Map<String, dynamic> body,
+  );
+
+  @GET("rtc/videoPermission")
+  Future<BaseResponse<WebinarPermissionModel>> getVideoPermission(
+    @Query("meeting_id") String meetingId,
+  );
+
+  @PUT("rtc/videoPermission")
+  Future<BaseResponse<WebinarPermissionModel>> updateVideoPermission(
+    @Header("Authorization") String token,
+    @Body() Map<String, dynamic> body,
   );
 }

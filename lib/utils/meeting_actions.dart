@@ -68,6 +68,20 @@ class MeetingActions {
 
   static const String finallyStopRecording = "recording-finally-stopped";
 
+  static const String deleteMessage = "delete-message";
+
+  static const String editMessage = "edit-message";
+
+  static const String addReaction = "add-reaction";
+
+  static const String allowScreenShareForAll = "allow-screen-share-for-all";
+
+  static const String requestScreenSharePermission = "request-screen-share-permission";
+
+  static const String requestScreenSharePermissionResponse = "request-screen-share-permission-response";
+
+  static const String canDownloadChatAttachment = "can-download-chat-attachment";
+
   // ✅ Add new fields here
 
   // ✅ Method to check if an action is valid
@@ -117,6 +131,13 @@ class MeetingActions {
     stopRecording,
     finallyStartRecording,
     finallyStopRecording,
+    deleteMessage,
+    editMessage,
+    addReaction,
+    allowScreenShareForAll,
+    requestScreenSharePermission,
+    requestScreenSharePermissionResponse,
+    canDownloadChatAttachment,
     // ✅ Add new fields here
   };
 }

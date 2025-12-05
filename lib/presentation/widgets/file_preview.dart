@@ -15,8 +15,9 @@ import 'package:path_provider/path_provider.dart';
 
 class FilePreviewWidget extends StatefulWidget {
   final String fileUrl;
+  final bool isChatAttachmentDownloadEnable;
 
-  const FilePreviewWidget({super.key, required this.fileUrl});
+  const FilePreviewWidget({super.key, required this.fileUrl, required this.isChatAttachmentDownloadEnable});
 
   @override
   State<FilePreviewWidget> createState() => _FilePreviewWidgetState();
@@ -146,6 +147,7 @@ class _FilePreviewWidgetState extends State<FilePreviewWidget> {
               }
             }
           } else {
+            if(!widget.isChatAttachmentDownloadEnable) return;
             setState(() => _progress = 0.0);
 
             await _downloadFile(widget.fileUrl, filePath);

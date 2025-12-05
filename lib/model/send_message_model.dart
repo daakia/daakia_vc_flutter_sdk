@@ -1,10 +1,12 @@
+import 'package:daakia_vc_flutter_sdk/model/reply_message.dart';
+
 class SendMessageModel {
   final String? action;
   final String? id;
   final String? message;
   final int? timestamp;
   final bool? isReplied;
-  // final String? replyMessage; // Field for the reply message, if any
+  final ReplyMessage? replyMessage;
 
   SendMessageModel({
     this.action,
@@ -12,7 +14,7 @@ class SendMessageModel {
     required this.message,
     required this.timestamp,
     this.isReplied = false,
-    // this.replyMessage,
+    this.replyMessage,
   });
 
   // Factory constructor to create an instance from JSON
@@ -23,7 +25,7 @@ class SendMessageModel {
       message: json['message'] as String?,
       timestamp: json['timestamp'] as int?,
       isReplied: json['isReplied'] as bool?,
-      // replyMessage: json['replyMessage'] as String?,
+      replyMessage: json['replyMessage'] as ReplyMessage?,
     );
   }
 
@@ -35,7 +37,7 @@ class SendMessageModel {
       'message': message,
       'timestamp': timestamp,
       'isReplied': isReplied,
-      // 'replyMessage': replyMessage,
+      'replyMessage': replyMessage,
     };
   }
 }

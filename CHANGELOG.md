@@ -1,5 +1,50 @@
 # CHANGELOG
 
+## v4.3.0 – (2025-12)
+
+### 🚀 New Features
+- **Screen-Share Permission System**
+    - Host controls to enable/disable screen sharing.
+    - Screen-share consent model & API.
+    - Screen-share request/response mechanism.
+    - “Allow Screen Share for All” support.
+    - Screen-share request dialog + request list.
+- **Chat System Enhancements**
+    - **Unread counters** for private chat with badges and sync logic.
+    - **Pinned messages** for public & private chat with navigation + highlight.
+    - **Reply message system** with models, UI, preview widgets & sender-side logic.
+    - **Edit message feature** with draft support, models, UI updates & sync logic.
+    - **Message reactions** with reaction bar, mapping, details sheet & sender logic.
+    - **Copy message** functionality added.
+- **Chat Attachments**
+    - File-type preview widget with link/file detection.
+    - Attachment permission control via host settings & API sync.
+    - Receiver-side logic and restriction handling.
+- **Webinar Mode**
+    - Webinar permissions model & API.
+    - Audio/video permission sync for Host/Co-Host.
+    - Sync older audio/video states when joining.
+- **Live Captions / Transcription**
+    - New caption data model and constants.
+    - Updated logic through `rtc-registerTextStreamHandler`.
+    - Register/unregister caption handlers to prevent data leak.
+    - Stopped pooling for caption start API.
+
+### 🧩 Improvements
+- Major chat code refactor (public, private, and message bubble).
+- Enhanced UI/UX for emoji reactions and chat interactions.
+- Improved navigation to pinned and replied messages.
+- Reusable host-control switch with enable/disable state.
+- Multiple null-handling, JSON mismatch, and model consistency fixes.
+
+### 🐞 Bug Fixes
+- Fixed **screen share event not going from iOS** and removed duplicates.
+- Fixed private chat reaction issues for sender messages.
+- Fixed unread count not updating.
+- Fixed reply/reaction visibility on deleted messages.
+- Fixed CDN link handling and file-type detection.
+- General bug fixes and code cleanup.
+
 ## v4.2.1 – (2025-10)
 
 ### 🚀 New Features
