@@ -228,16 +228,37 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   bool _isConnected = false;
   bool _isPhoneCallActive = false;
 
+  // Debounces the "Reconnecting…" banner so a single brief attempt that
+  // resolves instantly (common on an otherwise healthy connection) never
+  // flashes it. Only the first attempt of a given outage schedules these;
+  // subsequent RoomAttemptReconnectEvents for the same outage are no-ops,
+  // which also prevents stacked timers from firing out of order.
+  Timer? _reconnectShowDelayTimer;
+  // Safety net only, in case a reconnected/disconnected event is ever missed.
+  // LiveKit's own reconnectAttemptsExceeded disconnect is the authoritative
+  // give-up signal. Kept comfortably longer than LiveKit's worst-case backoff
+  // window (~44s across 10 attempts) plus per-attempt connection timeouts.
+  Timer? _reconnectFallbackTimer;
+
   late final TransformationController _zoomController;
   double _zoomScale = 1.0;
 
   void onReconnectStart() {
-    setState(() {
-      _isReconnecting = true;
-      _isConnected = false;
+    // Already showing (or about to show) the banner for this outage.
+    if (_isReconnecting || _reconnectShowDelayTimer != null) return;
+
+    _reconnectFallbackTimer?.cancel();
+    _reconnectShowDelayTimer = Timer(const Duration(milliseconds: 800), () {
+      _reconnectShowDelayTimer = null;
+      if (!mounted) return;
+      setState(() {
+        _isReconnecting = true;
+        _isConnected = false;
+      });
     });
-    // Fallback: clear reconnecting state if no event comes back within 8 sec
-    Future.delayed(const Duration(seconds: 30), () {
+
+    _reconnectFallbackTimer = Timer(const Duration(seconds: 90), () {
+      _reconnectFallbackTimer = null;
       if (mounted && _isReconnecting) {
         setState(() {
           _isReconnecting = false;
@@ -247,10 +268,23 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   }
 
   void onReconnectSuccess() {
+    _reconnectShowDelayTimer?.cancel();
+    _reconnectShowDelayTimer = null;
+    _reconnectFallbackTimer?.cancel();
+    _reconnectFallbackTimer = null;
+
+    if (!mounted) return;
+
+    // Only surface "You're back online" if we actually showed "Reconnecting…"
+    // first — otherwise this fires on every fresh join too (RoomConnectedEvent
+    // also calls onReconnectSuccess).
+    final wasReconnecting = _isReconnecting;
     setState(() {
       _isReconnecting = false;
-      _isConnected = true;
+      _isConnected = wasReconnecting;
     });
+
+    if (!wasReconnecting) return;
 
     // Auto hide success banner after 2 seconds
     Future.delayed(const Duration(seconds: 2), () {
@@ -260,6 +294,13 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         });
       }
     });
+  }
+
+  void _resetReconnectUiState() {
+    _reconnectShowDelayTimer?.cancel();
+    _reconnectShowDelayTimer = null;
+    _reconnectFallbackTimer?.cancel();
+    _reconnectFallbackTimer = null;
   }
 
   void _onZoomChanged() {
@@ -318,6 +359,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   @override
   void dispose() {
     onConfigureNativeAudio = defaultNativeAudioConfigurationFunc;
+    _resetReconnectUiState();
     _zoomController.removeListener(_onZoomChanged);
     _zoomController.dispose();
     super.dispose();
@@ -357,6 +399,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       // The outer null-guard that was here made the `case null` in the switch
       // unreachable — any unexpected disconnect (network drop, server kill
       // without a reason) would leave the page open and the service running.
+      _resetReconnectUiState();
       _isProgrammaticPop = true;
       DatadogDisconnectLogger.logDisconnectEvent(
           meetingId: widget.meetingDetails.meetingUid,
