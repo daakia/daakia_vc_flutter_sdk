@@ -73,6 +73,11 @@ abstract class RestClient {
     @Body() Map<String, dynamic> body,
   );
 
+  @POST("rtc/meeting/update/participantEmail")
+  Future<BaseResponse> updateParticipantEmail(
+    @Body() Map<String, dynamic> body,
+  );
+
   @POST("rtc/meeting/update/participantJoinedStatus")
   Future<BaseResponse> updateParticipantJoinedStatus(
     @Body() Map<String, dynamic> body,

@@ -2988,13 +2988,23 @@ class RtcViewmodel extends ChangeNotifier {
   void notifyParticipantJoinedStatus() {
     final participantEmail = meetingDetails.participantEmail;
     if (participantEmail == null || participantEmail.isEmpty) return;
-    Map<String, dynamic> body = {
+    final participantIdentity = room.localParticipant?.identity;
+    Map<String, dynamic> emailBody = {
       "meeting_uid": meetingDetails.meetingUid,
+      "participant_identity": participantIdentity,
       "participant_email": participantEmail,
-      "is_joined": true,
     };
     networkRequestHandler(
-        apiCall: () => apiClient.updateParticipantJoinedStatus(body));
+        apiCall: () => apiClient.updateParticipantEmail(emailBody),
+        onSuccess: (_) {
+          Map<String, dynamic> body = {
+            "meeting_uid": meetingDetails.meetingUid,
+            "participant_email": participantEmail,
+            "is_joined": true,
+          };
+          networkRequestHandler(
+              apiCall: () => apiClient.updateParticipantJoinedStatus(body));
+        });
   }
 
   void requestChatHistory() {
