@@ -7,11 +7,13 @@ class MeetingDetails {
   String authorizationToken;
   String livekitToken;
   MeetingDetailsModel? meetingBasicDetails;
+  final String? participantEmail;
 
   MeetingDetails(
       {required this.meetingUid,
       this.features,
       required this.authorizationToken,
         required this.livekitToken,
-      required this.meetingBasicDetails});
+      required this.meetingBasicDetails,
+      this.participantEmail});
 }
