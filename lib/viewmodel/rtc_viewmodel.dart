@@ -8,6 +8,7 @@ import 'package:daakia_vc_flutter_sdk/api/injection.dart';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/model/consent_participant.dart';
 import 'package:daakia_vc_flutter_sdk/model/edit_message.dart';
+import 'package:daakia_vc_flutter_sdk/model/invited_participant.dart';
 import 'package:daakia_vc_flutter_sdk/model/participant_attendance_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/reaction_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
@@ -1648,6 +1649,72 @@ class RtcViewmodel extends ChangeNotifier {
       }
     }
     pendingParticipantList = tempList;
+  }
+
+  //Invited Participants (email invite / reminder flow for standard-password meetings)
+
+  bool get isInviteParticipantEnabled =>
+      meetingDetails.meetingBasicDetails?.isStandardPassword == true;
+
+  List<InvitedParticipant> _invitedParticipantList = [];
+
+  List<InvitedParticipant> get invitedParticipantList =>
+      _invitedParticipantList;
+
+  void _applyInvitedParticipants(List<InvitedParticipant> rawList) {
+    final seenAttendees = <String>{};
+    final tempList = <InvitedParticipant>[];
+    for (var invitee in rawList) {
+      final attendee = invitee.attendee;
+      if (attendee == null || attendee.isEmpty) continue;
+      if (invitee.participantStatus?.toLowerCase() == 'joined') continue;
+      if (!seenAttendees.add(attendee)) continue;
+      tempList.add(invitee);
+    }
+    _invitedParticipantList = tempList;
+    notifyListeners();
+  }
+
+  void fetchInvitedParticipants({bool silent = false}) {
+    if (!isHost() && !isCoHost()) return;
+    if (!isInviteParticipantEnabled) return;
+    networkRequestHandler(
+      apiCall: () => apiClient.getInvitedParticipants(
+          selfIdentity, meetingDetails.meetingUid),
+      onSuccess: (data) =>
+          _applyInvitedParticipants(data?.invitedParticipants ?? []),
+      onError: silent ? null : (message) => sendMessageToUI(message),
+    );
+  }
+
+  void sendInviteEmails(List<String> emails) {
+    if (emails.isEmpty) return;
+    Map<String, dynamic> body = {
+      "meeting_uid": meetingDetails.meetingUid,
+      "participantsEmail": emails,
+    };
+    networkRequestHandler(
+      apiCall: () => apiClient.inviteParticipants(selfIdentity, body),
+      onSuccess: (_) {
+        sendMessageToUI("Invite sent");
+        sendAction(ActionModel(action: MeetingActions.refreshInvitedParticipants));
+        for (final delayMs in [500, 1500, 3000]) {
+          Timer(Duration(milliseconds: delayMs),
+              () => fetchInvitedParticipants(silent: true));
+        }
+      },
+      onError: (message) => sendMessageToUI(message),
+    );
+  }
+
+  void remindParticipant(String email) => sendInviteEmails([email]);
+
+  void remindAllParticipants() {
+    final emails = invitedParticipantList
+        .map((invitee) => invitee.attendee)
+        .whereType<String>()
+        .toList();
+    sendInviteEmails(emails);
   }
 
   //Recording Consent Flow
