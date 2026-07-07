@@ -2983,6 +2983,20 @@ class RtcViewmodel extends ChangeNotifier {
         isCoHost ? AttendanceRole.cohost : AttendanceRole.participant);
   }
 
+  // Only fires for the advance-password flow, where verify/password returns
+  // the participant's email; other join flows have no email to report.
+  void notifyParticipantJoinedStatus() {
+    final participantEmail = meetingDetails.participantEmail;
+    if (participantEmail == null || participantEmail.isEmpty) return;
+    Map<String, dynamic> body = {
+      "meeting_uid": meetingDetails.meetingUid,
+      "participant_email": participantEmail,
+      "is_joined": true,
+    };
+    networkRequestHandler(
+        apiCall: () => apiClient.updateParticipantJoinedStatus(body));
+  }
+
   void requestChatHistory() {
     if (room.remoteParticipants.values.isEmpty) return;
     final participant = room.remoteParticipants.values.first;

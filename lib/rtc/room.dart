@@ -192,6 +192,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
 
       viewModel?.registerCaption();
       viewModel?.storeMeetingDetails();
+      viewModel?.notifyParticipantJoinedStatus();
       viewModel?.requestChatHistory();
       viewModel?.requestRaiseHand();
 

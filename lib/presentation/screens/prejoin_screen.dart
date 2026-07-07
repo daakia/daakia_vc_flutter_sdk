@@ -55,8 +55,8 @@ class _PreJoinState extends State<PreJoinScreen> {
   late MeetingDetails meetingDetails;
 
   var name = "";
-  var email = "";
   var password = "";
+  String? _participantEmail;
 
   var _obscurePassword = true;
 
@@ -231,7 +231,7 @@ class _PreJoinState extends State<PreJoinScreen> {
     }
     if (!widget.isHost &&
         widget.basicMeetingDetails?.isStandardPassword == true) {
-      return "This meeting requires email/password verification. Disable skipPreJoinPage for this meeting type.";
+      return "This meeting requires password verification. Disable skipPreJoinPage for this meeting type.";
     }
     if (!widget.isHost &&
         widget.basicMeetingDetails?.isCommonPassword == true) {
@@ -772,7 +772,8 @@ class _PreJoinState extends State<PreJoinScreen> {
           authorizationToken: hostToken,
           livekitToken: livekitToken,
           features: features,
-          meetingBasicDetails: widget.basicMeetingDetails);
+          meetingBasicDetails: widget.basicMeetingDetails,
+          participantEmail: _participantEmail);
       if (mounted) {
         final navigator = Navigator.of(this.context);
         await navigator.push<void>(
@@ -968,33 +969,6 @@ class _PreJoinState extends State<PreJoinScreen> {
                         LengthLimitingTextInputFormatter(50),
                       ],
                       onChanged: (value) => setState(() => name = value),
-                    ),
-                  ),
-                  Visibility(
-                    visible: !widget.isHost &&
-                        !_shouldBypassParticipantChecks &&
-                        (widget.basicMeetingDetails?.isStandardPassword ==
-                            true),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
-                      // Equivalent to marginHorizontal="20dp" and marginTop="10dp"
-                      child: TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Email*', // Equivalent to hint="Name*"
-                          border: OutlineInputBorder(),
-                        ),
-                        style: const TextStyle(
-                          color: Colors
-                              .black, // Equivalent to textColor="@color/black"
-                        ),
-                        enabled: true, // Equivalent to android:enabled="false"
-                        onChanged: (String? value) {
-                          setState(() {
-                            email = value ?? "";
-                          });
-                        },
-                      ),
                     ),
                   ),
                   Visibility(
@@ -1465,25 +1439,11 @@ class _PreJoinState extends State<PreJoinScreen> {
   }
 
   bool checkValidity() {
-    var isValid = false;
-    if (email.isNotEmpty) {
-      if (Utils.isValidEmail(email)) {
-        isValid = true;
-      } else {
-        Utils.showSnackBar(context, message: "Invalid email");
-        return false;
-      }
-    } else {
-      Utils.showSnackBar(context, message: "Please enter your email");
-      return false;
-    }
     if (password.isEmpty) {
       Utils.showSnackBar(context, message: "Please enter your password");
       return false;
-    } else {
-      isValid = true;
     }
-    return isValid;
+    return true;
   }
 
   void verifyCommonPasswordProtectedMeeting(Function stopLoading) {
@@ -1511,12 +1471,12 @@ class _PreJoinState extends State<PreJoinScreen> {
   void verifyPasswordProtectedMeeting(Function stopLoading) {
     networkRequestHandlerWithMessage(
       apiCall: () => apiClient.verifyMeetingPassword({
-        "email": email,
         "password": password,
         "meeting_uid": widget.meetingId
       }),
       onSuccess: (response) {
         if (response?.data?.passwordVerified == true) {
+          _participantEmail = response?.data?.participantEmail;
           passwordVerified(stopLoading);
         } else {
           passwordNotVerified(stopLoading,
