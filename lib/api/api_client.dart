@@ -75,6 +75,7 @@ abstract class RestClient {
 
   @POST("rtc/meeting/update/participantEmail")
   Future<BaseResponse> updateParticipantEmail(
+    @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 

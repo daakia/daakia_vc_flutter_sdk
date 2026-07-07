@@ -250,11 +250,13 @@ class _RestClient implements RestClient {
 
   @override
   Future<BaseResponse<dynamic>> updateParticipantEmail(
+    String selfIdentity,
     Map<String, dynamic> body,
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
+    final _headers = <String, dynamic>{r'x-self-identity': selfIdentity};
+    _headers.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
     _data.addAll(body);
     final _options = _setStreamType<BaseResponse<dynamic>>(
