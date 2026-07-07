@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
+import 'initials_circle.dart';
 
 class InvitedParticipantWidget extends StatefulWidget {
   const InvitedParticipantWidget({required this.viewModel, super.key});
@@ -14,10 +16,42 @@ class InvitedParticipantWidget extends StatefulWidget {
 
 class _InvitedParticipantWidgetState extends State<InvitedParticipantWidget> {
   bool isExpanded = false;
+  bool _isRemindAllLoading = false;
+  final Set<String> _remindedAttendees = {};
+  final Set<String> _remindingAttendees = {};
+
+  Future<void> _remindOne(String attendee) async {
+    setState(() => _remindingAttendees.add(attendee));
+    final success = await widget.viewModel.remindParticipant(attendee);
+    if (!mounted) return;
+    setState(() {
+      _remindingAttendees.remove(attendee);
+      if (success) _remindedAttendees.add(attendee);
+    });
+  }
+
+  Future<void> _remindAll(List<String> remainingAttendees) async {
+    setState(() => _isRemindAllLoading = true);
+    final success =
+        await widget.viewModel.remindAllParticipants(emails: remainingAttendees);
+    if (!mounted) return;
+    setState(() {
+      _isRemindAllLoading = false;
+      if (success) {
+        _remindedAttendees.addAll(remainingAttendees);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final invitedList = widget.viewModel.invitedParticipantList;
+    final remainingAttendees = invitedList
+        .map((invitee) => invitee.attendee)
+        .whereType<String>()
+        .where((attendee) => !_remindedAttendees.contains(attendee))
+        .toList();
+    final canRemindAll = !_isRemindAllLoading && remainingAttendees.isNotEmpty;
     return Column(
       children: [
         Row(
@@ -33,8 +67,17 @@ class _InvitedParticipantWidgetState extends State<InvitedParticipantWidget> {
             Row(
               children: [
                 TextButton(
-                  onPressed: widget.viewModel.remindAllParticipants,
-                  child: const Text('Remind All'),
+                  onPressed: canRemindAll
+                      ? () => _remindAll(remainingAttendees)
+                      : null,
+                  child: _isRemindAllLoading
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Remind All'),
                 ),
                 IconButton(
                   onPressed: () {
@@ -61,26 +104,43 @@ class _InvitedParticipantWidgetState extends State<InvitedParticipantWidget> {
             itemCount: invitedList.length,
             itemBuilder: (context, index) {
               final invitee = invitedList[index];
+              final attendee = invitee.attendee;
+              final isLoading =
+                  attendee != null && _remindingAttendees.contains(attendee);
+              final isReminded =
+                  attendee != null && _remindedAttendees.contains(attendee);
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2.0),
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
                 child: Row(
                   children: [
+                    InitialsCircle(initials: Utils.getInitials(attendee)),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        invitee.attendee ?? "Unknown",
+                        attendee ?? "Unknown",
                         style: const TextStyle(color: Colors.white),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Remind',
-                      onPressed: invitee.attendee == null
+                      tooltip: isReminded ? 'Reminded' : 'Remind',
+                      onPressed: (attendee == null || isLoading || isReminded)
                           ? null
-                          : () => widget.viewModel
-                              .remindParticipant(invitee.attendee!),
-                      icon: const Icon(Icons.notifications_active_outlined,
-                          color: Colors.white),
+                          : () => _remindOne(attendee),
+                      icon: isLoading
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            )
+                          : Icon(
+                              isReminded
+                                  ? Icons.notifications_active
+                                  : Icons.notifications_active_outlined,
+                              color: isReminded ? Colors.white38 : Colors.white,
+                            ),
                     ),
                   ],
                 ),

@@ -1687,15 +1687,17 @@ class RtcViewmodel extends ChangeNotifier {
     );
   }
 
-  void sendInviteEmails(List<String> emails) {
-    if (emails.isEmpty) return;
+  Future<bool> sendInviteEmails(List<String> emails) async {
+    if (emails.isEmpty) return false;
     Map<String, dynamic> body = {
       "meeting_uid": meetingDetails.meetingUid,
       "participantsEmail": emails,
     };
-    networkRequestHandler(
+    bool isSuccess = false;
+    await networkRequestHandler(
       apiCall: () => apiClient.inviteParticipants(selfIdentity, body),
       onSuccess: (_) {
+        isSuccess = true;
         sendMessageToUI("Invite sent");
         sendAction(ActionModel(action: MeetingActions.refreshInvitedParticipants));
         for (final delayMs in [500, 1500, 3000]) {
@@ -1705,16 +1707,18 @@ class RtcViewmodel extends ChangeNotifier {
       },
       onError: (message) => sendMessageToUI(message),
     );
+    return isSuccess;
   }
 
-  void remindParticipant(String email) => sendInviteEmails([email]);
+  Future<bool> remindParticipant(String email) => sendInviteEmails([email]);
 
-  void remindAllParticipants() {
-    final emails = invitedParticipantList
-        .map((invitee) => invitee.attendee)
-        .whereType<String>()
-        .toList();
-    sendInviteEmails(emails);
+  Future<bool> remindAllParticipants({List<String>? emails}) {
+    final targets = emails ??
+        invitedParticipantList
+            .map((invitee) => invitee.attendee)
+            .whereType<String>()
+            .toList();
+    return sendInviteEmails(targets);
   }
 
   //Recording Consent Flow
