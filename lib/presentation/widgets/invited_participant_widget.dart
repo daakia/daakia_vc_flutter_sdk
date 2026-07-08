@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../resources/colors/color.dart';
 import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 import 'initials_circle.dart';
@@ -66,10 +67,27 @@ class _InvitedParticipantWidgetState extends State<InvitedParticipantWidget> {
             ),
             Row(
               children: [
-                TextButton(
+                ElevatedButton(
                   onPressed: canRemindAll
                       ? () => _remindAll(remainingAttendees)
                       : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: themeColor,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: themeColor.withValues(alpha: 0.4),
+                    disabledForegroundColor: Colors.white70,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    textStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   child: _isRemindAllLoading
                       ? const SizedBox(
                           width: 14,
