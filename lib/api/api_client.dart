@@ -23,6 +23,7 @@ import '../model/meeting_status_model.dart';
 import '../model/event_password_protected_data.dart';
 import '../model/host_controls_data.dart';
 import '../model/host_token_model.dart';
+import '../model/invited_participant.dart';
 import '../model/meeting_details_model.dart';
 import '../model/recording_dispatch_data.dart';
 import '../model/remote_participant_consent_model.dart';
@@ -360,5 +361,19 @@ abstract class RestClient {
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
+  );
+
+  //-------------------[INVITED PARTICIPANTS]-------------------
+
+  @POST("rtc/meeting/invite/participants")
+  Future<BaseResponse> inviteParticipants(
+    @Header("x-self-identity") String selfIdentity,
+    @Body() Map<String, dynamic> body,
+  );
+
+  @GET("rtc/meeting/invited/participants")
+  Future<BaseResponse<InvitedParticipantsData>> getInvitedParticipants(
+    @Header("x-self-identity") String selfIdentity,
+    @Query("meeting_uid") String meetingUid,
   );
 }

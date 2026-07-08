@@ -170,6 +170,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       _initializeWebViewController();
       viewModel?.getWhiteboardData();
       viewModel?.getAttendanceListForParticipant();
+      viewModel?.fetchInvitedParticipants(silent: true);
       if (viewModel?.meetingDetails.features?.isRecordingConsentAllowed() ==
           true) {
         viewModel?.checkSessionStatus(
@@ -487,6 +488,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       var viewModel = _livekitProviderKey.currentState?.viewModel;
       viewModel?.setRecording(widget.room.isRecording);
       viewModel?.getAttendanceListForParticipant();
+      viewModel?.fetchInvitedParticipants(silent: true);
       viewModel?.addParticipantToConsentList(event.participant);
       viewModel?.sendPrivateChatHistory(event.participant.identity);
       _sortParticipants();
@@ -498,6 +500,8 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           .removeParticipantFromConsentList(event.participant.identity);
       _livekitProviderKey.currentState?.viewModel
           .getAttendanceListForParticipant();
+      _livekitProviderKey.currentState?.viewModel
+          .fetchInvitedParticipants(silent: true);
       _livekitProviderKey.currentState?.viewModel.clearRaiseHandMemory(event.participant.identity);
       _sortParticipants();
     })
@@ -745,6 +749,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         storageHelper.setAttendanceRole(AttendanceRole.cohost);
         storageHelper.setHostToken(remoteData.token ?? "");
         viewModel?.getAttendanceListForParticipant();
+        viewModel?.fetchInvitedParticipants(silent: true);
         showSnackBar(message: "${remoteData.identity?.name} made you a Co-Host");
         break;
 
@@ -977,6 +982,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         if (isHidden && viewModel?.isParticipantPageOpen == true) {
           _innerNavigatorKey.currentState?.maybePop();
         }
+        break;
+
+      case MeetingActions.refreshInvitedParticipants:
+        viewModel?.fetchInvitedParticipants(silent: true);
         break;
 
       case "":

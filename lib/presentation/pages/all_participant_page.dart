@@ -1,3 +1,4 @@
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/invited_participant_widget.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/joined_participant_widget.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/lobby_request_widget.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/pending_attendance_widget.dart';
@@ -31,6 +32,9 @@ class AllParticipantPage extends StatelessWidget {
                 LobbyRequestWidget(viewModel: viewModel),
                 RaisedHandParticipantWidget(viewModel: viewModel),
                 JoinedParticipantWidget(viewModel: viewModel),
+                if (viewModel.invitedParticipantList.isNotEmpty &&
+                    (viewModel.isHost() || viewModel.isCoHost()))
+                  InvitedParticipantWidget(viewModel: viewModel),
                 if (viewModel.pendingParticipantList.isNotEmpty &&
                     (viewModel.isHost() || viewModel.isCoHost()))
                   PendingAttendanceWidget(viewModel: viewModel)
