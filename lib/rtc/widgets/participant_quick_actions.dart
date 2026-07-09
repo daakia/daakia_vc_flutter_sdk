@@ -62,6 +62,7 @@ class _ParticipantQuickActionsSheetState
 
     final bool isTargetHost = Utils.isHost(participant.metadata);
     final bool isTargetCoHost = Utils.isCoHost(participant.metadata);
+    final bool isTargetGuest = Utils.isGuest(participant.metadata);
     final bool isSelf =
         participant.identity == viewModel.room.localParticipant?.identity;
 
@@ -98,8 +99,9 @@ class _ParticipantQuickActionsSheetState
     final String displayName = participant.name.isNotEmpty
         ? participant.name
         : participant.identity;
-    final String roleLabel =
-        isTargetHost ? 'Host' : (isTargetCoHost ? 'Co-Host' : '');
+    final String roleLabel = isTargetHost
+        ? 'Host'
+        : (isTargetCoHost ? 'Co-Host' : (isTargetGuest ? 'Guest' : ''));
 
     return Container(
       decoration: const BoxDecoration(
@@ -188,8 +190,13 @@ class _ParticipantQuickActionsSheetState
                           Text(
                             roleLabel,
                             style: TextStyle(
-                              color: Colors.grey[400],
+                              color: isTargetGuest
+                                  ? Colors.greenAccent
+                                  : Colors.grey[400],
                               fontSize: 12,
+                              fontWeight: isTargetGuest
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                           ),
                       ],
