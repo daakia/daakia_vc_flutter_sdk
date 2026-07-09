@@ -181,6 +181,16 @@ class Utils {
     return role == 'cohost';
   }
 
+  static bool isGuest(String? metadata) {
+    if (metadata == null) return false;
+    try {
+      final jsonObject = jsonDecode(metadata);
+      return jsonObject['is_guest'] == true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   static Future<bool> isIosSimulator() async {
     var isRealDevice = await SafeDevice.isRealDevice;
     return isRealDevice;
