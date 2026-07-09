@@ -796,7 +796,11 @@ class _PreJoinState extends State<PreJoinScreen> {
           livekitToken: livekitToken,
           features: features,
           meetingBasicDetails: widget.basicMeetingDetails,
-          participantEmail: _participantEmail);
+          // Guests must never trigger notifyParticipantJoinedStatus: that call
+          // marks a pre-registered participant email as joined, so forwarding
+          // a guest-entered email would let a guest impersonate/mark a real
+          // invited participant as joined just by typing their address.
+          participantEmail: _joinAsGuest ? null : _participantEmail);
       if (mounted) {
         final navigator = Navigator.of(this.context);
         await navigator.push<void>(
