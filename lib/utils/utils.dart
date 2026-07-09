@@ -158,19 +158,6 @@ class Utils {
     }
   }
 
-  static String getParticipantType(String? metadata) {
-    String role = getMetadataRole(metadata);
-
-    switch (role) {
-      case 'moderator':
-        return ' (Host)';
-      case 'cohost':
-        return ' (Co-Host)';
-      default:
-        return '';
-    }
-  }
-
   static bool isHost(String? metadata) {
     String role = getMetadataRole(metadata);
     return role == 'moderator';

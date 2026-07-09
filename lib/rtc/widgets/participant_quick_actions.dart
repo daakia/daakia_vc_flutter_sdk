@@ -190,13 +190,13 @@ class _ParticipantQuickActionsSheetState
                           Text(
                             roleLabel,
                             style: TextStyle(
-                              color: isTargetGuest
-                                  ? Colors.greenAccent
-                                  : Colors.grey[400],
+                              color: isTargetHost
+                                  ? Colors.amberAccent
+                                  : (isTargetCoHost
+                                      ? Colors.lightBlueAccent
+                                      : Colors.greenAccent),
                               fontSize: 12,
-                              fontWeight: isTargetGuest
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                       ],

@@ -92,13 +92,31 @@ class ParticipantTile extends StatelessWidget {
                       children: [
                         TextSpan(
                           text:
-                              "${Utils.calculateMinutesSince(participant?.joinedAt)} mins ${Utils.getParticipantType(participant?.metadata)}",
+                              "${Utils.calculateMinutesSince(participant?.joinedAt)} mins",
                           style: const TextStyle(
                             color: Color(0xFFC4C1B8),
                             // Equivalent to the text color used
                             fontSize: 12,
                           ),
                         ),
+                        if (Utils.isHost(participant?.metadata))
+                          const TextSpan(
+                            text: " (Host)",
+                            style: TextStyle(
+                              color: Colors.amberAccent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        if (Utils.isCoHost(participant?.metadata))
+                          const TextSpan(
+                            text: " (Co-Host)",
+                            style: TextStyle(
+                              color: Colors.lightBlueAccent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         if (Utils.isGuest(participant?.metadata))
                           const TextSpan(
                             text: " (Guest)",
