@@ -57,6 +57,8 @@ class _PreJoinState extends State<PreJoinScreen> {
   var name = "";
   var password = "";
   String? _participantEmail;
+  bool _joinAsGuest = false;
+  String _guestEmail = "";
 
   var _obscurePassword = true;
 
@@ -120,6 +122,13 @@ class _PreJoinState extends State<PreJoinScreen> {
       widget.configuration?.vcConfig?.isCoHost == true;
   bool get _shouldBypassParticipantChecks =>
       _isCoHostVerified || _isConfiguredCoHost;
+
+  // Guest join is only offered when the meeting is password-protected and the
+  // backend has enabled it for this meeting via meeting_config.is_guest_mode.
+  bool get _isGuestModeAvailable =>
+      widget.basicMeetingDetails?.meetingConfig?.isGuestMode == 1 &&
+      (widget.basicMeetingDetails?.isStandardPassword == true ||
+          widget.basicMeetingDetails?.isCommonPassword == true);
 
   Future<void> _initializeMediaState() async {
     try {
@@ -384,6 +393,13 @@ class _PreJoinState extends State<PreJoinScreen> {
     final Map<String, dynamic> customMetadata =
         Map<String, dynamic>.from(widget.configuration?.metadata ?? {});
     customMetadata["client_platform"] = Utils.getClientPlatform();
+    if (_joinAsGuest && _isGuestModeAvailable) {
+      body["email"] = _participantEmail;
+      body["is_guest"] = true;
+      customMetadata["identifier"] = _participantEmail;
+      customMetadata["participant_email"] = _participantEmail;
+      customMetadata["participant_type"] = "guest";
+    }
     body["custom_metadata"] = customMetadata;
     final cacheData = StorageHelper();
     var tokenFromCache = false;
@@ -480,6 +496,7 @@ class _PreJoinState extends State<PreJoinScreen> {
 
   void _handleRejection(Function stopLoading) {
     isRejected = true;
+    lobbyRequestId = "";
     if (_shouldSkipPreJoin) {
       _skipJoinErrorMessage = alertMessage;
     }
@@ -571,6 +588,12 @@ class _PreJoinState extends State<PreJoinScreen> {
       "meeting_uid": widget.meetingId,
       "display_name": name.trim(),
     };
+    if (_participantEmail != null && _participantEmail!.isNotEmpty) {
+      body["email"] = _participantEmail;
+    }
+    if (_joinAsGuest && _isGuestModeAvailable) {
+      body["is_guest"] = true;
+    }
 
     networkRequestHandler(
         apiCall: () => apiClient.addParticipantToLobby(body),
@@ -974,6 +997,7 @@ class _PreJoinState extends State<PreJoinScreen> {
                   Visibility(
                     visible: !widget.isHost &&
                         !_shouldBypassParticipantChecks &&
+                        !_joinAsGuest &&
                         (widget.basicMeetingDetails?.isCommonPassword == true ||
                             widget.basicMeetingDetails?.isStandardPassword ==
                                 true),
@@ -1010,6 +1034,32 @@ class _PreJoinState extends State<PreJoinScreen> {
                       ),
                     ),
                   ),
+                  Visibility(
+                    visible: !widget.isHost &&
+                        !_shouldBypassParticipantChecks &&
+                        _joinAsGuest &&
+                        _isGuestModeAvailable,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
+                      child: TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: 'Email*',
+                          border: OutlineInputBorder(),
+                        ),
+                        style: const TextStyle(
+                          color: Colors.black,
+                        ),
+                        enabled: true,
+                        keyboardType: TextInputType.emailAddress,
+                        onChanged: (String? value) {
+                          setState(() {
+                            _guestEmail = (value ?? "").trim();
+                          });
+                        },
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   LoadingBtn(
                     height: 50,
@@ -1040,17 +1090,26 @@ class _PreJoinState extends State<PreJoinScreen> {
                             !_shouldBypassParticipantChecks &&
                             !await shouldAddAttendanceId()) {
                           var event = widget.basicMeetingDetails;
-                          if (event?.isStandardPassword == true) {
-                            if (!checkValidity()) {
-                              return;
-                            }
-                          }
-                          if (event?.isCommonPassword == true) {
-                            if (password.isEmpty) {
+                          if (_joinAsGuest && _isGuestModeAvailable) {
+                            if (!Utils.isValidEmail(_guestEmail)) {
                               if (!context.mounted) return;
                               Utils.showSnackBar(context,
-                                  message: "Please enter your password");
+                                  message: "Please enter a valid email");
                               return;
+                            }
+                          } else {
+                            if (event?.isStandardPassword == true) {
+                              if (!checkValidity()) {
+                                return;
+                              }
+                            }
+                            if (event?.isCommonPassword == true) {
+                              if (password.isEmpty) {
+                                if (!context.mounted) return;
+                                Utils.showSnackBar(context,
+                                    message: "Please enter your password");
+                                return;
+                              }
                             }
                           }
                         }
@@ -1088,6 +1147,31 @@ class _PreJoinState extends State<PreJoinScreen> {
                       }
                     },
                   ),
+                  Visibility(
+                    visible: !widget.isHost &&
+                        !_shouldBypassParticipantChecks &&
+                        _isGuestModeAvailable,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: TextButton.icon(
+                        onPressed: _toggleGuestMode,
+                        icon: Icon(
+                          _joinAsGuest ? Icons.lock_outline : Icons.person_outline,
+                          size: 18,
+                          color: themeColor,
+                        ),
+                        label: Text(
+                          _joinAsGuest
+                              ? "Have a password? Join with password"
+                              : "Join as Guest instead",
+                          style: const TextStyle(
+                            color: themeColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1095,6 +1179,22 @@ class _PreJoinState extends State<PreJoinScreen> {
         ],
       ),
     );
+  }
+
+  void _toggleGuestMode() {
+    // Abort any in-flight lobby polling from a previous attempt so switching
+    // modes mid-flight doesn't leave a stale lobby_request_id around.
+    _participantTimer?.cancel();
+    setState(() {
+      _joinAsGuest = !_joinAsGuest;
+      lobbyRequestId = "";
+      if (_joinAsGuest) {
+        password = "";
+      } else {
+        _guestEmail = "";
+        _participantEmail = null;
+      }
+    });
   }
 
   Widget _buildSkipPreJoinLoader() {
@@ -1396,6 +1496,23 @@ class _PreJoinState extends State<PreJoinScreen> {
     }
     if (widget.isHost) {
       getFeaturesAndJoinMeeting(stopLoading);
+    } else if (_joinAsGuest && _isGuestModeAvailable) {
+      if (!Utils.isValidEmail(_guestEmail)) {
+        if (mounted) {
+          Utils.showSnackBar(context, message: "Please enter a valid email");
+        }
+        stopLoading();
+        return;
+      }
+      if (isNeedToCancelApiCall) {
+        stopLoading();
+        return;
+      }
+      _participantEmail = _guestEmail;
+      // Same as the standard lobby flow: register the guest via addToLobby
+      // to get a server-issued lobby_request_id, then poll join with it
+      // until the host accepts/rejects.
+      addParticipantToLobby(stopLoading);
     } else if (event?.isStandardPassword == true) {
       if (checkValidity()) {
         verifyPasswordProtectedMeeting(stopLoading);
