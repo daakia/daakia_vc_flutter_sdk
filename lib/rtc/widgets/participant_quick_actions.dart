@@ -103,11 +103,10 @@ class _ParticipantQuickActionsSheetState
         ? 'Host'
         : (isTargetCoHost ? 'Co-Host' : (isTargetGuest ? 'Guest' : ''));
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+    return Material(
+      color: const Color(0xFF1E1E1E),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      clipBehavior: Clip.antiAlias,
       child: SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
