@@ -20,6 +20,7 @@ import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant_info.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/pip_screen.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/rtc_controls.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/white_board_widget.dart';
+import 'package:daakia_vc_flutter_sdk/theme/daakia_sdk_theme.dart';
 import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
 import 'package:daakia_vc_flutter_sdk/utils/datadog_disconnect_logger.dart';
 import 'package:daakia_vc_flutter_sdk/utils/datadog_reconnect_logger.dart';
@@ -1319,9 +1320,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         child: MaterialApp(
           navigatorKey: _innerNavigatorKey,
           debugShowCheckedModeBanner: false,
-          theme: Theme.of(context).copyWith(
-            scaffoldBackgroundColor: Colors.black,
-          ),
+          theme: DaakiaSdkTheme.meeting,
           home: AnnotatedRegion<SystemUiOverlayStyle>(
             value: const SystemUiOverlayStyle(
               statusBarColor: Colors.transparent,
