@@ -9,7 +9,7 @@ This SDK provides a simple and efficient way to add video conferencing features 
 ✅ **Android**  | ✅ **iOS**
 
 ## Latest Release
-**v4.5.1** - See [CHANGELOG.md](CHANGELOG.md) for detailed release notes and what's new.
+**v4.5.2** - See [CHANGELOG.md](CHANGELOG.md) for detailed release notes and what's new.
 
 # How to use
 
