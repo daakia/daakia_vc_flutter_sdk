@@ -23,11 +23,7 @@ DaakiaVideoConferenceWidget(
 
 ```dart
 // main.dart, once at app startup, before runApp()
-DaakiaSdk.initialize(
-  secret: '<YOUR_SECRET_KEY>',
-  baseUrl: '<BASE_URL>',         // optional, defaults to production
-  whiteboardDomain: '<WB_URL>',  // optional
-);
+DaakiaSdk.initialize(secret: '<YOUR_SECRET_KEY>');
 
 // meeting screen — no need to pass secretKey anymore
 DaakiaVideoConferenceWidget(
@@ -46,7 +42,5 @@ DaakiaVideoConferenceWidget(
 
 1. Call `DaakiaSdk.initialize(secret: '<YOUR_SECRET_KEY>')` once in `main()`, before `runApp()`.
 2. Remove the `secretKey` argument from every `DaakiaVideoConferenceWidget(...)` call site.
-3. If you use `baseUrl` or `whiteboardDomain`, pass them to the same `DaakiaSdk.initialize` call instead of
-   configuring them separately.
 
 No other parameters or behavior change as part of this migration.
