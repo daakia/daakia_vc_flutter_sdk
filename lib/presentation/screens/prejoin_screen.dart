@@ -505,7 +505,10 @@ class _PreJoinState extends State<PreJoinScreen> {
           isHostVerified = true;
           hostToken = data?.token ?? "";
           isNeedToCancelApiCall = data?.token == "";
-          getFeaturesAndJoinMeeting(stopLoading);
+          // Only now do we have a real token to identify this SaaS host with,
+          // so run the duplicate-device check here rather than before fetch.
+          _checkDuplicateJoinAndProceed(
+              stopLoading, () => getFeaturesAndJoinMeeting(stopLoading));
         },
         onError: (message) {
           if (_shouldSkipPreJoin) {
@@ -540,7 +543,10 @@ class _PreJoinState extends State<PreJoinScreen> {
           isHostVerified = true;
           hostToken = response?.data?.token ?? "";
           isNeedToCancelApiCall = response?.data?.token == "";
-          getFeaturesAndJoinMeeting(stopLoading);
+          // Only now do we have a real token to identify this SaaS host with,
+          // so run the duplicate-device check here rather than before fetch.
+          _checkDuplicateJoinAndProceed(
+              stopLoading, () => getFeaturesAndJoinMeeting(stopLoading));
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               Navigator.of(context).pop();
@@ -1169,6 +1175,14 @@ class _PreJoinState extends State<PreJoinScreen> {
   void _checkDuplicateJoinAndProceed(
       Function stopLoading, VoidCallback onProceed) {
     final token = widget.configuration?.vcConfig?.hostToken ?? hostToken;
+    if (token.isEmpty) {
+      // No authenticated identity yet (SaaS guest, or host token not fetched
+      // yet) — meetingStatus requires an Authorization token, so calling it
+      // now would always 401. Skip it and proceed; the host case is retried
+      // with a real token once one is fetched (see _getHostToken/verifyHost).
+      onProceed();
+      return;
+    }
     networkRequestHandler(
       apiCall: () => apiClient.getMeetingStatus(token, widget.meetingId),
       onSuccess: (data) {
