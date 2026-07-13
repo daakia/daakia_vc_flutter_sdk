@@ -30,6 +30,7 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 build/
+test/
 #pubspec.lock
 
 # Android related
@@ -92,3 +93,5 @@ sentry.properties
 # AI
 CLAUDE.md
 graphify-out
+
+sentry.properties

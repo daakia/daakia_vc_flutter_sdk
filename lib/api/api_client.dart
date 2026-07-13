@@ -5,22 +5,25 @@ import 'package:daakia_vc_flutter_sdk/model/consent_status_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/egress_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/feature_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/licence_verify_model.dart';
+import 'package:daakia_vc_flutter_sdk/model/observability_payload_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/participant_attendance_data.dart';
+import 'package:daakia_vc_flutter_sdk/model/participant_drawer_consent_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/screen_share_consent_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/session_details_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/translation_data.dart';
 import 'package:daakia_vc_flutter_sdk/model/webinar_permission_model.dart';
-import 'package:daakia_vc_flutter_sdk/model/participant_drawer_consent_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/workshop_permission_model.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
 import '../model/agent_dispatch_data.dart';
-import '../model/host_controls_data.dart';
 import '../model/base_list_response.dart';
 import '../model/base_response.dart';
+import '../model/meeting_status_model.dart';
 import '../model/event_password_protected_data.dart';
+import '../model/host_controls_data.dart';
 import '../model/host_token_model.dart';
+import '../model/invited_participant.dart';
 import '../model/meeting_details_model.dart';
 import '../model/recording_dispatch_data.dart';
 import '../model/remote_participant_consent_model.dart';
@@ -71,6 +74,23 @@ abstract class RestClient {
     @Body() Map<String, dynamic> body,
   );
 
+  @POST("rtc/meeting/update/participantEmail")
+  Future<BaseResponse> updateParticipantEmail(
+    @Header("x-self-identity") String selfIdentity,
+    @Body() Map<String, dynamic> body,
+  );
+
+  @POST("rtc/meeting/update/participantJoinedStatus")
+  Future<BaseResponse> updateParticipantJoinedStatus(
+    @Body() Map<String, dynamic> body,
+  );
+
+  @GET("rtc/meeting/participant/meetingStatus")
+  Future<BaseResponse<MeetingStatusData>> getMeetingStatus(
+    @Header("Authorization") String token,
+    @Query("meeting_uid") String meetingUid,
+  );
+
   @POST("saas/sdk/verify/key")
   Future<BaseResponse<LicenceVerifyModel>> licenceVerify(
     @Body() Map<String, dynamic> body,
@@ -78,7 +98,17 @@ abstract class RestClient {
 
   @GET("saas/sdk/meeting/basic/detail")
   Future<BaseResponse<MeetingDetailsModel>> getMeetingDetails(
-      @Query("meeting_uid") String meetingUid, @Header("secret") String secret);
+    @Query("meeting_uid") String meetingUid,
+    @Header("secret") String secret,
+  );
+
+  //-------------------[OBSERVABILITY]-------------------
+
+  @POST("saas/sdk/observability/credentials")
+  Future<BaseResponse<ObservabilityPayloadModel>> getObservabilityCredentials(
+    @Header("secret") String secret,
+    @Body() Map<String, dynamic> body,
+  );
 
   //-------------------[RTC]-------------------
 
@@ -331,5 +361,19 @@ abstract class RestClient {
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
+  );
+
+  //-------------------[INVITED PARTICIPANTS]-------------------
+
+  @POST("rtc/meeting/invite/participants")
+  Future<BaseResponse> inviteParticipants(
+    @Header("x-self-identity") String selfIdentity,
+    @Body() Map<String, dynamic> body,
+  );
+
+  @GET("rtc/meeting/invited/participants")
+  Future<BaseResponse<InvitedParticipantsData>> getInvitedParticipants(
+    @Header("x-self-identity") String selfIdentity,
+    @Query("meeting_uid") String meetingUid,
   );
 }

@@ -1,5 +1,32 @@
 # CHANGELOG
 
+## v4.5.2 – (2026-07)
+
+### ⚠️ Migration
+- **`secretKey` is now optional and deprecated** on `DaakiaVideoConferenceWidget` — set it once via
+  `DaakiaSdk.initialize(secret: ...)` at app startup instead. The old flow still works but will be removed
+  in a future major version. See the [Migration Guide](doc/MigrationGuide.md).
+
+### 🚀 New Features
+- **Duplicate Identity Handling** — Detects multi-device/duplicate joins and shows a modal dialog with platform-specific guidance instead of a snackbar; skipped for guest users.
+- **SDK Theme Isolation** — Introduced an isolated SDK theme applied consistently across pre-meeting and in-meeting screens, replacing ad-hoc theme usage in `Room`.
+- **Invited Participants & Reminder Flow** — Track invited participants and send join reminders, with a "remind all" action.
+- **Participant Quick Actions** — Tap a participant tile to open a quick-actions bottom sheet, including a "You" badge for the local participant.
+- **Advance Password / Join Status Improvements** — Track participant join status, update participant email before the joining-status notification, and refine password verification.
+- **Screen-Share Paused State UI** — Visual indicator when screen sharing is paused.
+- **Call Terminology Support** — `DaakiaMeetingConfiguration.useCallTerminology` support in `RoomPage`, with documentation.
+- **End Meeting Confirmation** — Added a confirmation dialog to `EndMeetingBottomSheet`.
+
+### 🧩 Improvements
+- Centralized participant action logic into a unified specification.
+- Refactored private chat navigation and initialization/event subscription handling.
+
+### 🐞 Bug Fixes
+- Fixed reconnection UI flicker during network drops.
+- Fixed public chat history request handling.
+- Fixed remind-all button visibility.
+- Normalized iOS platform identifier to lowercase.
+
 ## v4.5.1 – (2026-06)
 
 ### 🚀 New Features

@@ -18,6 +18,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../api/injection.dart';
 import '../../model/daakia_meeting_configuration.dart';
+import '../../presentation/bottom_sheets/duplicate_identity_bottomsheet.dart';
 import '../../resources/colors/color.dart';
 import '../../rtc/room.dart';
 import '../../utils/name_input_formatter.dart';
@@ -54,8 +55,8 @@ class _PreJoinState extends State<PreJoinScreen> {
   late MeetingDetails meetingDetails;
 
   var name = "";
-  var email = "";
   var password = "";
+  String? _participantEmail;
 
   var _obscurePassword = true;
 
@@ -203,19 +204,20 @@ class _PreJoinState extends State<PreJoinScreen> {
       setState(() {});
     }
 
-    if (widget.isHost && !isHostVerified) {
-      final token = widget.configuration?.vcConfig?.hostToken;
-      if (token != null && token.isNotEmpty) {
-        hostToken = token;
-        isHostVerified = true;
-        getFeaturesAndJoinMeeting(_autoStopLoading);
+    _checkDuplicateJoinAndProceed(_autoStopLoading, () {
+      if (widget.isHost && !isHostVerified) {
+        final token = widget.configuration?.vcConfig?.hostToken;
+        if (token != null && token.isNotEmpty) {
+          hostToken = token;
+          isHostVerified = true;
+          getFeaturesAndJoinMeeting(_autoStopLoading);
+          return;
+        }
+        _getHostToken(_autoStopLoading);
         return;
       }
-      _getHostToken(_autoStopLoading);
-      return;
-    }
-
-    checkMeetingType(_autoStopLoading);
+      checkMeetingType(_autoStopLoading);
+    });
   }
 
   String? _getSkipPreJoinValidationError() {
@@ -229,7 +231,7 @@ class _PreJoinState extends State<PreJoinScreen> {
     }
     if (!widget.isHost &&
         widget.basicMeetingDetails?.isStandardPassword == true) {
-      return "This meeting requires email/password verification. Disable skipPreJoinPage for this meeting type.";
+      return "This meeting requires password verification. Disable skipPreJoinPage for this meeting type.";
     }
     if (!widget.isHost &&
         widget.basicMeetingDetails?.isCommonPassword == true) {
@@ -503,7 +505,10 @@ class _PreJoinState extends State<PreJoinScreen> {
           isHostVerified = true;
           hostToken = data?.token ?? "";
           isNeedToCancelApiCall = data?.token == "";
-          getFeaturesAndJoinMeeting(stopLoading);
+          // Only now do we have a real token to identify this SaaS host with,
+          // so run the duplicate-device check here rather than before fetch.
+          _checkDuplicateJoinAndProceed(
+              stopLoading, () => getFeaturesAndJoinMeeting(stopLoading));
         },
         onError: (message) {
           if (_shouldSkipPreJoin) {
@@ -538,7 +543,10 @@ class _PreJoinState extends State<PreJoinScreen> {
           isHostVerified = true;
           hostToken = response?.data?.token ?? "";
           isNeedToCancelApiCall = response?.data?.token == "";
-          getFeaturesAndJoinMeeting(stopLoading);
+          // Only now do we have a real token to identify this SaaS host with,
+          // so run the duplicate-device check here rather than before fetch.
+          _checkDuplicateJoinAndProceed(
+              stopLoading, () => getFeaturesAndJoinMeeting(stopLoading));
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               Navigator.of(context).pop();
@@ -770,12 +778,13 @@ class _PreJoinState extends State<PreJoinScreen> {
           authorizationToken: hostToken,
           livekitToken: livekitToken,
           features: features,
-          meetingBasicDetails: widget.basicMeetingDetails);
+          meetingBasicDetails: widget.basicMeetingDetails,
+          participantEmail: _participantEmail);
       if (mounted) {
         final navigator = Navigator.of(this.context);
         await navigator.push<void>(
           MaterialPageRoute(
-              builder: (_) => RoomPage(room, listener, meetingDetails, fastConnection: true, saveAttachmentToDownloads: widget.configuration?.saveAttachmentToDownloads == true)),
+              builder: (_) => RoomPage(room, listener, meetingDetails, fastConnection: true, sdkConfiguration: widget.configuration)),
         );
         if (mounted && navigator.canPop()) {
           navigator.pop();
@@ -971,33 +980,6 @@ class _PreJoinState extends State<PreJoinScreen> {
                   Visibility(
                     visible: !widget.isHost &&
                         !_shouldBypassParticipantChecks &&
-                        (widget.basicMeetingDetails?.isStandardPassword ==
-                            true),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
-                      // Equivalent to marginHorizontal="20dp" and marginTop="10dp"
-                      child: TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Email*', // Equivalent to hint="Name*"
-                          border: OutlineInputBorder(),
-                        ),
-                        style: const TextStyle(
-                          color: Colors
-                              .black, // Equivalent to textColor="@color/black"
-                        ),
-                        enabled: true, // Equivalent to android:enabled="false"
-                        onChanged: (String? value) {
-                          setState(() {
-                            email = value ?? "";
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                  Visibility(
-                    visible: !widget.isHost &&
-                        !_shouldBypassParticipantChecks &&
                         (widget.basicMeetingDetails?.isCommonPassword == true ||
                             widget.basicMeetingDetails?.isStandardPassword ==
                                 true),
@@ -1084,28 +1066,30 @@ class _PreJoinState extends State<PreJoinScreen> {
                           return;
                         } else {
                           isNeedToCancelApiCall = false;
-                          if (widget.isHost && !isHostVerified) {
-                            if (!context.mounted) return;
-                            final token =
-                                widget.configuration?.vcConfig?.hostToken;
+                          _checkDuplicateJoinAndProceed(stopLoading, () {
+                            if (widget.isHost && !isHostVerified) {
+                              if (!context.mounted) return;
+                              final token =
+                                  widget.configuration?.vcConfig?.hostToken;
 
-                            if (token != null && token.isNotEmpty) {
-                              hostToken = token;
-                              isHostVerified = true;
-                              isNeedToCancelApiCall = false;
-                              getFeaturesAndJoinMeeting(stopLoading);
-                              return;
-                            }
-                            if (widget.basicMeetingDetails
-                                    ?.hostPinVerificationRequired ==
-                                1) {
-                              _showVerificationDialog(context, stopLoading);
+                              if (token != null && token.isNotEmpty) {
+                                hostToken = token;
+                                isHostVerified = true;
+                                isNeedToCancelApiCall = false;
+                                getFeaturesAndJoinMeeting(stopLoading);
+                                return;
+                              }
+                              if (widget.basicMeetingDetails
+                                      ?.hostPinVerificationRequired ==
+                                  1) {
+                                _showVerificationDialog(context, stopLoading);
+                              } else {
+                                _getHostToken(stopLoading);
+                              }
                             } else {
-                              _getHostToken(stopLoading);
+                              checkMeetingType(stopLoading);
                             }
-                          } else {
-                            checkMeetingType(stopLoading);
-                          }
+                          });
                         }
                       }
                     },
@@ -1186,6 +1170,59 @@ class _PreJoinState extends State<PreJoinScreen> {
     _participantTimer?.cancel();
     _nameController?.dispose();
     super.dispose();
+  }
+
+  void _checkDuplicateJoinAndProceed(
+      Function stopLoading, VoidCallback onProceed) {
+    final token = widget.configuration?.vcConfig?.hostToken ?? hostToken;
+    if (token.isEmpty) {
+      // No authenticated identity yet (SaaS guest, or host token not fetched
+      // yet) — meetingStatus requires an Authorization token, so calling it
+      // now would always 401. Skip it and proceed; the host case is retried
+      // with a real token once one is fetched (see _getHostToken/verifyHost).
+      onProceed();
+      return;
+    }
+    networkRequestHandler(
+      apiCall: () => apiClient.getMeetingStatus(token, widget.meetingId),
+      onSuccess: (data) {
+        if (data?.inMeeting == true) {
+          final otherPlatform = data?.meetings?.isNotEmpty == true
+              ? data!.meetings!.first.platform
+              : null;
+          _showDuplicateDeviceSheet(stopLoading, onProceed,
+              otherPlatform: otherPlatform);
+        } else {
+          onProceed();
+        }
+      },
+      onError: (_) => onProceed(),
+    );
+  }
+
+  void _showDuplicateDeviceSheet(Function stopLoading, VoidCallback onProceed,
+      {String? otherPlatform}) {
+    if (!mounted) return;
+    showModalBottomSheet<void>(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DuplicateIdentityBottomSheet(
+        otherPlatform: otherPlatform,
+        onLeave: () {
+          Navigator.of(context).pop();
+          isLoading = false;
+          isNeedToCancelApiCall = true;
+          stopLoading();
+          if (mounted) setState(() {});
+        },
+        onSwitch: () {
+          Navigator.of(context).pop();
+          onProceed();
+        },
+      ),
+    );
   }
 
   void getFeaturesAndJoinMeeting(Function stopLoading,
@@ -1416,25 +1453,11 @@ class _PreJoinState extends State<PreJoinScreen> {
   }
 
   bool checkValidity() {
-    var isValid = false;
-    if (email.isNotEmpty) {
-      if (Utils.isValidEmail(email)) {
-        isValid = true;
-      } else {
-        Utils.showSnackBar(context, message: "Invalid email");
-        return false;
-      }
-    } else {
-      Utils.showSnackBar(context, message: "Please enter your email");
-      return false;
-    }
     if (password.isEmpty) {
       Utils.showSnackBar(context, message: "Please enter your password");
       return false;
-    } else {
-      isValid = true;
     }
-    return isValid;
+    return true;
   }
 
   void verifyCommonPasswordProtectedMeeting(Function stopLoading) {
@@ -1462,12 +1485,12 @@ class _PreJoinState extends State<PreJoinScreen> {
   void verifyPasswordProtectedMeeting(Function stopLoading) {
     networkRequestHandlerWithMessage(
       apiCall: () => apiClient.verifyMeetingPassword({
-        "email": email,
         "password": password,
         "meeting_uid": widget.meetingId
       }),
       onSuccess: (response) {
         if (response?.data?.passwordVerified == true) {
+          _participantEmail = response?.data?.participantEmail;
           passwordVerified(stopLoading);
         } else {
           passwordNotVerified(stopLoading,

@@ -5,15 +5,43 @@ import '../../resources/colors/color.dart';
 class EndMeetingBottomSheet extends StatefulWidget {
   final VoidCallback onEndCall;
   final VoidCallback onLeaveCall;
+  final bool useCallTerminology;
 
   const EndMeetingBottomSheet(
-      {required this.onEndCall, required this.onLeaveCall, super.key});
+      {required this.onEndCall, required this.onLeaveCall, this.useCallTerminology = false, super.key});
 
   @override
   State<EndMeetingBottomSheet> createState() => _EndMeetingBottomSheetState();
 }
 
 class _EndMeetingBottomSheetState extends State<EndMeetingBottomSheet> {
+  Future<void> _confirmEnd() async {
+    final sessionWord = widget.useCallTerminology ? 'call' : 'meeting';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('End ${sessionWord[0].toUpperCase()}${sessionWord.substring(1)}'),
+        content: Text(
+          'Are you sure you want to end this $sessionWord? This will end it for all participants.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              'End ${sessionWord[0].toUpperCase()}${sessionWord.substring(1)}',
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) widget.onEndCall();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -33,16 +61,16 @@ class _EndMeetingBottomSheetState extends State<EndMeetingBottomSheet> {
             width: double.infinity,
             height: 60, // Square shape (height equal to width of the button)
             child: ElevatedButton(
-              onPressed: widget.onEndCall,
+              onPressed: _confirmEnd,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16.0), // Rounded corners
                 ),
               ),
-              child: const Text(
-                "End Call",
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              child: Text(
+                widget.useCallTerminology ? "End Call" : "End Meeting",
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -59,9 +87,9 @@ class _EndMeetingBottomSheetState extends State<EndMeetingBottomSheet> {
                   borderRadius: BorderRadius.circular(16.0), // Rounded corners
                 ),
               ),
-              child: const Text(
-                "Leave Call",
-                style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              child: Text(
+                widget.useCallTerminology ? "Leave Call" : "Leave Meeting",
+                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
             ),
           ),

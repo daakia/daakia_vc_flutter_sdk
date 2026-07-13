@@ -110,6 +110,8 @@ class MeetingActions {
 
   static const String revokeAnnotationPermission = "revoke-annotation-permission";
 
+  static const String refreshInvitedParticipants = "refresh_invited_participants";
+
   // ✅ Add new fields here
 
   // ✅ Method to check if an action is valid
@@ -181,6 +183,7 @@ class MeetingActions {
     allowScreenShareAnnotation,
     allowAnnotationPermission,
     revokeAnnotationPermission,
+    refreshInvitedParticipants,
     // ✅ Add new fields here
   };
 }

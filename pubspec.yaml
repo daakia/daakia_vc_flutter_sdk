@@ -1,6 +1,6 @@
 name: daakia_vc_flutter_sdk
 description: "A ready-to-use Flutter SDK for seamless audio/video calls, group meetings, and scalable conferencing solutions."
-version: 4.5.1
+version: 4.5.2
 homepage: https://github.com/daakia/daakia_vc_flutter_sdk
 
 environment:
@@ -12,6 +12,7 @@ platforms:
   ios:
 
 dependencies:
+  sentry_flutter: ^9.21.0
   flutter:
     sdk: flutter
 
@@ -49,11 +50,13 @@ dependencies:
   webview_flutter_android: ^4.10.1
   webview_flutter_wkwebview: ^3.23.0
   audioplayers: ^6.5.1
-  datadog_flutter_plugin: ^2.16.1
+  datadog_flutter_plugin: ^3.3.0
   connectivity_plus: ^7.0.0
   device_info_plus: ^12.2.0
+  pointycastle: ^4.0.0
 
 dev_dependencies:
+  sentry_dart_plugin: ^3.4.0
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
@@ -103,3 +106,9 @@ flutter:
   #
   # For details regarding fonts in packages, see
   # https://flutter.dev/to/font-from-package
+
+sentry:
+  upload_debug_symbols: true
+  upload_source_maps: true
+  project: flutter
+  org: daakia-op
