@@ -185,12 +185,14 @@ cd ios && pod install
 ```dart
 import 'package:daakia_vc_flutter_sdk/daakia_vc_flutter_sdk.dart';
 
+// main.dart, once at app startup, before runApp()
+DaakiaSdk.initialize(secret: '<YOUR_SECRET_KEY>');
+
 await Navigator.push<void>(
                 context,
                 MaterialPageRoute(
                   builder: (_) => DaakiaVideoConferenceWidget(
                     meetingId: meetingUID,
-                    secretKey: licenseKey,
                     isHost: isHost,
                     configuration: DaakiaMeetingConfiguration (optional),
                   ),
@@ -200,6 +202,10 @@ await Navigator.push<void>(
 
 Use ``DaakiaVideoConferenceWidget`` to start the meeting.
 
+> **Migrating from an older version?** Passing `secretKey` directly to `DaakiaVideoConferenceWidget` is
+> deprecated as of v4.5.2 in favor of `DaakiaSdk.initialize(secret: ...)`. See the
+> [Migration Guide](doc/MigrationGuide.md) for details.
+
 
 ## Parameters
 
@@ -208,8 +214,10 @@ To run the `DaakiaVideoConferenceWidget`, you will need to pass the following pa
 - **`meetingId`** (`String`):  
   This parameter is required to join a specific meeting. It helps identify the unique meeting to which the user will connect.
 
-- **`secretKey`** (`String`):  
-  This is a license key that grants access to the meeting service. It is necessary for secure access.
+- **`secretKey`** (`String`, optional, **deprecated**):  
+  This is a license key that grants access to the meeting service. **Deprecated since v4.5.2** — set it
+  once via `DaakiaSdk.initialize(secret: ...)` at app startup instead of passing it to every widget
+  instance. See the [Migration Guide](doc/MigrationGuide.md).
 
 - **`isHost`** (`bool`, optional):  
   This optional parameter defines the user's role. When set to `true`, the user will join as the host of the meeting; otherwise, they will be a participant.

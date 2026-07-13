@@ -2,6 +2,11 @@
 
 ## v4.5.2 – (2026-07)
 
+### ⚠️ Migration
+- **`secretKey` is now optional and deprecated** on `DaakiaVideoConferenceWidget` — set it once via
+  `DaakiaSdk.initialize(secret: ...)` at app startup instead. The old flow still works but will be removed
+  in a future major version. See the [Migration Guide](doc/MigrationGuide.md).
+
 ### 🚀 New Features
 - **Duplicate Identity Handling** — Detects multi-device/duplicate joins and shows a modal dialog with platform-specific guidance instead of a snackbar; skipped for guest users.
 - **SDK Theme Isolation** — Introduced an isolated SDK theme applied consistently across pre-meeting and in-meeting screens, replacing ad-hoc theme usage in `Room`.
