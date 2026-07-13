@@ -6,7 +6,7 @@ import 'package:daakia_vc_flutter_sdk/api/injection.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/screens/license_expired.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/screens/loading_screen.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/screens/prejoin_screen.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'model/daakia_meeting_configuration.dart';
@@ -15,6 +15,7 @@ import 'model/observability_config.dart';
 import 'model/observability_payload_model.dart';
 import 'service/daakia_vc_datadog_service.dart';
 import 'service/daakia_vc_sentry_service.dart';
+import 'theme/daakia_sdk_theme.dart';
 import 'utils/constants.dart';
 import 'utils/sdk_crypto.dart';
 
@@ -232,6 +233,6 @@ class _DaakiaVideoConferenceState extends State<DaakiaVideoConferenceWidget> {
     } else {
       screen = LicenseExpiredScreen(_licenseMessage);
     }
-    return screen;
+    return Theme(data: DaakiaSdkTheme.preMeeting, child: screen);
   }
 }
