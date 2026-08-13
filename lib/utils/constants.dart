@@ -6,7 +6,7 @@ class Constant {
 
   static final String platform = getPlatform();
 
-  static String baseUrl = "https://api.daakia.co.in/v2.0/";
+  static String baseUrl = "https://api.daakia.co.in/";
   static String whiteboardDomain = "https://www.daakia.co.in/";
 
   static const String startRecordingUrl = "https://cdn.vc.daakia.co.in/sounds/recording_start.mp3";

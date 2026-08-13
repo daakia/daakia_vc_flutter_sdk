@@ -34,7 +34,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/join',
+            'v2.0/rtc/meeting/join',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -67,7 +67,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'meeting/verifyHost',
+            'v2.0/meeting/verifyHost',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -97,7 +97,7 @@ class _RestClient implements RestClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'saas/host/token',
+            'v2.0/saas/host/token',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -127,7 +127,7 @@ class _RestClient implements RestClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'saas/meeting/features',
+            'v2.0/saas/meeting/features',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -160,7 +160,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/verify/commonPassword',
+            'v2.0/rtc/meeting/verify/commonPassword',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -194,7 +194,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'meeting/verify/password',
+            'v2.0/meeting/verify/password',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -228,7 +228,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/addParticipant/toLobby',
+            'v2.0/rtc/meeting/addParticipant/toLobby',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -263,7 +263,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/update/participantEmail',
+            'v2.0/rtc/meeting/update/participantEmail',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -296,7 +296,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/update/participantJoinedStatus',
+            'v2.0/rtc/meeting/update/participantJoinedStatus',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -330,7 +330,7 @@ class _RestClient implements RestClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/participant/meetingStatus',
+            'v2.0/rtc/meeting/participant/meetingStatus',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -363,7 +363,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'saas/sdk/verify/key',
+            'v2.0/saas/sdk/verify/key',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -397,7 +397,7 @@ class _RestClient implements RestClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'saas/sdk/meeting/basic/detail',
+            'v2.0/saas/sdk/meeting/basic/detail',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -432,7 +432,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'saas/sdk/observability/credentials',
+            'v2.0/saas/sdk/observability/credentials',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -468,7 +468,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/delete',
+            'v2.0/rtc/meeting/delete',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -507,7 +507,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/remove/participant',
+            'v2.0/rtc/meeting/remove/participant',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -546,7 +546,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/create/cohost',
+            'v2.0/rtc/meeting/create/cohost',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -585,7 +585,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/recording/start',
+            'v2.0/rtc/meeting/recording/start',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -624,7 +624,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/recording/stop',
+            'v2.0/rtc/meeting/recording/stop',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -662,7 +662,7 @@ class _RestClient implements RestClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/recording/dispatchId',
+            'v2.0/rtc/recording/dispatchId',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -697,7 +697,7 @@ class _RestClient implements RestClient {
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/update/participantLobbyStatus',
+            'v2.0/rtc/meeting/update/participantLobbyStatus',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -745,7 +745,7 @@ class _RestClient implements RestClient {
           )
           .compose(
             _dio.options,
-            'rtc/meeting/chat/uploadAttachment',
+            'v2.0/rtc/meeting/chat/uploadAttachment',
             queryParameters: queryParameters,
             data: _data,
             onSendProgress: onSendProgress,
@@ -785,7 +785,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/update/transcriptionLanguage',
+            'v2.0/rtc/meeting/update/transcriptionLanguage',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -824,7 +824,7 @@ class _RestClient implements RestClient {
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/update/participantLanguage',
+            'v2.0/rtc/meeting/update/participantLanguage',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -859,7 +859,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/transcription/start',
+            'v2.0/rtc/meeting/transcription/start',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -898,7 +898,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/dispatch/agent',
+            'v2.0/rtc/meeting/dispatch/agent',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -933,7 +933,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/text/translation',
+            'v2.0/rtc/meeting/text/translation',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -972,7 +972,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/transcription/stop',
+            'v2.0/rtc/meeting/transcription/stop',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1007,7 +1007,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/updateParticipant/name',
+            'v2.0/rtc/meeting/updateParticipant/name',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1046,7 +1046,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/time/extend',
+            'v2.0/rtc/meeting/time/extend',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1080,7 +1080,7 @@ class _RestClient implements RestClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/whiteboard/get',
+            'v2.0/rtc/meeting/whiteboard/get',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1113,7 +1113,7 @@ class _RestClient implements RestClient {
           Options(method: 'GET', headers: _headers, extra: _extra)
               .compose(
                 _dio.options,
-                'rtc/meeting/invitee/participantsList',
+                'v2.0/rtc/meeting/invitee/participantsList',
                 queryParameters: queryParameters,
                 data: _data,
               )
@@ -1151,7 +1151,7 @@ class _RestClient implements RestClient {
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/updateRecording/consentStatus',
+            'v2.0/rtc/meeting/updateRecording/consentStatus',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1185,7 +1185,7 @@ class _RestClient implements RestClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/session/detail',
+            'v2.0/rtc/meeting/session/detail',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1220,7 +1220,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/startRecording/consent',
+            'v2.0/rtc/meeting/startRecording/consent',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1258,7 +1258,7 @@ class _RestClient implements RestClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/participant/consentList',
+            'v2.0/rtc/meeting/participant/consentList',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1293,7 +1293,7 @@ class _RestClient implements RestClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/hostControls',
+            'v2.0/rtc/meeting/hostControls',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1327,7 +1327,7 @@ class _RestClient implements RestClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/screenShareConsent',
+            'v2.0/rtc/screenShareConsent',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1367,7 +1367,7 @@ class _RestClient implements RestClient {
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/screenShareConsent',
+            'v2.0/rtc/screenShareConsent',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1402,7 +1402,7 @@ class _RestClient implements RestClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/chatAttachmentDownloadConsent',
+            'v2.0/rtc/chatAttachmentDownloadConsent',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1442,7 +1442,7 @@ class _RestClient implements RestClient {
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/chatAttachmentDownloadConsent',
+            'v2.0/rtc/chatAttachmentDownloadConsent',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1477,7 +1477,7 @@ class _RestClient implements RestClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/audioPermission',
+            'v2.0/rtc/audioPermission',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1516,7 +1516,7 @@ class _RestClient implements RestClient {
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/audioPermission',
+            'v2.0/rtc/audioPermission',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1550,7 +1550,7 @@ class _RestClient implements RestClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/videoPermission',
+            'v2.0/rtc/videoPermission',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1589,7 +1589,7 @@ class _RestClient implements RestClient {
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/videoPermission',
+            'v2.0/rtc/videoPermission',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1628,7 +1628,7 @@ class _RestClient implements RestClient {
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/update/participantMicPermission',
+            'v2.0/rtc/meeting/update/participantMicPermission',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1668,7 +1668,7 @@ class _RestClient implements RestClient {
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/update/participantVideoPermission',
+            'v2.0/rtc/meeting/update/participantVideoPermission',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1702,7 +1702,7 @@ class _RestClient implements RestClient {
           Options(method: 'GET', headers: _headers, extra: _extra)
               .compose(
                 _dio.options,
-                'rtc/meeting/get/participantDrawer',
+                'v2.0/rtc/meeting/get/participantDrawer',
                 queryParameters: queryParameters,
                 data: _data,
               )
@@ -1747,7 +1747,7 @@ class _RestClient implements RestClient {
           Options(method: 'PUT', headers: _headers, extra: _extra)
               .compose(
                 _dio.options,
-                'rtc/meeting/allow/participantDrawer',
+                'v2.0/rtc/meeting/allow/participantDrawer',
                 queryParameters: queryParameters,
                 data: _data,
               )
@@ -1790,7 +1790,7 @@ class _RestClient implements RestClient {
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/allowAnnotation',
+            'v2.0/rtc/meeting/allowAnnotation',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1829,7 +1829,7 @@ class _RestClient implements RestClient {
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/participant/allowAnnotation',
+            'v2.0/rtc/meeting/participant/allowAnnotation',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1864,7 +1864,7 @@ class _RestClient implements RestClient {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/invite/participants',
+            'v2.0/rtc/meeting/invite/participants',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -1898,7 +1898,7 @@ class _RestClient implements RestClient {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'rtc/meeting/invited/participants',
+            'v2.0/rtc/meeting/invited/participants',
             queryParameters: queryParameters,
             data: _data,
           )
