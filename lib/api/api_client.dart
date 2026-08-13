@@ -33,70 +33,72 @@ import '../model/white_board_data.dart';
 
 part 'api_client.g.dart';
 
+/// [Constant.baseUrl] is the unversioned API root, so every path below must
+/// start with its own API version prefix (e.g. `v2.0/`, `v3.0/`).
 @RestApi()
 abstract class RestClient {
   factory RestClient(Dio dio, {String? baseUrl}) = _RestClient;
 
   //-------------------[PRE-JOIN]-------------------
 
-  @POST("rtc/meeting/join")
+  @POST("v2.0/rtc/meeting/join")
   Future<BaseResponse<RtcData>> getMeetingJoinDetail(
     @Header("Authorization") String token,
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("meeting/verifyHost")
+  @POST("v2.0/meeting/verifyHost")
   Future<BaseResponse<HostTokenModel>> verifyHostToken(
     @Body() Map<String, dynamic> body,
   );
 
-  @GET("saas/host/token")
+  @GET("v2.0/saas/host/token")
   Future<BaseResponse<HostTokenModel>> getHostToken(
     @Query("meeting_uid") String meetingUid,
   );
 
-  @GET("saas/meeting/features")
+  @GET("v2.0/saas/meeting/features")
   Future<BaseResponse<FeatureData>> getFeatures(
       @Query("meeting_uid") String meetingUid);
 
-  @POST("rtc/meeting/verify/commonPassword")
+  @POST("v2.0/rtc/meeting/verify/commonPassword")
   Future<BaseResponse<EventPasswordProtectedData>> verifyCommonMeetingPassword(
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("meeting/verify/password")
+  @POST("v2.0/meeting/verify/password")
   Future<BaseResponse<EventPasswordProtectedData>> verifyMeetingPassword(
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("rtc/meeting/addParticipant/toLobby")
+  @POST("v2.0/rtc/meeting/addParticipant/toLobby")
   Future<BaseResponse<RtcData>> addParticipantToLobby(
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("rtc/meeting/update/participantEmail")
+  @POST("v2.0/rtc/meeting/update/participantEmail")
   Future<BaseResponse> updateParticipantEmail(
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("rtc/meeting/update/participantJoinedStatus")
+  @POST("v2.0/rtc/meeting/update/participantJoinedStatus")
   Future<BaseResponse> updateParticipantJoinedStatus(
     @Body() Map<String, dynamic> body,
   );
 
-  @GET("rtc/meeting/participant/meetingStatus")
+  @GET("v2.0/rtc/meeting/participant/meetingStatus")
   Future<BaseResponse<MeetingStatusData>> getMeetingStatus(
     @Header("Authorization") String token,
     @Query("meeting_uid") String meetingUid,
   );
 
-  @POST("saas/sdk/verify/key")
+  @POST("v2.0/saas/sdk/verify/key")
   Future<BaseResponse<LicenceVerifyModel>> licenceVerify(
     @Body() Map<String, dynamic> body,
   );
 
-  @GET("saas/sdk/meeting/basic/detail")
+  @GET("v2.0/saas/sdk/meeting/basic/detail")
   Future<BaseResponse<MeetingDetailsModel>> getMeetingDetails(
     @Query("meeting_uid") String meetingUid,
     @Header("secret") String secret,
@@ -104,7 +106,7 @@ abstract class RestClient {
 
   //-------------------[OBSERVABILITY]-------------------
 
-  @POST("saas/sdk/observability/credentials")
+  @POST("v2.0/saas/sdk/observability/credentials")
   Future<BaseResponse<ObservabilityPayloadModel>> getObservabilityCredentials(
     @Header("secret") String secret,
     @Body() Map<String, dynamic> body,
@@ -112,34 +114,34 @@ abstract class RestClient {
 
   //-------------------[RTC]-------------------
 
-  @POST("rtc/meeting/delete")
+  @POST("v2.0/rtc/meeting/delete")
   Future<BaseResponse> endMeeting(
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("rtc/meeting/remove/participant")
+  @POST("v2.0/rtc/meeting/remove/participant")
   Future<BaseResponse> removeParticipant(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("rtc/meeting/create/cohost")
+  @POST("v2.0/rtc/meeting/create/cohost")
   Future<BaseResponse> makeCoHost(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("rtc/meeting/recording/start")
+  @POST("v2.0/rtc/meeting/recording/start")
   Future<BaseResponse<EgressData>> startRecording(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("rtc/meeting/recording/stop")
+  @POST("v2.0/rtc/meeting/recording/stop")
   Future<BaseResponse> stopRecording(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
@@ -147,32 +149,32 @@ abstract class RestClient {
   );
 
   @Deprecated("No longer needed the dispatch id")
-  @GET("rtc/recording/dispatchId")
+  @GET("v2.0/rtc/recording/dispatchId")
   Future<BaseResponse<RecordingDispatchData>> getRecordingDispatchedId(
       @Header("Authorization") String token,
       @Header("x-self-identity") String selfIdentity,
       @Query("meeting_id") String meetingUid);
 
-  @PUT("rtc/meeting/update/participantLobbyStatus")
+  @PUT("v2.0/rtc/meeting/update/participantLobbyStatus")
   Future<BaseResponse<RtcData>> acceptParticipantInLobby(
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("rtc/meeting/chat/uploadAttachment")
+  @POST("v2.0/rtc/meeting/chat/uploadAttachment")
   @MultiPart()
   Future<BaseResponse<UploadData>> uploadFile(@Part() File file,
       {@SendProgress() ProgressCallback? onSendProgress});
 
   @Deprecated("This API is no longer supported.")
-  @POST("rtc/meeting/update/transcriptionLanguage")
+  @POST("v2.0/rtc/meeting/update/transcriptionLanguage")
   Future<BaseResponse> setTranscriptionLanguage(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @PUT("rtc/meeting/update/participantLanguage")
+  @PUT("v2.0/rtc/meeting/update/participantLanguage")
   Future<BaseResponse> updateTranscriptionLanguage(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
@@ -180,77 +182,77 @@ abstract class RestClient {
   );
 
   @Deprecated("This API is no longer supported. Please use dispatchAgent instead.")
-  @POST("rtc/meeting/transcription/start")
+  @POST("v2.0/rtc/meeting/transcription/start")
   Future<BaseResponse> startTranscription(
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("rtc/meeting/dispatch/agent")
+  @POST("v2.0/rtc/meeting/dispatch/agent")
   Future<BaseResponse<AgentDispatchData>> dispatchAgent(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("rtc/meeting/text/translation")
+  @POST("v2.0/rtc/meeting/text/translation")
   Future<BaseResponse<TranslationData>> translateText(
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("rtc/meeting/transcription/stop")
+  @POST("v2.0/rtc/meeting/transcription/stop")
   Future<BaseResponse> stopTranscription(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("rtc/meeting/updateParticipant/name")
+  @POST("v2.0/rtc/meeting/updateParticipant/name")
   Future<BaseResponse> updateParticipantName(
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @POST("rtc/meeting/time/extend")
+  @POST("v2.0/rtc/meeting/time/extend")
   Future<BaseResponse> meetingTimeExtend(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @GET("rtc/meeting/whiteboard/get")
+  @GET("v2.0/rtc/meeting/whiteboard/get")
   Future<BaseListResponse<WhiteboardData>> getWhiteBoardData(
     @Header("x-self-identity") String selfIdentity,
     @Query("meeting_id") String meetingId,
   );
 
-  @GET("rtc/meeting/invitee/participantsList")
+  @GET("v2.0/rtc/meeting/invitee/participantsList")
   Future<BaseListResponse<ParticipantAttendanceData>>
       getAttendanceListForParticipant(
     @Header("x-self-identity") String selfIdentity,
     @Query("meeting_uid") String meetingId,
   );
 
-  @PUT("rtc/meeting/updateRecording/consentStatus")
+  @PUT("v2.0/rtc/meeting/updateRecording/consentStatus")
   Future<BaseResponse<ConsentStatusData>> updateRecordingConsent(
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @GET("rtc/meeting/session/detail")
+  @GET("v2.0/rtc/meeting/session/detail")
   Future<BaseResponse<SessionDetailsData>> getSessionDetails(
     @Header("x-self-identity") String selfIdentity,
     @Query("meeting_uid") String meetingId,
   );
 
-  @POST("rtc/meeting/startRecording/consent")
+  @POST("v2.0/rtc/meeting/startRecording/consent")
   Future<BaseResponse> startRecordingConsent(
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @GET("rtc/meeting/participant/consentList")
+  @GET("v2.0/rtc/meeting/participant/consentList")
   Future<BaseListResponse<RemoteParticipantConsent>> getParticipantConsentList(
     @Header("x-self-identity") String selfIdentity,
     @Query("meeting_uid") String meetingId,
@@ -259,20 +261,20 @@ abstract class RestClient {
 
   // Returns all host control states in a single call.
   // Use this instead of the individual GET endpoints below.
-  @GET("rtc/meeting/hostControls")
+  @GET("v2.0/rtc/meeting/hostControls")
   Future<BaseResponse<HostControlsData>> getHostControls(
     @Header("x-self-identity") String selfIdentity,
     @Query("meeting_uid") String meetingUid,
   );
 
   @Deprecated('Use getHostControls() instead.')
-  @GET("rtc/screenShareConsent")
+  @GET("v2.0/rtc/screenShareConsent")
   Future<BaseResponse<ScreenShareConsentModel>> getScreenShareConsent(
     @Header("x-self-identity") String selfIdentity,
     @Query("meeting_id") String meetingId,
   );
 
-  @PUT("rtc/screenShareConsent")
+  @PUT("v2.0/rtc/screenShareConsent")
   Future<BaseResponse<ScreenShareConsentModel>> updateScreenShareConsent(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
@@ -280,13 +282,13 @@ abstract class RestClient {
   );
 
   @Deprecated('Use getHostControls() instead.')
-  @GET("rtc/chatAttachmentDownloadConsent")
+  @GET("v2.0/rtc/chatAttachmentDownloadConsent")
   Future<BaseResponse<ChatAttachmentConsentModel>> getChatAttachmentConsent(
     @Header("x-self-identity") String selfIdentity,
     @Query("meeting_id") String meetingId,
   );
 
-  @PUT("rtc/chatAttachmentDownloadConsent")
+  @PUT("v2.0/rtc/chatAttachmentDownloadConsent")
   Future<BaseResponse<ChatAttachmentConsentModel>> updateChatAttachmentConsent(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
@@ -294,13 +296,13 @@ abstract class RestClient {
   );
 
   @Deprecated('Use getHostControls() instead.')
-  @GET("rtc/audioPermission")
+  @GET("v2.0/rtc/audioPermission")
   Future<BaseResponse<WebinarPermissionModel>> getAudioPermission(
     @Header("x-self-identity") String selfIdentity,
     @Query("meeting_id") String meetingId,
   );
 
-  @PUT("rtc/audioPermission")
+  @PUT("v2.0/rtc/audioPermission")
   Future<BaseResponse<WebinarPermissionModel>> updateAudioPermission(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
@@ -308,27 +310,27 @@ abstract class RestClient {
   );
 
   @Deprecated('Use getHostControls() instead.')
-  @GET("rtc/videoPermission")
+  @GET("v2.0/rtc/videoPermission")
   Future<BaseResponse<WebinarPermissionModel>> getVideoPermission(
     @Header("x-self-identity") String selfIdentity,
     @Query("meeting_id") String meetingId,
   );
 
-  @PUT("rtc/videoPermission")
+  @PUT("v2.0/rtc/videoPermission")
   Future<BaseResponse<WebinarPermissionModel>> updateVideoPermission(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @PUT("rtc/meeting/update/participantMicPermission")
+  @PUT("v2.0/rtc/meeting/update/participantMicPermission")
   Future<BaseResponse<WorkshopPermissionModel>> updateWorkshopMicPermission(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @PUT("rtc/meeting/update/participantVideoPermission")
+  @PUT("v2.0/rtc/meeting/update/participantVideoPermission")
   Future<BaseResponse<WorkshopPermissionModel>> updateWorkshopVideoPermission(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
@@ -336,27 +338,27 @@ abstract class RestClient {
   );
 
   @Deprecated('Use getHostControls() instead.')
-  @GET("rtc/meeting/get/participantDrawer")
+  @GET("v2.0/rtc/meeting/get/participantDrawer")
   Future<BaseResponse<ParticipantDrawerConsentModel>> getParticipantDrawerConsent(
     @Header("x-self-identity") String selfIdentity,
     @Query("meeting_uid") String meetingUid,
   );
 
-  @PUT("rtc/meeting/allow/participantDrawer")
+  @PUT("v2.0/rtc/meeting/allow/participantDrawer")
   Future<BaseResponse<ParticipantDrawerConsentModel>> updateParticipantDrawerConsent(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @PUT("rtc/meeting/allowAnnotation")
+  @PUT("v2.0/rtc/meeting/allowAnnotation")
   Future<BaseResponse<dynamic>> allowAnnotation(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @PUT("rtc/meeting/participant/allowAnnotation")
+  @PUT("v2.0/rtc/meeting/participant/allowAnnotation")
   Future<BaseResponse<dynamic>> allowParticipantAnnotation(
     @Header("Authorization") String token,
     @Header("x-self-identity") String selfIdentity,
@@ -365,13 +367,13 @@ abstract class RestClient {
 
   //-------------------[INVITED PARTICIPANTS]-------------------
 
-  @POST("rtc/meeting/invite/participants")
+  @POST("v2.0/rtc/meeting/invite/participants")
   Future<BaseResponse> inviteParticipants(
     @Header("x-self-identity") String selfIdentity,
     @Body() Map<String, dynamic> body,
   );
 
-  @GET("rtc/meeting/invited/participants")
+  @GET("v2.0/rtc/meeting/invited/participants")
   Future<BaseResponse<InvitedParticipantsData>> getInvitedParticipants(
     @Header("x-self-identity") String selfIdentity,
     @Query("meeting_uid") String meetingUid,

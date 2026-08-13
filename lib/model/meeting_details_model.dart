@@ -64,7 +64,7 @@ class MeetingDetailsModel {
     startDate = json['start_date'];
     endDate = json['end_date'];
     duration = json['duration'];
-    isStartNow = json['is_start_now'];
+    isStartNow = _parseNullableInt(json['is_start_now']);
     topic = json['topic'];
     timeZone = json['time_zone'];
     timezoneIdentifier = json['timezone_identifier'];
@@ -75,14 +75,16 @@ class MeetingDetailsModel {
     roomUid = json['room_uid'];
     conferenceStatusId = json['conference_status_id'];
     totalMembersCount = json['total_members_count'];
-    isPassword = json['is_password'];
+    isPassword = json['is_password']?.toString();
     conferenceStatus = json['conference_status'] != null
         ? ConferenceStatus.fromJson(json['conference_status'])
         : null;
     isLobbyMode = json['is_lobby_mode'];
     isStandardPassword = json['is_standard_password'];
     isCommonPassword = json['is_common_password'];
-    currentSessionUid = json['current_session_uid'].toString();
+    // `?.` matters here: a plain `.toString()` turns a null session into the
+    // literal string "null".
+    currentSessionUid = json['current_session_uid']?.toString();
     transcriptionDetail = json['transcription_detail'] != null
         ? TranscriptionDetail.fromJson(json['transcription_detail'])
         : null;
@@ -130,6 +132,15 @@ class MeetingDetailsModel {
     data['host_pin_verification_required'] = hostPinVerificationRequired;
     return data;
   }
+}
+
+/// The backend returns some flags as `1`/`0` on one endpoint and `true`/`false`
+/// on another (e.g. `is_start_now`), so normalise instead of assigning raw JSON.
+int? _parseNullableInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is bool) return value ? 1 : 0;
+  return int.tryParse(value.toString());
 }
 
 class ConferenceStatus {
