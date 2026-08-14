@@ -187,8 +187,9 @@ class MeetingConfig {
   int? autoMeetingEnd;
   String? autoMeetingEndSchedule;
   String? autoMeetingEndScheduleTimezoneFormated;
+  int? isGuestMode;
 
-  MeetingConfig({autoStartRecording, recordingForceStopped, autoMeetingEnd, autoMeetingEndSchedule, autoMeetingEndScheduleTimezoneFormated});
+  MeetingConfig({autoStartRecording, recordingForceStopped, autoMeetingEnd, autoMeetingEndSchedule, autoMeetingEndScheduleTimezoneFormated, this.isGuestMode});
 
   MeetingConfig.fromJson(Map<String, dynamic> json) {
     autoStartRecording = json['auto_start_recording'];
@@ -196,6 +197,7 @@ class MeetingConfig {
     autoMeetingEnd = json['auto_meeting_end'];
     autoMeetingEndSchedule = json['auto_meeting_end_schedule'];
     autoMeetingEndScheduleTimezoneFormated = json['auto_meeting_end_schedule_timezone_formated'];
+    isGuestMode = _parseFlag(json['is_guest_mode']);
   }
 
   Map<String, dynamic> toJson() {
@@ -205,6 +207,15 @@ class MeetingConfig {
     data['auto_meeting_end'] = autoMeetingEnd;
     data['auto_meeting_end_schedule'] = autoMeetingEndSchedule;
     data['auto_meeting_end_schedule_timezone_formated'] = autoMeetingEndScheduleTimezoneFormated;
+    data['is_guest_mode'] = isGuestMode;
     return data;
+  }
+
+  // Backend usually sends is_guest_mode as an int flag (0/1) but may send a bool.
+  static int? _parseFlag(dynamic value) {
+    if (value == null) return null;
+    if (value is bool) return value ? 1 : 0;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
   }
 }

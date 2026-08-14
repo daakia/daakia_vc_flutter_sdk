@@ -46,26 +46,87 @@ class ParticipantTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  (isForLobby
-                          ? lobbyRequest?.displayName
-                          : participant?.name) ??
-                      "Unknown",
-                  // Replace with the participant's name
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        (isForLobby
+                                ? lobbyRequest?.displayName
+                                : participant?.name) ??
+                            "Unknown",
+                        // Replace with the participant's name
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (!isForLobby &&
+                        participant?.identity ==
+                            viewModel.room.localParticipant?.identity) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text(
+                          'You',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 if (!isForLobby)
-                  Text(
-                    "${Utils.calculateMinutesSince(participant?.joinedAt)} mins ${Utils.getParticipantType(participant?.metadata)}", // Replace with details text
-                    style: const TextStyle(
-                      color: Color(0xFFC4C1B8),
-                      // Equivalent to the text color used
-                      fontSize: 12,
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text:
+                              "${Utils.calculateMinutesSince(participant?.joinedAt)} mins",
+                          style: const TextStyle(
+                            color: Color(0xFFC4C1B8),
+                            // Equivalent to the text color used
+                            fontSize: 12,
+                          ),
+                        ),
+                        if (Utils.isHost(participant?.metadata))
+                          const TextSpan(
+                            text: " (Host)",
+                            style: TextStyle(
+                              color: Colors.amberAccent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        if (Utils.isCoHost(participant?.metadata))
+                          const TextSpan(
+                            text: " (Co-Host)",
+                            style: TextStyle(
+                              color: Colors.lightBlueAccent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        if (Utils.isGuest(participant?.metadata))
+                          const TextSpan(
+                            text: " (Guest)",
+                            style: TextStyle(
+                              color: Colors.greenAccent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                      ],
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

@@ -158,19 +158,6 @@ class Utils {
     }
   }
 
-  static String getParticipantType(String? metadata) {
-    String role = getMetadataRole(metadata);
-
-    switch (role) {
-      case 'moderator':
-        return ' (Host)';
-      case 'cohost':
-        return ' (Co-Host)';
-      default:
-        return '';
-    }
-  }
-
   static bool isHost(String? metadata) {
     String role = getMetadataRole(metadata);
     return role == 'moderator';
@@ -179,6 +166,16 @@ class Utils {
   static bool isCoHost(String? metadata) {
     String role = getMetadataRole(metadata);
     return role == 'cohost';
+  }
+
+  static bool isGuest(String? metadata) {
+    if (metadata == null) return false;
+    try {
+      final jsonObject = jsonDecode(metadata);
+      return jsonObject['is_guest'] == true;
+    } catch (e) {
+      return false;
+    }
   }
 
   static Future<bool> isIosSimulator() async {
