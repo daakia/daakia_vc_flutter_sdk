@@ -3,13 +3,18 @@ import 'package:dio/dio.dart';
 
 import '../model/base_list_response.dart';
 import '../model/base_response.dart';
+import '../service/api_parse_error_reporter.dart';
 import '../service/daakia_vc_logger.dart';
 import '../utils/utils.dart';
 import 'api_client.dart';
 
 RestClient? _apiClientInstance;
 
-RestClient get apiClient => _apiClientInstance ??= RestClient(setDio());
+/// `errorLogger` fires only when a response body fails to deserialize — that is
+/// the backend silently changing a field's type on us. See
+/// [ApiParseErrorLogger]; successful calls never reach it.
+RestClient get apiClient => _apiClientInstance ??=
+    RestClient(setDio(), errorLogger: const ApiParseErrorLogger());
 
 Dio setDio() {
   final dio = Dio();

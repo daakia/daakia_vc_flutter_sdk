@@ -37,7 +37,11 @@ part 'api_client.g.dart';
 /// start with its own API version prefix (e.g. `v2.0/`, `v3.0/`).
 @RestApi()
 abstract class RestClient {
-  factory RestClient(Dio dio, {String? baseUrl}) = _RestClient;
+  factory RestClient(
+    Dio dio, {
+    String? baseUrl,
+    ParseErrorLogger? errorLogger,
+  }) = _RestClient;
 
   //-------------------[PRE-JOIN]-------------------
 
