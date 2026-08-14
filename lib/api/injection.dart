@@ -37,6 +37,11 @@ Dio setDio() {
         handler.next(response);
       },
       onError: (DioException e, handler) {
+        // Every failure is logged to Datadog. Only `badResponse` — the backend
+        // actually answered with a non-2xx — reaches Sentry; timeouts, cancels
+        // and connection drops are the user's network, not a defect, and would
+        // bury real issues.
+        final isServerFault = e.type == DioExceptionType.badResponse;
         DaakiaVcLogger.logError(
           Utils.extractMessage("Error", e.requestOptions.data, e.requestOptions.path),
           error: e,
@@ -47,7 +52,9 @@ Dio setDio() {
             'payload': e.requestOptions.data,
             'response': e.response?.data,
             'statusCode': e.response?.statusCode,
+            'dioErrorType': e.type.name,
           },
+          reportToSentry: isServerFault,
         );
         handler.next(e);
       },
