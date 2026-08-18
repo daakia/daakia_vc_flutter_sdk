@@ -34,11 +34,15 @@ class ParticipantActionSpec {
 /// because they need to dismiss the menu and then open another dialog/route,
 /// and the correct sequencing differs depending on what else the caller's
 /// screen needs to close first.
+///
+/// [onRename] is optional: pass null on surfaces that already expose their
+/// own rename affordance (the all-participants list edits the name straight
+/// from the initials avatar) so the action isn't offered twice.
 List<ParticipantActionSpec> buildParticipantActionSpecs({
   required Participant participant,
   required RtcViewmodel viewModel,
   required VoidCallback onDismiss,
-  required VoidCallback onRename,
+  VoidCallback? onRename,
   required VoidCallback onOpenPrivateChat,
   required VoidCallback onAnnotationUnavailable,
 }) {
@@ -179,13 +183,16 @@ List<ParticipantActionSpec> buildParticipantActionSpecs({
     ParticipantActionSpec(
       icon: Icons.edit_outlined,
       label: 'Rename',
-      visible: isSelf
-          ? viewModel.meetingDetails.features?.isProfileEditBySelfAllowed() ==
-              true
-          : (amIHost || amICoHost) &&
-              viewModel.meetingDetails.features?.isProfileEditByHostAllowed() ==
-                  true,
-      onTap: onRename,
+      visible: onRename != null &&
+          (isSelf
+              ? viewModel.meetingDetails.features
+                      ?.isProfileEditBySelfAllowed() ==
+                  true
+              : (amIHost || amICoHost) &&
+                  viewModel.meetingDetails.features
+                          ?.isProfileEditByHostAllowed() ==
+                      true),
+      onTap: onRename ?? () {},
     ),
     ParticipantActionSpec(
       icon:
