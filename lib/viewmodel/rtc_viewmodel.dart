@@ -2371,10 +2371,40 @@ class RtcViewmodel extends ChangeNotifier {
         isScreenShareEnable = data.screenSharePermissionGranted;
         isVideoModeEnable = data.videoPermission;
         isVideoPermissionEnable = !data.videoPermission;
+        isMicPermissionGranted =
+            Utils.isMicEnabled(room.localParticipant?.attributes);
+        isVideoPermissionGranted =
+            Utils.isVideoEnabled(room.localParticipant?.attributes);
+        _enforceHostMediaRestrictions();
         //if (data.isRecordingActive) setRecording(true); NOTE: Not Needed
       },
       onError: (_) => _fallbackToIndividualHostControlAPIs(),
     );
+  }
+
+  /// Mutes media the host has switched off for participants.
+  ///
+  /// The prejoin page publishes mic/camera as part of the connect, and a lobby
+  /// participant can be admitted long after the host flipped webinar/workshop
+  /// mode on, so the join-time host-control fetch has to *apply* the state and
+  /// not merely render it — otherwise the participant keeps streaming media the
+  /// meeting has disabled. Individual workshop-mode grants (participant
+  /// attributes) and host/co-host still win.
+  void _enforceHostMediaRestrictions() {
+    if (isHost() || isCoHost()) return;
+    final localParticipant = room.localParticipant;
+    if (localParticipant == null) return;
+
+    if (!isAudioPermissionEnable &&
+        !isMicPermissionGranted &&
+        localParticipant.isMicrophoneEnabled()) {
+      disableAudio();
+    }
+    if (!isVideoPermissionEnable &&
+        !isVideoPermissionGranted &&
+        localParticipant.isCameraEnabled()) {
+      disableVideo();
+    }
   }
 
   // ignore: deprecated_member_use_from_same_package
@@ -2609,6 +2639,7 @@ class RtcViewmodel extends ChangeNotifier {
           isAudioModeEnable = (data?.audioPermission == true);
           isAudioPermissionEnable = !(data?.audioPermission == true);
           isMicPermissionGranted = Utils.isMicEnabled(room.localParticipant?.attributes);
+          _enforceHostMediaRestrictions();
         },
         onError: (message) {
           sendMessageToUI(message);
@@ -2646,6 +2677,7 @@ class RtcViewmodel extends ChangeNotifier {
           isVideoModeEnable = (data?.videoPermission == true);
           isVideoPermissionEnable = !(data?.videoPermission == true);
           isVideoPermissionGranted = Utils.isVideoEnabled(room.localParticipant?.attributes);
+          _enforceHostMediaRestrictions();
         },
         onError: (message) {
           sendMessageToUI(message);
