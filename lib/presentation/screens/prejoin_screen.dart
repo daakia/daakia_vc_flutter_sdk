@@ -62,7 +62,9 @@ class _PreJoinState extends State<PreJoinScreen> {
 
   var _obscurePassword = true;
 
-  var alertMessage = 'Please check your audio/video settings';
+  static const _defaultAlertMessage = 'Please check your audio/video settings';
+
+  var alertMessage = _defaultAlertMessage;
   var isRejected = false;
 
   var isLoading = false;
@@ -77,6 +79,12 @@ class _PreJoinState extends State<PreJoinScreen> {
   bool _autoJoinStarted = false;
   String _skipJoinErrorMessage = "";
   bool _initialMediaStateResolved = false;
+
+  // Meeting-level mic/camera locks (webinar/workshop mode). Fetched before the
+  // user can join so a participant can't walk in publishing media the host has
+  // switched off; room.dart re-checks and enforces after the connect.
+  bool _isMicDisabledByHost = false;
+  bool _isCameraDisabledByHost = false;
 
   //============== RTC ===============
   StreamSubscription? _subscription;
@@ -108,6 +116,10 @@ class _PreJoinState extends State<PreJoinScreen> {
           endDate: getMeetingEndDate(),
           endMeetingCallBack: (event) {},
           context: context);
+      // Awaited: skip-prejoin joins straight away, and joining with the mic on
+      // is exactly what the host controls are supposed to prevent.
+      await _fetchHostMediaRestrictions();
+      if (!mounted) return;
       unawaited(_startAutoJoinIfRequired());
     });
     super.initState();
@@ -122,6 +134,9 @@ class _PreJoinState extends State<PreJoinScreen> {
       widget.configuration?.vcConfig?.isCoHost == true;
   bool get _shouldBypassParticipantChecks =>
       _isCoHostVerified || _isConfiguredCoHost;
+
+  // Host and co-host are never subject to the participant mic/camera locks.
+  bool get _isPrivilegedUser => widget.isHost || _shouldBypassParticipantChecks;
 
   // Guest join is only offered when the meeting is password-protected and the
   // backend has enabled it for this meeting via meeting_config.is_guest_mode.
@@ -150,8 +165,12 @@ class _PreJoinState extends State<PreJoinScreen> {
     final canEnableVideo =
         _shouldEnableVideoByDefault && await _hasPermission(Permission.camera);
 
-    _enableAudio = canEnableAudio && _selectedAudioDevice != null;
-    _enableVideo = canEnableVideo && _selectedVideoDevice != null;
+    _enableAudio = canEnableAudio &&
+        _selectedAudioDevice != null &&
+        !_isMicDisabledByHost;
+    _enableVideo = canEnableVideo &&
+        _selectedVideoDevice != null &&
+        !_isCameraDisabledByHost;
 
     if (_enableAudio) {
       try {
@@ -170,6 +189,61 @@ class _PreJoinState extends State<PreJoinScreen> {
         _videoTrack = null;
       }
     }
+  }
+
+  /// Reads the meeting's host-control state so the prejoin toggles match what
+  /// the participant will actually be allowed to do in the meeting.
+  ///
+  /// `x-self-identity` is a LiveKit participant identity, which doesn't exist
+  /// yet at this point — the host-control states are meeting-level, so an empty
+  /// identity is enough to read them. Any failure leaves the toggles untouched
+  /// rather than locking the user out of their own mic; the room enforces the
+  /// same states again right after joining.
+  Future<void> _fetchHostMediaRestrictions() async {
+    if (_isPrivilegedUser) return;
+
+    await networkRequestHandler(
+      apiCall: () => apiClient.getHostControls("", widget.meetingId),
+      onSuccess: (data) {
+        if (data == null) return;
+        _isMicDisabledByHost = data.audioPermission;
+        _isCameraDisabledByHost = data.videoPermission;
+      },
+      onError: (_) {},
+    );
+
+    await _applyHostMediaRestrictions();
+  }
+
+  Future<void> _applyHostMediaRestrictions() async {
+    if (_isMicDisabledByHost && _enableAudio) {
+      await _setEnableAudio(false);
+    }
+    if (!mounted) return;
+    if (_isCameraDisabledByHost && _enableVideo) {
+      await _setEnableVideo(false);
+    }
+    if (mounted) setState(() {});
+  }
+
+  bool get _isDefaultAlertSuppressed =>
+      alertMessage == _defaultAlertMessage &&
+      _hostMediaRestrictionMessage != null;
+
+  /// Explains the locked toggles, so a participant doesn't read a greyed-out
+  /// mic as a broken device.
+  String? get _hostMediaRestrictionMessage {
+    if (_isMicDisabledByHost && _isCameraDisabledByHost) {
+      return "The host has disabled the microphone and camera for participants. "
+          "You can still join and ask the host to unlock them.";
+    }
+    if (_isMicDisabledByHost) {
+      return "The host has disabled the microphone for participants.";
+    }
+    if (_isCameraDisabledByHost) {
+      return "The host has disabled the camera for participants.";
+    }
+    return null;
   }
 
   Future<bool> _hasPermission(Permission permission) async {
@@ -311,14 +385,14 @@ class _PreJoinState extends State<PreJoinScreen> {
   }
 
   Future<void> _setEnableAudio(bool value) async {
-    _enableAudio = value;
+    _enableAudio = value && !_isMicDisabledByHost;
     if (_enableAudio) {
       await _changeLocalAudioTrack();
     } else {
       await _audioTrack?.stop();
       _audioTrack = null;
     }
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   Future<void> _changeLocalAudioTrack() async {
@@ -337,14 +411,14 @@ class _PreJoinState extends State<PreJoinScreen> {
   }
 
   Future<void> _setEnableVideo(bool value) async {
-    _enableVideo = value;
+    _enableVideo = value && !_isCameraDisabledByHost;
     if (_enableVideo) {
       await _changeLocalVideoTrack();
     } else {
       await _videoTrack?.stop();
       _videoTrack = null;
     }
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   Future<void> _changeLocalVideoTrack() async {
@@ -882,18 +956,20 @@ class _PreJoinState extends State<PreJoinScreen> {
                                 )
                               : Visibility(
                                   visible: !_enableVideo,
-                                  child: const Column(
+                                  child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(
+                                      const Icon(
                                         Icons.videocam_off,
                                         size: 55,
                                         color: Colors.white,
                                       ),
-                                      SizedBox(height: 8),
+                                      const SizedBox(height: 8),
                                       Text(
-                                        'Your Camera is turned off',
-                                        style: TextStyle(
+                                        _isCameraDisabledByHost
+                                            ? 'Camera is disabled by the host'
+                                            : 'Your Camera is turned off',
+                                        style: const TextStyle(
                                             fontWeight: FontWeight.w500,
                                             fontSize: 15,
                                             color: Colors.white),
@@ -916,42 +992,58 @@ class _PreJoinState extends State<PreJoinScreen> {
                                         _enableVideo
                                             ? Icons.videocam
                                             : Icons.videocam_off,
-                                        color: Colors.white),
+                                        color: _isCameraDisabledByHost
+                                            ? Colors.white38
+                                            : Colors.white),
                                     iconSize: 30,
-                                    onPressed: () async {
-                                      if (!Platform.isIOS) {
-                                        bool permissionsGranted =
-                                            await checkAndRequestPermissions(
-                                                context,
-                                                checkForAudio: false);
-                                        if (!permissionsGranted) return;
-                                      }
-                                      setState(() {
-                                        _enableVideo = !_enableVideo;
-                                        _setEnableVideo(_enableVideo);
-                                      });
-                                    },
+                                    tooltip: _isCameraDisabledByHost
+                                        ? 'Camera disabled by host'
+                                        : null,
+                                    // Null rather than a snackbar: the notice
+                                    // below the preview already says why.
+                                    onPressed: _isCameraDisabledByHost
+                                        ? null
+                                        : () async {
+                                          if (!Platform.isIOS) {
+                                            bool permissionsGranted =
+                                                await checkAndRequestPermissions(
+                                                    context,
+                                                    checkForAudio: false);
+                                            if (!permissionsGranted) return;
+                                          }
+                                          setState(() {
+                                            _enableVideo = !_enableVideo;
+                                            _setEnableVideo(_enableVideo);
+                                          });
+                                        },
                                   ),
                                   IconButton(
                                     icon: Icon(
                                         _enableAudio
                                             ? Icons.mic
                                             : Icons.mic_off,
-                                        color: Colors.white),
+                                        color: _isMicDisabledByHost
+                                            ? Colors.white38
+                                            : Colors.white),
                                     iconSize: 30,
-                                    onPressed: () async {
-                                      if (!Platform.isIOS) {
-                                        bool permissionsGranted =
-                                            await checkAndRequestPermissions(
-                                                context,
-                                                checkForCamera: false);
-                                        if (!permissionsGranted) return;
-                                      }
-                                      setState(() {
-                                        _enableAudio = !_enableAudio;
-                                        _setEnableAudio(_enableAudio);
-                                      });
-                                    },
+                                    tooltip: _isMicDisabledByHost
+                                        ? 'Microphone disabled by host'
+                                        : null,
+                                    onPressed: _isMicDisabledByHost
+                                        ? null
+                                        : () async {
+                                          if (!Platform.isIOS) {
+                                            bool permissionsGranted =
+                                                await checkAndRequestPermissions(
+                                                    context,
+                                                    checkForCamera: false);
+                                            if (!permissionsGranted) return;
+                                          }
+                                          setState(() {
+                                            _enableAudio = !_enableAudio;
+                                            _setEnableAudio(_enableAudio);
+                                          });
+                                        },
                                   ),
                                 ],
                               ),
@@ -961,24 +1053,46 @@ class _PreJoinState extends State<PreJoinScreen> {
                       ),
                     ),
                   ),
+                  if (_hostMediaRestrictionMessage != null) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(Icons.info_outline,
+                            size: 18, color: Colors.black54),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _hostMediaRestrictionMessage!,
+                            style: const TextStyle(
+                                fontSize: 13, color: Colors.black54),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(
                     height: 20,
                   ),
-                  Center(
-                    child: Text(
-                      alertMessage,
-                      textAlign:
-                          TextAlign.center, // Equivalent to gravity="center"
-                      style: const TextStyle(
-                        color: Colors
-                            .black, // Equivalent to textColor="@color/black"
-                        fontSize: 15, // Equivalent to textSize="15sp"
+                  // "Please check your audio/video settings" is pointless advice
+                  // when the host is the one holding the mic/camera off — hide it
+                  // until the API replaces it with a real message.
+                  if (!_isDefaultAlertSuppressed) ...[
+                    Center(
+                      child: Text(
+                        alertMessage,
+                        textAlign:
+                            TextAlign.center, // Equivalent to gravity="center"
+                        style: const TextStyle(
+                          color: Colors
+                              .black, // Equivalent to textColor="@color/black"
+                          fontSize: 15, // Equivalent to textSize="15sp"
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                  ],
                   Container(
                     margin: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 10),
