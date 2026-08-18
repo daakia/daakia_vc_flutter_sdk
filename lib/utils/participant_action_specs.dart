@@ -43,6 +43,7 @@ List<ParticipantActionSpec> buildParticipantActionSpecs({
   required RtcViewmodel viewModel,
   required VoidCallback onDismiss,
   VoidCallback? onRename,
+  required VoidCallback onRemoveFromCall,
   required VoidCallback onOpenPrivateChat,
   required VoidCallback onAnnotationUnavailable,
 }) {
@@ -231,10 +232,9 @@ List<ParticipantActionSpec> buildParticipantActionSpecs({
       icon: Icons.person_remove,
       label: 'Remove from call',
       visible: isRemote && (amIHost || (amICoHost && !isTargetHost)),
-      onTap: () {
-        onDismiss();
-        viewModel.removeFromCall(participant.identity);
-      },
+      // Removal is immediate and can't be undone, so the caller confirms
+      // first via [showRemoveParticipantConfirmDialog].
+      onTap: onRemoveFromCall,
     ),
     ParticipantActionSpec(
       icon: Icons.chat_bubble_outline,
@@ -285,6 +285,51 @@ void showParticipantRenameDialog(
             Navigator.pop(dialogCtx);
           },
           child: const Text('Save'),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Shared "Remove from call" confirmation, used by every surface that
+/// exposes the Remove action from [buildParticipantActionSpecs]. Removal is
+/// immediate and irreversible, so the participant is named in the prompt to
+/// make sure the host is removing the person they meant to.
+void showRemoveParticipantConfirmDialog(
+  BuildContext context,
+  Participant participant,
+  RtcViewmodel viewModel,
+) {
+  final displayName =
+      participant.name.isNotEmpty ? participant.name : participant.identity;
+  showDialog(
+    context: context,
+    builder: (dialogCtx) => AlertDialog(
+      title: const Text('Remove from call'),
+      content: Text.rich(
+        TextSpan(
+          children: [
+            const TextSpan(text: 'Are you sure you want to remove '),
+            TextSpan(
+              text: displayName,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const TextSpan(text: '?'),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogCtx),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.pop(dialogCtx);
+            viewModel.removeFromCall(participant.identity);
+          },
+          style: TextButton.styleFrom(foregroundColor: Colors.red),
+          child: const Text('Remove'),
         ),
       ],
     ),

@@ -79,6 +79,13 @@ class _ParticipantQuickActionsSheetState
             participant,
             viewModel);
       },
+      onRemoveFromCall: () {
+        Navigator.pop(context);
+        showRemoveParticipantConfirmDialog(
+            Navigator.of(this.context, rootNavigator: false).context,
+            participant,
+            viewModel);
+      },
       onOpenPrivateChat: () {
         Navigator.pop(context);
         widget.onNavigateTo(
