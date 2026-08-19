@@ -12,6 +12,7 @@ import 'package:daakia_vc_flutter_sdk/model/daakia_meeting_configuration.dart';
 import 'package:daakia_vc_flutter_sdk/model/meeting_details.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/dialog/notification_permission_dialog.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/emoji_reaction_widget.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/workshop_mode_dialog.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/lobby_request_manager.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/connectivity_banner.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/widgets/participant.dart';
@@ -98,6 +99,11 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
   // toggling screen share) into a single rebuild instead of one per event,
   // to reduce main-thread churn during toggle storms.
   Timer? _sortParticipantsDebounceTimer;
+
+  // Groups the mic / camera / participant-list changes that arrive as three
+  // separate actions when the host toggles Workshop mode into one notice.
+  final WorkshopModeNoticeController _workshopNotice =
+      WorkshopModeNoticeController();
 
   late final MeetingManager meetingManager;
 
@@ -376,6 +382,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     widget.room.disconnect();
     handleAndroidNotification(enable: false);
     _sortParticipantsDebounceTimer?.cancel();
+    _workshopNotice.dispose();
     // always dispose listener
     (() async {
       DaakiaPiP.disposePiP();
@@ -769,6 +776,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         if (isAudioModeEnabled) {
           viewModel?.disableAudio();
         }
+        _announceWorkshopChange(viewModel, remoteData.identity?.name);
         break;
 
       case MeetingActions.forceVideoOffAll:
@@ -778,6 +786,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         if (isVideoModeEnabled) {
           viewModel?.disableVideo();
         }
+        _announceWorkshopChange(viewModel, remoteData.identity?.name);
         break;
 
       case MeetingActions.showLiveCaption:
@@ -983,6 +992,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         if (isHidden && viewModel?.isParticipantPageOpen == true) {
           _innerNavigatorKey.currentState?.maybePop();
         }
+        _announceWorkshopChange(viewModel, remoteData.identity?.name);
         break;
 
       case MeetingActions.refreshInvitedParticipants:
@@ -1651,6 +1661,10 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
             actionCallBack: () {
               Utils.openMediaFile(event.path ?? "", context);
             });
+      } else if (event is ShowWorkshopModeNotice) {
+        // Joining a meeting that's already in Workshop mode: no actor to name,
+        // and the controller drops it if nothing is actually restricted.
+        _announceWorkshopChange(viewModel, null);
       } else if (event is ShowReaction) {
         showReaction(event.emoji, viewModel);
       } else if (event is UpdateView) {
@@ -1720,6 +1734,34 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
         senderName: senderName,
         timestamp: DateTime.now().millisecondsSinceEpoch.toString());
     viewModel.addEmoji(newMessage);
+  }
+
+  /// Announces a Workshop-mode change made by somebody else.
+  ///
+  /// Everyone still in the room hears about it, but not in the same words:
+  /// participants are told what's been taken away from them, while hosts and
+  /// co-hosts — exempt from the restrictions — are told what changed for
+  /// everyone else, so a co-host flipping the switch doesn't leave the host
+  /// guessing. The person who flipped it doesn't receive their own data
+  /// message; they got the summary from the Host controls screen already.
+  ///
+  /// The calling case has already applied the change to the viewmodel, so
+  /// reading the three flags back off it gives the restrictions currently in
+  /// force — which is exactly what the notice lists.
+  void _announceWorkshopChange(RtcViewmodel? viewModel, String? actorName) {
+    if (!mounted) return;
+    if (viewModel == null) return;
+    final isModerator = viewModel.isHost() || viewModel.isCoHost();
+    _workshopNotice.report(
+      context,
+      micLocked: viewModel.isAudioModeEnable,
+      cameraLocked: viewModel.isVideoModeEnable,
+      participantListHidden: viewModel.isParticipantDrawerHidden,
+      audience: isModerator
+          ? WorkshopAudience.moderator
+          : WorkshopAudience.participant,
+      actorName: actorName,
+    );
   }
 
   void _showDuplicateIdentityDialog() {
