@@ -2376,6 +2376,7 @@ class RtcViewmodel extends ChangeNotifier {
         isVideoPermissionGranted =
             Utils.isVideoEnabled(room.localParticipant?.attributes);
         _enforceHostMediaRestrictions();
+        sendEvent(ShowWorkshopModeNotice());
         //if (data.isRecordingActive) setRecording(true); NOTE: Not Needed
       },
       onError: (_) => _fallbackToIndividualHostControlAPIs(),
@@ -2640,6 +2641,7 @@ class RtcViewmodel extends ChangeNotifier {
           isAudioPermissionEnable = !(data?.audioPermission == true);
           isMicPermissionGranted = Utils.isMicEnabled(room.localParticipant?.attributes);
           _enforceHostMediaRestrictions();
+          sendEvent(ShowWorkshopModeNotice());
         },
         onError: (message) {
           sendMessageToUI(message);
@@ -2678,6 +2680,7 @@ class RtcViewmodel extends ChangeNotifier {
           isVideoPermissionEnable = !(data?.videoPermission == true);
           isVideoPermissionGranted = Utils.isVideoEnabled(room.localParticipant?.attributes);
           _enforceHostMediaRestrictions();
+          sendEvent(ShowWorkshopModeNotice());
         },
         onError: (message) {
           sendMessageToUI(message);
