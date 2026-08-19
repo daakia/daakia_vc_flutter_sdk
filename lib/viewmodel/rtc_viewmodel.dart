@@ -2751,6 +2751,60 @@ class RtcViewmodel extends ChangeNotifier {
     );
   }
 
+  /// Participants currently in the raised-hand queue, resolved to live
+  /// [Participant] objects. Stale queue entries (participant already gone)
+  /// are dropped.
+  List<Participant> get _raisedHandParticipants {
+    final byIdentity = {
+      for (final track in _participantTracks)
+        track.participant.identity: track.participant
+    };
+    return _raisedHandQueue
+        .map((raisedHand) => byIdentity[raisedHand.identity])
+        .whereType<Participant>()
+        .toList();
+  }
+
+  /// Grants workshop-mode mic permission to everyone who currently has their
+  /// hand raised. Hosts/co-hosts and anyone already granted are skipped, so
+  /// this only fires the calls that actually change something.
+  void allowMicForRaisedHands() {
+    final targets = _raisedHandParticipants
+        .where((participant) =>
+            !Utils.isHost(participant.metadata) &&
+            !Utils.isCoHost(participant.metadata) &&
+            !Utils.isMicEnabled(participant.attributes))
+        .toList();
+
+    if (targets.isEmpty) {
+      sendMessageToUI("All raised hands already have mic permission");
+      return;
+    }
+
+    for (final participant in targets) {
+      updateAudioPermissionForParticipant(participant.identity, true);
+    }
+  }
+
+  /// Video counterpart of [allowMicForRaisedHands].
+  void allowVideoForRaisedHands() {
+    final targets = _raisedHandParticipants
+        .where((participant) =>
+            !Utils.isHost(participant.metadata) &&
+            !Utils.isCoHost(participant.metadata) &&
+            !Utils.isVideoEnabled(participant.attributes))
+        .toList();
+
+    if (targets.isEmpty) {
+      sendMessageToUI("All raised hands already have video permission");
+      return;
+    }
+
+    for (final participant in targets) {
+      updateVideoPermissionForParticipant(participant.identity, true);
+    }
+  }
+
   //===============================[Participant Drawer]===============================
 
   bool _isParticipantDrawerHidden = false;
