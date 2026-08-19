@@ -1,6 +1,7 @@
 import 'package:daakia_vc_flutter_sdk/model/remote_activity_data.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/dialog/pariticipant_dialog_controls.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/widgets/initials_circle.dart';
+import 'package:daakia_vc_flutter_sdk/presentation/widgets/role_pill.dart';
 import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -86,50 +87,30 @@ class ParticipantTile extends StatelessWidget {
                     ],
                   ],
                 ),
+                // Role and joined-time as chips rather than one text line:
+                // "guest" is a separate flag from the meeting role, so a
+                // promoted guest carries two labels and used to run off the
+                // end of a single ellipsised line. Wrap lets the labels drop
+                // to a second row instead of being clipped.
                 if (!isForLobby)
-                  Text.rich(
-                    TextSpan(
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        TextSpan(
-                          text:
-                              "${Utils.calculateMinutesSince(participant?.joinedAt)} mins",
+                        Text(
+                          "${Utils.calculateMinutesSince(participant?.joinedAt)} mins",
                           style: const TextStyle(
                             color: Color(0xFFC4C1B8),
                             // Equivalent to the text color used
                             fontSize: 12,
                           ),
                         ),
-                        if (Utils.isHost(participant?.metadata))
-                          const TextSpan(
-                            text: " (Host)",
-                            style: TextStyle(
-                              color: Colors.amberAccent,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        if (Utils.isCoHost(participant?.metadata))
-                          const TextSpan(
-                            text: " (Co-Host)",
-                            style: TextStyle(
-                              color: Colors.lightBlueAccent,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        if (Utils.isGuest(participant?.metadata))
-                          const TextSpan(
-                            text: " (Guest)",
-                            style: TextStyle(
-                              color: Colors.greenAccent,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                        ...buildRolePills(participant?.metadata),
                       ],
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
               ],
             ),
