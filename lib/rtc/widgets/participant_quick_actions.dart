@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 
 import '../../presentation/pages/chat_controller.dart';
+import '../../presentation/widgets/role_pill.dart';
 import '../../utils/participant_action_specs.dart';
-import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 
 /// Shows a quick-action bottom sheet anchored to [participant].
@@ -60,9 +60,6 @@ class _ParticipantQuickActionsSheetState
     final participant = widget.participant;
     final viewModel = widget.viewModel;
 
-    final bool isTargetHost = Utils.isHost(participant.metadata);
-    final bool isTargetCoHost = Utils.isCoHost(participant.metadata);
-    final bool isTargetGuest = Utils.isGuest(participant.metadata);
     final bool isSelf =
         participant.identity == viewModel.room.localParticipant?.identity;
 
@@ -75,6 +72,13 @@ class _ParticipantQuickActionsSheetState
         // Use the root navigator's context: the sheet is already dismissed
         // at this point, so the builder's `context` param may be unmounted.
         showParticipantRenameDialog(
+            Navigator.of(this.context, rootNavigator: false).context,
+            participant,
+            viewModel);
+      },
+      onRemoveFromCall: () {
+        Navigator.pop(context);
+        showRemoveParticipantConfirmDialog(
             Navigator.of(this.context, rootNavigator: false).context,
             participant,
             viewModel);
@@ -99,9 +103,9 @@ class _ParticipantQuickActionsSheetState
     final String displayName = participant.name.isNotEmpty
         ? participant.name
         : participant.identity;
-    final String roleLabel = isTargetHost
-        ? 'Host'
-        : (isTargetCoHost ? 'Co-Host' : (isTargetGuest ? 'Guest' : ''));
+    // Every role the participant holds, not just the first that matches:
+    // the guest flag is independent of the meeting role.
+    final rolePills = buildRolePills(participant.metadata);
 
     return Material(
       color: const Color(0xFF1E1E1E),
@@ -185,17 +189,13 @@ class _ParticipantQuickActionsSheetState
                             ],
                           ],
                         ),
-                        if (roleLabel.isNotEmpty)
-                          Text(
-                            roleLabel,
-                            style: TextStyle(
-                              color: isTargetHost
-                                  ? Colors.amberAccent
-                                  : (isTargetCoHost
-                                      ? Colors.lightBlueAccent
-                                      : Colors.greenAccent),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                        if (rolePills.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: rolePills,
                             ),
                           ),
                       ],

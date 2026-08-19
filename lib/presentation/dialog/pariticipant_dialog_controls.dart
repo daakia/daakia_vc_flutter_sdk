@@ -40,10 +40,15 @@ class ParticipantDialogState extends State<ParticipantDialogControls> {
       participant: widget.participant,
       viewModel: widget.viewModel,
       onDismiss: () => Navigator.pop(context),
-      onRename: () {
-        Navigator.pop(context);
-        showParticipantRenameDialog(
-            context, widget.participant, widget.viewModel);
+      // No rename here: the participant row on this page already edits the
+      // name from its initials avatar, so offering it again is duplicate.
+      onRemoveFromCall: () {
+        // Capture the navigator before popping — this dialog's context is
+        // unmounted once it closes.
+        final navigator = Navigator.of(context);
+        navigator.pop();
+        showRemoveParticipantConfirmDialog(
+            navigator.context, widget.participant, widget.viewModel);
       },
       onOpenPrivateChat: () {
         // Capture navigator before closing anything — context becomes

@@ -34,11 +34,16 @@ class ParticipantActionSpec {
 /// because they need to dismiss the menu and then open another dialog/route,
 /// and the correct sequencing differs depending on what else the caller's
 /// screen needs to close first.
+///
+/// [onRename] is optional: pass null on surfaces that already expose their
+/// own rename affordance (the all-participants list edits the name straight
+/// from the initials avatar) so the action isn't offered twice.
 List<ParticipantActionSpec> buildParticipantActionSpecs({
   required Participant participant,
   required RtcViewmodel viewModel,
   required VoidCallback onDismiss,
-  required VoidCallback onRename,
+  VoidCallback? onRename,
+  required VoidCallback onRemoveFromCall,
   required VoidCallback onOpenPrivateChat,
   required VoidCallback onAnnotationUnavailable,
 }) {
@@ -57,14 +62,10 @@ List<ParticipantActionSpec> buildParticipantActionSpecs({
 
   final bool micOn = participant.isMicrophoneEnabled();
   final bool cameraOn = participant.isCameraEnabled();
-  final bool micPermGranted = Utils.isMicEnabled(participant.attributes);
-  final bool videoPermGranted = Utils.isVideoEnabled(participant.attributes);
   final bool annotationPermGranted =
       Utils.isAnnotationAllowed(participant.attributes);
   final bool targetIsOnMobile = Utils.isMobilePlatform(participant.metadata);
   final bool isPinned = viewModel.pinnedParticipantId == participant.identity;
-  final bool isHandRaised = viewModel.raisedHandQueue
-      .any((raisedHand) => raisedHand.identity == participant.identity);
 
   bool canToggleCoHost() {
     // Host can never be demoted/promoted from this menu.
@@ -90,21 +91,7 @@ List<ParticipantActionSpec> buildParticipantActionSpecs({
   // toggles here) so they're placed right next to their matching permission
   // action.
   return [
-    ParticipantActionSpec(
-      icon: micPermGranted ? Icons.mic_off : Icons.mic,
-      label:
-          micPermGranted ? 'Revoke mic permission' : 'Allow mic permission',
-      visible: isRemote &&
-          viewModel.isAudioModeEnable &&
-          !isTargetHost &&
-          !isTargetCoHost &&
-          (amIHost || amICoHost),
-      onTap: () {
-        onDismiss();
-        viewModel.updateAudioPermissionForParticipant(
-            participant.identity, !micPermGranted);
-      },
-    ),
+    micPermissionSpec(participant, viewModel, onDismiss),
     ParticipantActionSpec(
       icon: micOn ? Icons.mic_off : Icons.mic,
       label: micOn ? 'Mute mic' : 'Ask to unmute mic',
@@ -122,22 +109,7 @@ List<ParticipantActionSpec> buildParticipantActionSpecs({
         );
       },
     ),
-    ParticipantActionSpec(
-      icon: videoPermGranted ? Icons.videocam_off : Icons.videocam,
-      label: videoPermGranted
-          ? 'Revoke video permission'
-          : 'Allow video permission',
-      visible: isRemote &&
-          viewModel.isVideoModeEnable &&
-          !isTargetHost &&
-          !isTargetCoHost &&
-          (amIHost || amICoHost),
-      onTap: () {
-        onDismiss();
-        viewModel.updateVideoPermissionForParticipant(
-            participant.identity, !videoPermGranted);
-      },
-    ),
+    videoPermissionSpec(participant, viewModel, onDismiss),
     ParticipantActionSpec(
       icon: cameraOn ? Icons.videocam_off : Icons.videocam,
       label: cameraOn ? 'Turn off camera' : 'Ask to turn on camera',
@@ -179,13 +151,16 @@ List<ParticipantActionSpec> buildParticipantActionSpecs({
     ParticipantActionSpec(
       icon: Icons.edit_outlined,
       label: 'Rename',
-      visible: isSelf
-          ? viewModel.meetingDetails.features?.isProfileEditBySelfAllowed() ==
-              true
-          : (amIHost || amICoHost) &&
-              viewModel.meetingDetails.features?.isProfileEditByHostAllowed() ==
-                  true,
-      onTap: onRename,
+      visible: onRename != null &&
+          (isSelf
+              ? viewModel.meetingDetails.features
+                      ?.isProfileEditBySelfAllowed() ==
+                  true
+              : (amIHost || amICoHost) &&
+                  viewModel.meetingDetails.features
+                          ?.isProfileEditByHostAllowed() ==
+                      true),
+      onTap: onRename ?? () {},
     ),
     ParticipantActionSpec(
       icon:
@@ -197,18 +172,7 @@ List<ParticipantActionSpec> buildParticipantActionSpecs({
         viewModel.makeCoHost(participant.identity, !isTargetCoHost);
       },
     ),
-    ParticipantActionSpec(
-      icon: Icons.front_hand_outlined,
-      label: 'Lower hand',
-      visible: isRemote &&
-          isHandRaised &&
-          (amIHost || amICoHost) &&
-          viewModel.meetingDetails.features?.isRaiseHandAllowed() == true,
-      onTap: () {
-        onDismiss();
-        viewModel.lowerHand(participant.identity);
-      },
-    ),
+    lowerHandSpec(participant, viewModel, onDismiss),
     ParticipantActionSpec(
       icon: isPinned ? Icons.push_pin_outlined : Icons.push_pin,
       label: isPinned ? 'Unpin' : 'Pin to screen',
@@ -220,15 +184,7 @@ List<ParticipantActionSpec> buildParticipantActionSpecs({
         viewModel.sendEvent(SortParticipants());
       },
     ),
-    ParticipantActionSpec(
-      icon: Icons.person_remove,
-      label: 'Remove from call',
-      visible: isRemote && (amIHost || (amICoHost && !isTargetHost)),
-      onTap: () {
-        onDismiss();
-        viewModel.removeFromCall(participant.identity);
-      },
-    ),
+    removeFromCallSpec(participant, viewModel, onRemoveFromCall),
     ParticipantActionSpec(
       icon: Icons.chat_bubble_outline,
       label: 'Send private message',
@@ -241,6 +197,194 @@ List<ParticipantActionSpec> buildParticipantActionSpecs({
         viewModel.setPrivateChatUserName(participant.name);
         onOpenPrivateChat();
       },
+    ),
+  ];
+}
+
+// ── Specs shared with the raised-hands section ───────────────────────────────
+// Pulled out of [buildParticipantActionSpecs] so the raised-hands menus can
+// offer the same actions under the same role/mode rules without dragging in
+// the whole participant menu. Change a rule here and every surface follows.
+
+/// True when the local participant may manage [participant]'s workshop-mode
+/// media permissions: hosts and co-hosts may, but never for themselves and
+/// never for another host/co-host.
+bool _canManageMediaPermissions(
+    Participant participant, RtcViewmodel viewModel) {
+  final String? myMetadata = viewModel.room.localParticipant?.metadata;
+  final bool isSelf =
+      participant.identity == viewModel.room.localParticipant?.identity;
+  return !isSelf &&
+      (Utils.isHost(myMetadata) || Utils.isCoHost(myMetadata)) &&
+      !Utils.isHost(participant.metadata) &&
+      !Utils.isCoHost(participant.metadata);
+}
+
+/// Workshop-mode mic permission toggle. Only meaningful while audio mode is
+/// on — outside workshop mode everyone already has mic permission.
+ParticipantActionSpec micPermissionSpec(
+  Participant participant,
+  RtcViewmodel viewModel,
+  VoidCallback onDismiss,
+) {
+  final bool granted = Utils.isMicEnabled(participant.attributes);
+  return ParticipantActionSpec(
+    icon: granted ? Icons.mic_off : Icons.mic,
+    label: granted ? 'Revoke mic permission' : 'Allow mic permission',
+    visible: viewModel.isAudioModeEnable &&
+        _canManageMediaPermissions(participant, viewModel),
+    onTap: () {
+      onDismiss();
+      viewModel.updateAudioPermissionForParticipant(
+          participant.identity, !granted);
+    },
+  );
+}
+
+/// Workshop-mode video permission toggle, mirroring [micPermissionSpec].
+ParticipantActionSpec videoPermissionSpec(
+  Participant participant,
+  RtcViewmodel viewModel,
+  VoidCallback onDismiss,
+) {
+  final bool granted = Utils.isVideoEnabled(participant.attributes);
+  return ParticipantActionSpec(
+    icon: granted ? Icons.videocam_off : Icons.videocam,
+    label: granted ? 'Revoke video permission' : 'Allow video permission',
+    visible: viewModel.isVideoModeEnable &&
+        _canManageMediaPermissions(participant, viewModel),
+    onTap: () {
+      onDismiss();
+      viewModel.updateVideoPermissionForParticipant(
+          participant.identity, !granted);
+    },
+  );
+}
+
+/// Lowers [participant]'s raised hand. [onTap] overrides the default
+/// dismiss-then-lower for surfaces that confirm first.
+ParticipantActionSpec lowerHandSpec(
+  Participant participant,
+  RtcViewmodel viewModel,
+  VoidCallback onDismiss, {
+  VoidCallback? onTap,
+}) {
+  final String? myMetadata = viewModel.room.localParticipant?.metadata;
+  final bool isSelf =
+      participant.identity == viewModel.room.localParticipant?.identity;
+  final bool isHandRaised = viewModel.raisedHandQueue
+      .any((raisedHand) => raisedHand.identity == participant.identity);
+  return ParticipantActionSpec(
+    icon: Icons.front_hand_outlined,
+    label: 'Lower hand',
+    visible: !isSelf &&
+        isHandRaised &&
+        (Utils.isHost(myMetadata) || Utils.isCoHost(myMetadata)) &&
+        viewModel.meetingDetails.features?.isRaiseHandAllowed() == true,
+    onTap: onTap ??
+        () {
+          onDismiss();
+          viewModel.lowerHand(participant.identity);
+        },
+  );
+}
+
+/// Removes [participant] from the call. Removal is immediate and can't be
+/// undone, so [onRemoveFromCall] is expected to confirm first via
+/// [showRemoveParticipantConfirmDialog].
+ParticipantActionSpec removeFromCallSpec(
+  Participant participant,
+  RtcViewmodel viewModel,
+  VoidCallback onRemoveFromCall,
+) {
+  final String? myMetadata = viewModel.room.localParticipant?.metadata;
+  final bool isSelf =
+      participant.identity == viewModel.room.localParticipant?.identity;
+  final bool amIHost = Utils.isHost(myMetadata);
+  final bool amICoHost = Utils.isCoHost(myMetadata);
+  return ParticipantActionSpec(
+    icon: Icons.person_remove,
+    label: 'Remove from call',
+    visible: !isSelf &&
+        (amIHost || (amICoHost && !Utils.isHost(participant.metadata))),
+    onTap: onRemoveFromCall,
+  );
+}
+
+// ── Raised-hands menus ───────────────────────────────────────────────────────
+
+/// Actions for a single entry in the raised-hands list. Deliberately a subset
+/// of [buildParticipantActionSpecs]: a host manages the raised hand itself,
+/// the raiser's workshop-mode media permissions, and — role permitting —
+/// removal. Outside workshop mode only "Lower hand" (and removal) remain.
+///
+/// [onLowerHand] and [onRemoveFromCall] are the caller's, because both
+/// confirm before acting and the caller owns the dismiss sequencing.
+List<ParticipantActionSpec> buildRaisedHandActionSpecs({
+  required Participant participant,
+  required RtcViewmodel viewModel,
+  required VoidCallback onDismiss,
+  required VoidCallback onLowerHand,
+  required VoidCallback onRemoveFromCall,
+}) {
+  return [
+    micPermissionSpec(participant, viewModel, onDismiss),
+    videoPermissionSpec(participant, viewModel, onDismiss),
+    lowerHandSpec(participant, viewModel, onDismiss, onTap: onLowerHand),
+    removeFromCallSpec(participant, viewModel, onRemoveFromCall),
+  ];
+}
+
+/// Whether [participant]'s raised-hand menu would offer anything at all.
+/// Every action is role- and mode-gated, so a menu can come up empty — most
+/// obviously on your own raised hand, where nothing applies. Callers use this
+/// to hide the menu button instead of opening an empty dialog.
+bool hasRaisedHandActions(Participant participant, RtcViewmodel viewModel) {
+  return buildRaisedHandActionSpecs(
+    participant: participant,
+    viewModel: viewModel,
+    onDismiss: () {},
+    onLowerHand: () {},
+    onRemoveFromCall: () {},
+  ).any((action) => action.visible);
+}
+
+/// Actions for the raised-hands section header. The bulk media grants apply
+/// only to the people currently in the raised-hand queue and only make sense
+/// in workshop mode, so outside it the menu is just "Lower all hands".
+List<ParticipantActionSpec> buildRaisedHandBulkActionSpecs({
+  required RtcViewmodel viewModel,
+  required VoidCallback onDismiss,
+  required VoidCallback onLowerAllHands,
+}) {
+  final String? myMetadata = viewModel.room.localParticipant?.metadata;
+  final bool canManage =
+      Utils.isHost(myMetadata) || Utils.isCoHost(myMetadata);
+
+  return [
+    ParticipantActionSpec(
+      icon: Icons.mic,
+      label: 'Allow mic for all',
+      visible: canManage && viewModel.isAudioModeEnable,
+      onTap: () {
+        onDismiss();
+        viewModel.allowMicForRaisedHands();
+      },
+    ),
+    ParticipantActionSpec(
+      icon: Icons.videocam,
+      label: 'Allow video for all',
+      visible: canManage && viewModel.isVideoModeEnable,
+      onTap: () {
+        onDismiss();
+        viewModel.allowVideoForRaisedHands();
+      },
+    ),
+    ParticipantActionSpec(
+      icon: Icons.front_hand_outlined,
+      label: 'Lower all hands',
+      visible: canManage,
+      onTap: onLowerAllHands,
     ),
   ];
 }
@@ -278,6 +422,51 @@ void showParticipantRenameDialog(
             Navigator.pop(dialogCtx);
           },
           child: const Text('Save'),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Shared "Remove from call" confirmation, used by every surface that
+/// exposes the Remove action from [buildParticipantActionSpecs]. Removal is
+/// immediate and irreversible, so the participant is named in the prompt to
+/// make sure the host is removing the person they meant to.
+void showRemoveParticipantConfirmDialog(
+  BuildContext context,
+  Participant participant,
+  RtcViewmodel viewModel,
+) {
+  final displayName =
+      participant.name.isNotEmpty ? participant.name : participant.identity;
+  showDialog(
+    context: context,
+    builder: (dialogCtx) => AlertDialog(
+      title: const Text('Remove from call'),
+      content: Text.rich(
+        TextSpan(
+          children: [
+            const TextSpan(text: 'Are you sure you want to remove '),
+            TextSpan(
+              text: displayName,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const TextSpan(text: '?'),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogCtx),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.pop(dialogCtx);
+            viewModel.removeFromCall(participant.identity);
+          },
+          style: TextButton.styleFrom(foregroundColor: Colors.red),
+          child: const Text('Remove'),
         ),
       ],
     ),
