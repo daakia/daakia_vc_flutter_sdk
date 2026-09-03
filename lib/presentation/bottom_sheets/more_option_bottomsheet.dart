@@ -47,7 +47,12 @@ class _MoreOptionState extends State<MoreOptionBottomSheet> {
               // Top View (like the handle in a bottom sheet)
               Center(
                 child: Container(
-                  margin: const EdgeInsets.only(top: 10.0, bottom: 30.0),
+                  // Landscape has far less height to spend, so the grab handle
+                  // gets a tighter gutter there.
+                  margin: MediaQuery.of(context).orientation ==
+                          Orientation.landscape
+                      ? const EdgeInsets.only(top: 8.0, bottom: 12.0)
+                      : const EdgeInsets.only(top: 10.0, bottom: 30.0),
                   width: 50,
                   height: 5,
                   color: Colors.white,
