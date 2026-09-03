@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/bottom_sheets/end_meeting_bottomsheet.dart';
 import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
+import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -211,17 +212,11 @@ class _RtcControlState extends State<RtcControls> with WidgetsBindingObserver {
     );
   }
 
-  /// Modal sheets default to 9/16 of the viewport height, which on a phone in
-  /// landscape is only ~200px. Letting them scroll-control in landscape lets
-  /// them size to their content (still capped by the safe area) instead.
-  bool get _sheetNeedsFullHeight =>
-      MediaQuery.of(context).orientation == Orientation.landscape;
-
   void _showAudioOutputSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: _sheetNeedsFullHeight,
-      useSafeArea: true,
+    Utils.showAdaptiveSheet<void>(
+      context,
+      // The device list grows with whatever is paired.
+      scrollable: true,
       backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -487,10 +482,9 @@ class _RtcControlState extends State<RtcControls> with WidgetsBindingObserver {
   }
 
   void showMoreOptionBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: _sheetNeedsFullHeight,
-      useSafeArea: true,
+    Utils.showAdaptiveSheet<void>(
+      context,
+      // No scrollable: the sheet body is already a scroll view of its own.
       builder: (BuildContext context) {
         return const MoreOptionBottomSheet();
       },
@@ -507,10 +501,8 @@ class _RtcControlState extends State<RtcControls> with WidgetsBindingObserver {
   }
 
   void _endMeetingOptions(RtcViewmodel viewModel) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: _sheetNeedsFullHeight,
-      useSafeArea: true,
+    Utils.showAdaptiveSheet<void>(
+      context,
       backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),

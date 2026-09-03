@@ -60,6 +60,59 @@ class Utils {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
+  /// Shows a modal bottom sheet that survives a short viewport.
+  ///
+  /// A phone in landscape is only ~360dp tall and the framework caps a plain
+  /// sheet at 9/16 of that (~200dp), which clips almost every sheet in this
+  /// SDK. Every sheet should go through here rather than calling
+  /// [showModalBottomSheet] directly so it gets the full height when the
+  /// viewport is short.
+  ///
+  /// Lifting the cap is only half the fix for a sheet that can genuinely
+  /// outgrow the screen: [isScrollControlled] removes the ceiling but does not
+  /// make the sheet's own content scroll. Pass [scrollable] for those — an
+  /// unbounded list, or a block of copy that is already taller than a
+  /// landscape phone — and the builder's result is wrapped in a scroll view.
+  ///
+  /// It is off by default on purpose: a scrollable inside a sheet wins the
+  /// gesture arena against the sheet's own drag recognizer, so wrapping a
+  /// sheet that always fits would cost swipe-down-to-dismiss for nothing.
+  /// Leave it off too when the sheet manages its own scrolling, or when its
+  /// layout needs a bounded height (an [Expanded] over a [ListView], a
+  /// [DraggableScrollableSheet]) — wrapping those hands them unbounded height
+  /// and breaks them outright.
+  ///
+  /// Pass [forceFullHeight] for a sheet that must be scroll-controlled in
+  /// every orientation (again, [DraggableScrollableSheet] requires it).
+  static Future<T?> showAdaptiveSheet<T>(
+    BuildContext context, {
+    required WidgetBuilder builder,
+    bool scrollable = false,
+    bool forceFullHeight = false,
+    Color? backgroundColor,
+    ShapeBorder? shape,
+    bool isDismissible = true,
+    bool enableDrag = true,
+    bool useSafeArea = true,
+  }) {
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    return showModalBottomSheet<T>(
+      context: context,
+      backgroundColor: backgroundColor,
+      shape: shape,
+      isDismissible: isDismissible,
+      enableDrag: enableDrag,
+      useSafeArea: useSafeArea,
+      isScrollControlled: forceFullHeight || isLandscape,
+      builder: (sheetContext) {
+        final child = builder(sheetContext);
+        if (!scrollable) return child;
+        return SingleChildScrollView(child: child);
+      },
+    );
+  }
+
   static String getTimeZoneId() {
     return DateTime.now().timeZoneName;
   }

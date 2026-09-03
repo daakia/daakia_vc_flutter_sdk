@@ -136,9 +136,11 @@ class _TranscriptionScreenState extends State<TranscriptionScreen> {
         widget.viewModel.meetingDetails.features?.isVoiceTextTranslationAllowed() ==
             true;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
+    Utils.showAdaptiveSheet<void>(
+      context,
+      forceFullHeight: true,
+      // Two language pickers plus the keyboard inset overflow a short viewport.
+      scrollable: true,
       backgroundColor: Colors.transparent,
       builder: (_) => LanguageSelectionBottomSheet(
         languages: widget.viewModel.languages,

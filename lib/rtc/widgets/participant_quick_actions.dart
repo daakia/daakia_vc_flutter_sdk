@@ -4,6 +4,7 @@ import 'package:livekit_client/livekit_client.dart';
 import '../../presentation/pages/chat_controller.dart';
 import '../../presentation/widgets/role_pill.dart';
 import '../../utils/participant_action_specs.dart';
+import '../../utils/utils.dart';
 import '../../viewmodel/rtc_viewmodel.dart';
 
 /// Shows a quick-action bottom sheet anchored to [participant].
@@ -15,10 +16,13 @@ void showParticipantQuickActions(
   Participant participant,
   RtcViewmodel viewModel,
 ) {
-  showModalBottomSheet(
-    context: context,
+  Utils.showAdaptiveSheet<void>(
+    context,
     backgroundColor: Colors.transparent,
-    isScrollControlled: true,
+    forceFullHeight: true,
+    // The identity header plus a role-dependent action list can outgrow a
+    // landscape phone.
+    scrollable: true,
     builder: (_) => ParticipantQuickActionsSheet(
       participant: participant,
       viewModel: viewModel,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../model/language_model.dart';
+import '../../utils/utils.dart';
 
 class LanguageSelectionBottomSheet extends StatefulWidget {
   final List<LanguageModel> languages;
@@ -43,10 +44,12 @@ class _LanguageSelectionBottomSheetState
 
   Future<void> _pickLanguage({required bool isSource}) async {
     final currentSelection = isSource ? _sourceLanguage : _targetLanguage;
-    final picked = await showModalBottomSheet<LanguageModel>(
-      context: context,
+    final picked = await Utils.showAdaptiveSheet<LanguageModel>(
+      context,
       backgroundColor: const Color(0xFF1A1A2E),
-      isScrollControlled: true,
+      // A DraggableScrollableSheet sizes itself and scrolls its own list.
+      forceFullHeight: true,
+      scrollable: false,
       builder: (_) => _LanguagePickerSheet(
         title: isSource ? 'From (Speak Language)' : 'To (Read Language)',
         languages: widget.languages,
