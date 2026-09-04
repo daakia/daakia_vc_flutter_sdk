@@ -1346,170 +1346,12 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
                     Scaffold(
                       backgroundColor: Colors.black,
                       body: SafeArea(
-                        child: Stack(children: [
-                          Container(
-                            color: Colors.black,
-                            child: Column(
-                              children: [
-                                // Main content area for participants
-                                Expanded(
-                                  child: Stack(
-                                    children: [
-                                      Column(
-                                        children: [
-                                          Expanded(
-                                            child: _isWhiteBoardEnabled
-                                                ? WhiteBoardWidget(
-                                                    key: const ValueKey(
-                                                        'whiteboard'),
-                                                    controller:
-                                                        _webViewController,
-                                                  )
-                                                : participantTracks.isNotEmpty
-                                                    ? Stack(
-                                                        children: [
-                                                          _speakerHasActiveVideo()
-                                                              ? GestureDetector(
-                                                                  onDoubleTap: _resetZoom,
-                                                                  child: InteractiveViewer(
-                                                                    transformationController: _zoomController,
-                                                                    minScale: 1.0,
-                                                                    maxScale: 4.0,
-                                                                    clipBehavior: Clip.hardEdge,
-                                                                    child: ParticipantWidget.widgetFor(
-                                                                      participantTracks.first,
-                                                                      showStatsLayer: true,
-                                                                      isSpeaker: true,
-                                                                      key: ValueKey('speaker_${participantTracks.first.participant.identity}'),
-                                                                    ),
-                                                                  ),
-                                                                )
-                                                              : ParticipantWidget.widgetFor(
-                                                                  participantTracks.first,
-                                                                  showStatsLayer: true,
-                                                                  isSpeaker: true,
-                                                                  key: ValueKey('speaker_${participantTracks.first.participant.identity}'),
-                                                                ),
-                                                          if (_speakerHasActiveVideo() && _zoomScale > 1.05)
-                                                            Positioned(
-                                                              top: 8,
-                                                              left: 8,
-                                                              child: GestureDetector(
-                                                                onTap: _resetZoom,
-                                                                child: Container(
-                                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                                                  decoration: BoxDecoration(
-                                                                    color: Colors.black.withValues(alpha: 0.55),
-                                                                    borderRadius: BorderRadius.circular(20),
-                                                                  ),
-                                                                  child: const Row(
-                                                                    mainAxisSize: MainAxisSize.min,
-                                                                    children: [
-                                                                      Icon(Icons.zoom_out, color: Colors.white, size: 16),
-                                                                      SizedBox(width: 4),
-                                                                      Text('Reset', style: TextStyle(color: Colors.white, fontSize: 12)),
-                                                                    ],
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                        ],
-                                                      )
-                                                    : Container(),
-                                          ),
-
-                                          // Show participant list below (adjusted based on whiteboard status)
-                                          if (participantTracks.length > 1 ||
-                                              _isWhiteBoardEnabled)
-                                            SizedBox(
-                                              height: 120,
-                                              child: ListView.builder(
-                                                scrollDirection:
-                                                    Axis.horizontal,
-                                                itemCount: _isWhiteBoardEnabled
-                                                    ? participantTracks
-                                                        .length // show all
-                                                    : participantTracks.length -
-                                                        1,
-                                                // skip first
-                                                itemBuilder:
-                                                    (BuildContext context,
-                                                        int index) {
-                                                  final track =
-                                                      _isWhiteBoardEnabled
-                                                          ? participantTracks[
-                                                              index] // show all participants
-                                                          : participantTracks[
-                                                              index +
-                                                                  1]; // skip first
-
-                                                  return SizedBox(
-                                                    width: 180,
-                                                    height: 120,
-                                                    child: ParticipantWidget.widgetFor(
-                                                      track,
-                                                      key: ValueKey(track.participant.identity),
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                      Consumer<RtcViewmodel>(
-                                        builder: (context, viewModel, _) {
-                                          if (!viewModel.isWebinarModeEnable) {
-                                            return const SizedBox.shrink();
-                                          }
-                                          return Positioned(
-                                            left: 0,
-                                            right: 0,
-                                            top: 10,
-                                            child: IgnorePointer(
-                                              child: Center(
-                                                child: _buildTopStatusIndicator(
-                                                  label: 'Workshop',
-                                                  indicatorColor:
-                                                      const Color(0xFF34C759),
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      if (_livekitProviderKey.currentState
-                                              ?.viewModel.isRecording ==
-                                          true)
-                                        const Positioned(
-                                          right: 10,
-                                          top: 10,
-                                          child: Icon(
-                                              Icons.radio_button_checked,
-                                              color: Colors.red),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                if (widget.room.localParticipant != null)
-                                  SafeArea(
-                                    top: false,
-                                    child: RtcControls(
-                                      widget.room,
-                                      widget.room.localParticipant!,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          Positioned(
-                            right: 0,
-                            top: 50,
-                            child: EmojiReactionWidget(
-                              viewModel:
-                                  _livekitProviderKey.currentState?.viewModel,
-                            ),
-                          ),
-                        ]),
+                        child: Container(
+                          color: Colors.black,
+                          child: _isLandscape(context)
+                              ? _buildLandscapeLayout(context)
+                              : _buildPortraitLayout(context),
+                        ),
                       ),
                     ),
 
@@ -1558,6 +1400,252 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
           ),        // closes AnnotatedRegion
         ),          // closes MaterialApp
       ),            // closes RtcProvider
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Layout
+  //
+  // Portrait keeps the classic stack: speaker/whiteboard on top, the filmstrip
+  // of the remaining participants below it, controls pinned to the bottom.
+  // Landscape mirrors that along the other axis — the stage grows into the
+  // width freed up by rotating, and the filmstrip + controls become vertical
+  // rails on the trailing edge instead of eating the (now scarce) height.
+  // ---------------------------------------------------------------------------
+
+  static const double _filmstripPortraitHeight = 120;
+  static const double _filmstripPortraitTileWidth = 180;
+
+  bool _isLandscape(BuildContext context) =>
+      MediaQuery.of(context).orientation == Orientation.landscape;
+
+  /// Whether there is anything to show in the filmstrip. With the whiteboard up
+  /// every participant goes into the strip; otherwise the first track is the
+  /// speaker on stage and only the rest are stripped.
+  bool get _hasFilmstrip =>
+      participantTracks.length > 1 || _isWhiteBoardEnabled;
+
+  int get _filmstripCount => _isWhiteBoardEnabled
+      ? participantTracks.length
+      : participantTracks.length - 1;
+
+  ParticipantTrack _filmstripTrackAt(int index) => _isWhiteBoardEnabled
+      ? participantTracks[index]
+      : participantTracks[index + 1];
+
+  Widget _buildPortraitLayout(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(child: _buildStageArea(context, isLandscape: false)),
+        if (_hasFilmstrip)
+          SizedBox(
+            height: _filmstripPortraitHeight,
+            child: _buildFilmstrip(
+              axis: Axis.horizontal,
+              tileWidth: _filmstripPortraitTileWidth,
+              tileHeight: _filmstripPortraitHeight,
+            ),
+          ),
+        if (widget.room.localParticipant != null)
+          SafeArea(
+            top: false,
+            child: RtcControls(
+              widget.room,
+              widget.room.localParticipant!,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildLandscapeLayout(BuildContext context) {
+    // Keep the rail a proportion of the width so it stays a thumbnail strip on
+    // a phone and doesn't balloon into a second stage on a tablet.
+    final railWidth =
+        (MediaQuery.of(context).size.width * 0.18).clamp(130.0, 190.0);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(child: _buildStageArea(context, isLandscape: true)),
+        if (_hasFilmstrip)
+          SizedBox(
+            width: railWidth,
+            child: _buildFilmstrip(
+              axis: Axis.vertical,
+              tileWidth: railWidth,
+              tileHeight: railWidth * 2 / 3,
+            ),
+          ),
+        if (widget.room.localParticipant != null)
+          RtcControls(
+            widget.room,
+            widget.room.localParticipant!,
+            axis: Axis.vertical,
+          ),
+      ],
+    );
+  }
+
+  /// The speaker / screen share / whiteboard surface plus everything that
+  /// floats on top of it. Overlays are anchored to the stage (not the whole
+  /// screen) so they never drift over the filmstrip or the controls rail.
+  Widget _buildStageArea(BuildContext context, {required bool isLandscape}) {
+    // The stage is the stack's only non-positioned child and StackFit.expand
+    // makes it fill: a Stack sizes itself from its non-positioned children, so
+    // if every child were positioned (or the only unpositioned one collapsed to
+    // zero) the whole stage would collapse with it.
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        _buildStage(),
+        // Status pills (workshop / recording) share one centred block at the
+        // top of the stage. Both top corners of the speaker tile are already
+        // taken — hand raise / zoom-reset on the left, the quick-actions "⋮" on
+        // the right — so the block is inset past the widest of them instead of
+        // being pinned to a corner, which is what made the recording dot sit
+        // under the "⋮" button. Wrap (not Row) means that when both pills are
+        // showing on a narrow stage they stack vertically rather than growing
+        // into the insets.
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 10,
+          child: Consumer<RtcViewmodel>(
+            builder: (context, viewModel, _) {
+              final pills = <Widget>[
+                if (viewModel.isWebinarModeEnable)
+                  _buildTopStatusIndicator(
+                    label: 'Workshop',
+                    indicatorColor: const Color(0xFF34C759),
+                  ),
+                if (viewModel.isRecording)
+                  _buildTopStatusIndicator(
+                    label: 'Recording',
+                    indicatorColor: Colors.red,
+                  ),
+              ];
+              if (pills.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return IgnorePointer(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 84),
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: pills,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        // Reactions float up the trailing edge of the stage. Landscape starts
+        // them higher and keeps them shorter because there is far less height.
+        Positioned(
+          right: 0,
+          top: isLandscape ? 8 : 50,
+          bottom: isLandscape ? 8 : null,
+          child: EmojiReactionWidget(
+            viewModel: _livekitProviderKey.currentState?.viewModel,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStage() {
+    if (_isWhiteBoardEnabled) {
+      return WhiteBoardWidget(
+        key: const ValueKey('whiteboard'),
+        controller: _webViewController,
+      );
+    }
+    if (participantTracks.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final speaker = ParticipantWidget.widgetFor(
+      participantTracks.first,
+      showStatsLayer: true,
+      isSpeaker: true,
+      key: ValueKey('speaker_${participantTracks.first.participant.identity}'),
+    );
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        _speakerHasActiveVideo()
+            ? GestureDetector(
+                onDoubleTap: _resetZoom,
+                child: InteractiveViewer(
+                  transformationController: _zoomController,
+                  minScale: 1.0,
+                  maxScale: 4.0,
+                  clipBehavior: Clip.hardEdge,
+                  child: speaker,
+                ),
+              )
+            : speaker,
+        if (_speakerHasActiveVideo() && _zoomScale > 1.05)
+          Positioned(
+            top: 8,
+            left: 8,
+            child: GestureDetector(
+              onTap: _resetZoom,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.zoom_out, color: Colors.white, size: 16),
+                    SizedBox(width: 4),
+                    Text('Reset',
+                        style: TextStyle(color: Colors.white, fontSize: 12)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildFilmstrip({
+    required Axis axis,
+    required double tileWidth,
+    required double tileHeight,
+  }) {
+    final isVertical = axis == Axis.vertical;
+    return ListView.builder(
+      scrollDirection: axis,
+      padding: isVertical
+          ? const EdgeInsets.symmetric(vertical: 4)
+          : EdgeInsets.zero,
+      itemCount: _filmstripCount,
+      itemBuilder: (BuildContext context, int index) {
+        final track = _filmstripTrackAt(index);
+        return Padding(
+          padding: isVertical
+              ? const EdgeInsets.only(bottom: 4)
+              : EdgeInsets.zero,
+          child: SizedBox(
+            width: tileWidth,
+            height: tileHeight,
+            child: ParticipantWidget.widgetFor(
+              track,
+              key: ValueKey(track.participant.identity),
+            ),
+          ),
+        );
+      },
     );
   }
 

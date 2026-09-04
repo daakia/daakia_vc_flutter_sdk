@@ -21,8 +21,8 @@ class AttachmentPickerSheet {
     required AttachmentUploadCallback onUpload,
   }) {
     Utils.hideKeyboard(context);
-    showModalBottomSheet(
-      context: context,
+    Utils.showAdaptiveSheet<void>(
+      context,
       backgroundColor: Colors.grey[900],
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -148,8 +148,10 @@ class AttachmentPickerSheet {
     double uploadProgress,
     AttachmentUploadCallback onUpload,
   ) {
-    showModalBottomSheet(
-      context: context,
+    Utils.showAdaptiveSheet<void>(
+      context,
+      // The preview sizes itself from the picked file.
+      scrollable: true,
       backgroundColor: Colors.black,
       builder: (previewContext) => Padding(
         padding: const EdgeInsets.all(8.0),

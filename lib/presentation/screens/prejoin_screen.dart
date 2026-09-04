@@ -1421,10 +1421,12 @@ class _PreJoinState extends State<PreJoinScreen> {
   void _showDuplicateDeviceSheet(Function stopLoading, VoidCallback onProceed,
       {String? otherPlatform}) {
     if (!mounted) return;
-    showModalBottomSheet<void>(
-      context: context,
+    Utils.showAdaptiveSheet<void>(
+      context,
       isDismissible: false,
       enableDrag: false,
+      // Taller than a landscape phone even with the cap lifted.
+      scrollable: true,
       backgroundColor: Colors.transparent,
       builder: (_) => DuplicateIdentityBottomSheet(
         otherPlatform: otherPlatform,

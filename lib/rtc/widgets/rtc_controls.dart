@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:daakia_vc_flutter_sdk/events/rtc_events.dart';
 import 'package:daakia_vc_flutter_sdk/presentation/bottom_sheets/end_meeting_bottomsheet.dart';
 import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
+import 'package:daakia_vc_flutter_sdk/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -18,9 +19,15 @@ class RtcControls extends StatefulWidget {
   final Room room;
   final LocalParticipant participant;
 
+  /// [Axis.horizontal] is the classic bottom bar. [Axis.vertical] renders the
+  /// same buttons as a rail on the trailing edge, which is what the meeting
+  /// screen uses in landscape so the controls don't eat the limited height.
+  final Axis axis;
+
   const RtcControls(
     this.room,
     this.participant, {
+    this.axis = Axis.horizontal,
     super.key,
   });
 
@@ -52,8 +59,9 @@ class _RtcControlState extends State<RtcControls> with WidgetsBindingObserver {
     // Set speaker immediately so audio is loud even before device list loads.
     Hardware.instance.setSpeakerphoneOn(true);
     Hardware.instance.enumerateDevices().then(_loadDevices);
-    _deviceSubscription =
-        Hardware.instance.onDeviceChange.stream.listen(_loadDevices);
+    _deviceSubscription = Hardware.instance.onDeviceChange.stream.listen(
+      _loadDevices,
+    );
     WidgetsBinding.instance.addObserver(this);
     _checkOsPermissions();
   }
@@ -81,16 +89,20 @@ class _RtcControlState extends State<RtcControls> with WidgetsBindingObserver {
 
   void _loadDevices(List<MediaDevice> devices) {
     final rawOutputs = devices.where((d) => d.kind == 'audiooutput').toList();
-    final hadExternal =
-        _audioOutputDevices.any((d) => isExternalAudioDevice(d.label));
+    final hadExternal = _audioOutputDevices.any(
+      (d) => isExternalAudioDevice(d.label),
+    );
 
     // On iOS, also check audioinput for BT devices: when overrideOutputAudioPort(.speaker)
     // is active the current route shows only Speaker, but BT HFP still appears in
     // availableInputs (audioinput kind) with portType containing "bluetooth".
-    final hasBtInput = defaultTargetPlatform == TargetPlatform.iOS &&
-        devices.any((d) =>
-            d.kind == 'audioinput' &&
-            (d.groupId ?? '').toLowerCase().contains('bluetooth'));
+    final hasBtInput =
+        defaultTargetPlatform == TargetPlatform.iOS &&
+        devices.any(
+          (d) =>
+              d.kind == 'audioinput' &&
+              (d.groupId ?? '').toLowerCase().contains('bluetooth'),
+        );
     final hasExternal =
         rawOutputs.any((d) => isExternalAudioDevice(d.label)) || hasBtInput;
 
@@ -193,15 +205,18 @@ class _RtcControlState extends State<RtcControls> with WidgetsBindingObserver {
       icon: Icon(
         _audioOutputIcon,
         color: Colors.white.withValues(
-            alpha: Hardware.instance.canSwitchSpeakerphone ? 1.0 : 0.5),
+          alpha: Hardware.instance.canSwitchSpeakerphone ? 1.0 : 0.5,
+        ),
       ),
       iconSize: 30,
     );
   }
 
   void _showAudioOutputSheet() {
-    showModalBottomSheet(
-      context: context,
+    Utils.showAdaptiveSheet<void>(
+      context,
+      // The device list grows with whatever is paired.
+      scrollable: true,
       backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -263,7 +278,8 @@ class _RtcControlState extends State<RtcControls> with WidgetsBindingObserver {
 
     // Check meeting-level permission.
     final isHostOrCoHost = viewModel.isHost() || viewModel.isCoHost();
-    final hasMeetingPermission = isHostOrCoHost ||
+    final hasMeetingPermission =
+        isHostOrCoHost ||
         viewModel.isAudioPermissionEnable ||
         viewModel.isMicPermissionGranted;
 
@@ -301,7 +317,8 @@ class _RtcControlState extends State<RtcControls> with WidgetsBindingObserver {
 
     // Check meeting-level permission.
     final isHostOrCoHost = viewModel.isHost() || viewModel.isCoHost();
-    final hasMeetingPermission = isHostOrCoHost ||
+    final hasMeetingPermission =
+        isHostOrCoHost ||
         viewModel.isVideoPermissionEnable ||
         viewModel.isVideoPermissionGranted;
 
@@ -373,77 +390,105 @@ class _RtcControlState extends State<RtcControls> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<RtcViewmodel>(context);
+    final buttons = _buildButtons(viewModel);
+
+    if (widget.axis == Axis.horizontal) {
+      return Container(
+        color: transparentMaskColor,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: buttons,
+        ),
+      );
+    }
+
     return Container(
       color: transparentMaskColor,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildAudioOutputButton(),
-          _buildCameraButton(viewModel),
-          _buildMicButton(viewModel),
-          IconButton(
-            onPressed: () {
-              if (participant.isCameraEnabled()) {
-                _toggleCamera();
-              }
-            },
-            icon: Icon(
-              Icons.flip_camera_android,
-              color: Colors.white
-                  .withValues(alpha: participant.isCameraEnabled() ? 1 : 0.5),
-            ),
-            iconSize: 30,
-          ),
-          IconButton(
-            onPressed: () {
-              showMoreOptionBottomSheet();
-            },
-            icon: Badge(
-              isLabelVisible: (viewModel.getUnReadCount() +
-                      viewModel.getUnreadCountPrivateChat() +
-                      viewModel.screenShareRequestCount) >
-                  0,
-              label: Text(
-                (viewModel.getUnReadCount() +
-                        viewModel.getUnreadCountPrivateChat() +
-                        viewModel.screenShareRequestCount)
-                    .toString(),
-                style: const TextStyle(color: Colors.white),
-              ),
-              offset: const Offset(8, 8),
-              backgroundColor: Colors.red,
-              child: const Icon(
-                Icons.more_horiz,
-                color: Colors.white,
+      width: _railWidth,
+      // A short landscape viewport (or a large text scale) can leave less room
+      // than the buttons need, so the rail scrolls instead of overflowing.
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: buttons,
               ),
             ),
-            iconSize: 30,
           ),
-          IconButton(
-            onPressed: () {
-              if (viewModel.isHost() || viewModel.isCoHost()) {
-                _endMeetingOptions(viewModel);
-              } else {
-                _onTapDisconnect(viewModel);
-              }
-            },
-            icon: const Icon(
-              Icons.call_end,
-              color: Colors.redAccent,
-            ),
-            iconSize: 30,
-          )
-        ],
+        ),
       ),
     );
   }
 
+  static const double _railWidth = 64;
+
+  List<Widget> _buildButtons(RtcViewmodel viewModel) {
+    return [
+      _buildAudioOutputButton(),
+      _buildCameraButton(viewModel),
+      _buildMicButton(viewModel),
+      IconButton(
+        onPressed: () {
+          if (participant.isCameraEnabled()) {
+            _toggleCamera();
+          }
+        },
+        icon: Icon(
+          Icons.flip_camera_android,
+          color: Colors.white.withValues(
+            alpha: participant.isCameraEnabled() ? 1 : 0.5,
+          ),
+        ),
+        iconSize: 30,
+      ),
+      IconButton(
+        onPressed: () {
+          showMoreOptionBottomSheet();
+        },
+        icon: Badge(
+          isLabelVisible:
+              (viewModel.getUnReadCount() +
+                  viewModel.getUnreadCountPrivateChat() +
+                  viewModel.screenShareRequestCount) >
+              0,
+          label: Text(
+            (viewModel.getUnReadCount() +
+                    viewModel.getUnreadCountPrivateChat() +
+                    viewModel.screenShareRequestCount)
+                .toString(),
+            style: const TextStyle(color: Colors.white),
+          ),
+          offset: const Offset(8, 8),
+          backgroundColor: Colors.red,
+          child: const Icon(Icons.more_horiz, color: Colors.white),
+        ),
+        iconSize: 30,
+      ),
+      IconButton(
+        onPressed: () {
+          if (viewModel.isHost() || viewModel.isCoHost()) {
+            _endMeetingOptions(viewModel);
+          } else {
+            _onTapDisconnect(viewModel);
+          }
+        },
+        icon: const Icon(Icons.call_end, color: Colors.redAccent),
+        iconSize: 30,
+      ),
+    ];
+  }
+
   void showMoreOptionBottomSheet() {
-    showModalBottomSheet(
-        context: context,
-        builder: (BuildContext context) {
-          return const MoreOptionBottomSheet();
-        });
+    Utils.showAdaptiveSheet<void>(
+      context,
+      // No scrollable: the sheet body is already a scroll view of its own.
+      builder: (BuildContext context) {
+        return const MoreOptionBottomSheet();
+      },
+    );
   }
 
   void _onTapDisconnect(RtcViewmodel viewModel) async {
@@ -456,8 +501,8 @@ class _RtcControlState extends State<RtcControls> with WidgetsBindingObserver {
   }
 
   void _endMeetingOptions(RtcViewmodel viewModel) {
-    showModalBottomSheet(
-      context: context,
+    Utils.showAdaptiveSheet<void>(
+      context,
       backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
@@ -522,8 +567,11 @@ class _ControlButton extends StatelessWidget {
                 color: Colors.orange,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.priority_high,
-                  size: 10, color: Colors.white),
+              child: const Icon(
+                Icons.priority_high,
+                size: 10,
+                color: Colors.white,
+              ),
             ),
           ),
       ],
