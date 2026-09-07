@@ -44,10 +44,14 @@ class RoomNotificationState extends State<RoomNotification>
     super.dispose();
   }
 
+  /// [duration] overrides [_displayDuration] for a notice that needs longer on
+  /// screen than a routine one — a couple of sentences the user has to act on
+  /// can't be read in the default 2.5s.
   void show({
     required String message,
     String? actionText,
     VoidCallback? actionCallback,
+    Duration? duration,
   }) {
     if (!mounted) return;
 
@@ -67,7 +71,7 @@ class RoomNotificationState extends State<RoomNotification>
       _actionCallback = actionCallback;
     });
     _animController.forward(from: 0);
-    _dismissTimer = Timer(_displayDuration, _dismiss);
+    _dismissTimer = Timer(duration ?? _displayDuration, _dismiss);
   }
 
   void _dismiss() {
