@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:daakia_vc_flutter_sdk/utils/constants.dart';
 import 'package:dio/dio.dart';
 
@@ -122,21 +124,37 @@ Future<void> networkListRequestHandler<T>({
   }
 }
 
-/// Parses Dio errors into readable messages
+/// Parses Dio errors into readable messages.
+///
+/// These are shown to participants verbatim, so they name the likely cause
+/// rather than the exception. "An unexpected error occurred" for what is really
+/// a phone that walked out of Wi-Fi range reads as an app fault, and gets
+/// reported to us as one.
 String _getDioErrorMessage(DioException dioError) {
   switch (dioError.type) {
+    case DioExceptionType.connectionError:
+      return "Can't reach the server. Please check your internet connection and try again.";
     case DioExceptionType.connectionTimeout:
-      return "Connection timeout. Please try again.";
+      return "The connection timed out. Your network looks slow — please check it and try again.";
     case DioExceptionType.sendTimeout:
-      return "Request timed out. Please try again.";
+      return "The request timed out. Please check your connection and try again.";
     case DioExceptionType.receiveTimeout:
-      return "Server took too long to respond.";
+      return "The server took too long to respond. Please try again.";
+    case DioExceptionType.transformTimeout:
+      return "The response took too long to process. Please try again.";
+    case DioExceptionType.badCertificate:
+      return "Secure connection failed. If you're on a public or office network, it may be blocking the connection.";
     case DioExceptionType.badResponse:
       return "Server error: ${dioError.response?.statusCode} - ${dioError.response?.statusMessage}";
     case DioExceptionType.cancel:
       return "Request was cancelled.";
     case DioExceptionType.unknown:
-    default:
-      return "An unexpected error occurred.";
+      // Dio reports a dead socket as `unknown` on some platforms, so read the
+      // wrapped error rather than defaulting to the useless generic message.
+      final wrapped = dioError.error;
+      if (wrapped is SocketException || wrapped is HttpException) {
+        return "Can't reach the server. Please check your internet connection and try again.";
+      }
+      return "Something went wrong. Please check your connection and try again.";
   }
 }
