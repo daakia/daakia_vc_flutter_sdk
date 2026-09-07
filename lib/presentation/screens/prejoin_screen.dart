@@ -7,7 +7,6 @@ import 'package:daakia_vc_flutter_sdk/model/meeting_details_model.dart';
 import 'package:daakia_vc_flutter_sdk/model/rtc_data.dart';
 import 'package:daakia_vc_flutter_sdk/enum/attendance_role_enum.dart';
 import 'package:daakia_vc_flutter_sdk/rtc/meeting_manager.dart';
-import 'package:daakia_vc_flutter_sdk/utils/rtc_ext.dart';
 import 'package:daakia_vc_flutter_sdk/utils/storage_helper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -19,8 +18,11 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../api/injection.dart';
 import '../../model/daakia_meeting_configuration.dart';
 import '../../presentation/bottom_sheets/duplicate_identity_bottomsheet.dart';
+import '../../presentation/dialog/join_failure_dialog.dart';
 import '../../resources/colors/color.dart';
 import '../../rtc/room.dart';
+import '../../service/daakia_vc_logger.dart';
+import '../../utils/join_failure.dart';
 import '../../utils/name_input_formatter.dart';
 import '../../utils/utils.dart';
 
@@ -550,9 +552,59 @@ class _PreJoinState extends State<PreJoinScreen> {
           isNeedToCancelApiCall = true;
           stopLoading.call();
         });
-        if (mounted) Utils.showSnackBar(context, message: message);
+        unawaited(_showJoinApiError(message,
+            stopLoading: stopLoading, isParticipant: isParticipant));
       },
     );
+  }
+
+  /// Reports a failure from the join API.
+  ///
+  /// Backend messages are already written for participants, so they are shown
+  /// as-is — but a transport failure never reaches the backend, and the message
+  /// the API layer synthesises for it ("Can't reach the server…") can't tell the
+  /// user *why*. Probing here upgrades that one case to the full explanation,
+  /// which is the difference between "no internet" and the Wi-Fi that is
+  /// connected but has no internet access.
+  Future<void> _showJoinApiError(
+    String message, {
+    required Function stopLoading,
+    required bool isParticipant,
+  }) async {
+    if (!mounted) return;
+    final failure = await JoinFailure.forNetwork(technicalDetail: message);
+    if (!mounted) return;
+
+    if (failure == null) {
+      Utils.showSnackBar(context, message: message);
+      return;
+    }
+
+    DaakiaVcLogger.logWarning(
+      'Meeting join API failed with no usable connection',
+      attributes: {
+        'meeting_uid': widget.meetingId,
+        'network_status': failure.diagnosis.status.name,
+        'network_transport': failure.diagnosis.transport,
+        'api_message': message,
+      },
+      reportToSentry: false,
+    );
+
+    if (_shouldSkipPreJoin) {
+      setState(() => _skipJoinErrorMessage =
+          '${failure.title}\n\n${failure.summary}');
+      return;
+    }
+
+    final retry = await showJoinFailureDialog(context, failure);
+    if (!retry || !mounted) return;
+
+    // The failing call set this to cancel the attempt; clear it so the retry
+    // isn't short-circuited by its own predecessor.
+    isNeedToCancelApiCall = false;
+    setState(() => isLoading = true);
+    joinMeeting(stopLoading, isParticipant: isParticipant);
   }
 
   bool _isInvalidMeetingDetails(RtcData it) {
@@ -794,119 +846,372 @@ class _PreJoinState extends State<PreJoinScreen> {
     );
   }
 
+  /// LiveKit's default gives each leg of the connect a single 10s window,
+  /// which is tight for a phone moving between cells or on congested Wi-Fi.
+  static const _connectTimeout = Duration(seconds: 12);
+
+  /// The media-free retry gets longer still: it is the last attempt before the
+  /// user is told they can't join at all.
+  static const _fallbackConnectTimeout = Duration(seconds: 15);
+
+  static const _weakConnectionNotice =
+      'Your connection was weak, so you joined with your microphone and camera '
+      'off. You can turn them on any time.';
+
   void _join(BuildContext context, Function stopLoading,
       {required String livekitUrl, required String livekitToken}) async {
     isLoading = true;
 
     setState(() {});
 
-    // var args = widget.args;
+    // Remember what the user actually asked for. A failed attempt takes the
+    // live tracks down with it (see [_discardLocalMedia]), so anything we
+    // rebuild afterwards has to come from their intent, not from the track
+    // objects — those are corpses by then.
+    final wantedAudio = _enableAudio;
+    final wantedVideo = _enableVideo;
 
-    try {
-      //create new room
-      var cameraEncoding = const VideoEncoding(
-        maxBitrate: 5 * 1000 * 1000,
-        maxFramerate: 30,
-      );
+    Object? lastError;
 
-      var screenEncoding = const VideoEncoding(
-        maxBitrate: 3 * 1000 * 1000,
-        maxFramerate: 15,
-      );
-
-      // E2EEOptions? e2eeOptions;
-      // if (args.e2ee && args.e2eeKey != null) {
-      //   final keyProvider = await BaseKeyProvider.create();
-      //   e2eeOptions = E2EEOptions(keyProvider: keyProvider);
-      //   await keyProvider.setKey(args.e2eeKey!);
-      // }
-
-      final room = Room(
-        roomOptions: RoomOptions(
-          adaptiveStream: true,
-          dynacast: true,
-          defaultAudioPublishOptions: const AudioPublishOptions(
-            name: 'custom_audio_track_name',
-          ),
-          defaultAudioCaptureOptions: const AudioCaptureOptions(
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-            stopAudioCaptureOnMute: false,
-          ),
-          defaultCameraCaptureOptions: const CameraCaptureOptions(
-              maxFrameRate: 30,
-              params: VideoParameters(
-                dimensions: VideoDimensions(1280, 720),
-              )),
-          defaultScreenShareCaptureOptions: const ScreenShareCaptureOptions(
-              useiOSBroadcastExtension: true,
-              params: VideoParameters(
-                dimensions: VideoDimensionsPresets.h1080_169,
-              )),
-          defaultVideoPublishOptions: VideoPublishOptions(
-            simulcast: false,
-            videoEncoding: cameraEncoding,
-            screenShareEncoding: screenEncoding,
-          ),
-        ),
-      );
+    // Two passes. The first publishes whatever the user set up on this screen.
+    // If it was the media path that failed, the second drops the local mic and
+    // camera: with nothing to publish there is no publisher peer connection to
+    // negotiate and far less to force through a constrained network, which is
+    // often enough to get in. Being in the meeting muted beats not getting in.
+    for (var attempt = 0; attempt < 2; attempt++) {
+      final withoutMedia = attempt == 1;
+      final room = _buildRoom();
       // Create a Listener before connecting
       final listener = room.createListener();
 
-      await room.prepareConnection(livekitUrl, livekitToken);
+      try {
+        await room.prepareConnection(livekitUrl, livekitToken);
 
-      // Try to connect to the room
-      // This will throw an Exception if it fails for any reason.
-      await room.connect(
-        livekitUrl,
-        livekitToken,
-        fastConnectOptions: FastConnectOptions(
-          microphone: TrackOption(track: _audioTrack),
-          camera: TrackOption(track: _videoTrack),
-        ),
-      );
-
-      //NOTE:: Storing guest name in cache
-      StorageHelper().setGuestUserName(name.trim());
-
-      meetingDetails = MeetingDetails(
-          meetingUid: widget.meetingId,
-          authorizationToken: hostToken,
-          livekitToken: livekitToken,
-          features: features,
-          meetingBasicDetails: widget.basicMeetingDetails,
-          // Guests must never trigger notifyParticipantJoinedStatus: that call
-          // marks a pre-registered participant email as joined, so forwarding
-          // a guest-entered email would let a guest impersonate/mark a real
-          // invited participant as joined just by typing their address.
-          participantEmail: _joinAsGuest ? null : _participantEmail);
-      if (mounted) {
-        final navigator = Navigator.of(this.context);
-        await navigator.push<void>(
-          MaterialPageRoute(
-              builder: (_) => RoomPage(room, listener, meetingDetails, fastConnection: true, sdkConfiguration: widget.configuration)),
+        // Try to connect to the room
+        // This will throw an Exception if it fails for any reason.
+        await room.connect(
+          livekitUrl,
+          livekitToken,
+          connectOptions: _connectOptions(
+              withoutMedia ? _fallbackConnectTimeout : _connectTimeout),
+          fastConnectOptions: withoutMedia
+              ? null
+              : FastConnectOptions(
+                  microphone: TrackOption(track: _audioTrack),
+                  camera: TrackOption(track: _videoTrack),
+                ),
         );
-        if (mounted && navigator.canPop()) {
-          navigator.pop();
+      } catch (error) {
+        if (kDebugMode) {
+          print('Could not connect $error');
         }
+        lastError = error;
+        await _disposeRoom(room, listener);
+        await _discardLocalMedia();
+
+        final shouldFallBack = !withoutMedia &&
+            _isMediaPathFailure(error) &&
+            (wantedAudio || wantedVideo) &&
+            mounted;
+
+        // Not a defect on its own — an attempt we are about to retry, and the
+        // final outcome is logged separately. It's here so a Datadog dashboard
+        // can show how often first attempts fail in the field, which is the
+        // only way to tell a one-off from a systemic ICE/TURN problem.
+        DaakiaVcLogger.logWarning(
+          'Meeting join attempt failed',
+          attributes: {
+            'meeting_uid': widget.meetingId,
+            'attempt': attempt + 1,
+            'without_media': withoutMedia,
+            'will_retry_without_media': shouldFallBack,
+            'error_type': error.runtimeType.toString(),
+            'error': error.toString(),
+          },
+          reportToSentry: false,
+        );
+
+        if (!shouldFallBack) break;
+
+        if (mounted) {
+          Utils.showSnackBar(this.context,
+              message: 'Connection is weak — trying again with your camera '
+                  'and microphone off…');
+        }
+        continue;
       }
-    } catch (error) {
-      if (kDebugMode) {
-        print('Could not connect $error');
+
+      if (withoutMedia) {
+        // A degraded join, not a failure — worth a dashboard line so a rise in
+        // "joined muted" is visible before users start reporting it.
+        DaakiaVcLogger.logWarning(
+          'Joined meeting without local media after a media-path failure',
+          attributes: {
+            'meeting_uid': widget.meetingId,
+            'wanted_audio': wantedAudio,
+            'wanted_video': wantedVideo,
+          },
+          reportToSentry: false,
+        );
       }
-      if (_shouldSkipPreJoin) {
-        _skipJoinErrorMessage = error.toString();
+
+      await _enterMeeting(room, listener,
+          livekitToken: livekitToken, joinedWithoutMedia: withoutMedia);
+      if (mounted) {
+        setState(() {
+          stopLoading();
+          isLoading = false;
+        });
       }
-      if (context.mounted) {
-        await context.showErrorDialog(error);
-      }
-    } finally {
-      setState(() {
-        stopLoading();
-        isLoading = false;
-      });
+      return;
     }
+
+    // Note we are still "loading" here on purpose. On the pre-join page the
+    // retry lives inside the failure dialog, so leaving the join button in its
+    // loading state behind the dialog means Try Again reuses that spinner
+    // instead of running a join under a button that looks idle.
+    // [_reportJoinFailure] owns stopping it on every path that ends the attempt.
+    await _reportJoinFailure(
+      lastError,
+      livekitUrl: livekitUrl,
+      livekitToken: livekitToken,
+      wantedAudio: wantedAudio,
+      wantedVideo: wantedVideo,
+      stopLoading: stopLoading,
+    );
+  }
+
+  void _stopJoinLoading(Function stopLoading) {
+    isLoading = false;
+    stopLoading();
+    if (mounted) setState(() {});
+  }
+
+  Room _buildRoom() {
+    var cameraEncoding = const VideoEncoding(
+      maxBitrate: 5 * 1000 * 1000,
+      maxFramerate: 30,
+    );
+
+    var screenEncoding = const VideoEncoding(
+      maxBitrate: 3 * 1000 * 1000,
+      maxFramerate: 15,
+    );
+
+    // E2EEOptions? e2eeOptions;
+    // if (args.e2ee && args.e2eeKey != null) {
+    //   final keyProvider = await BaseKeyProvider.create();
+    //   e2eeOptions = E2EEOptions(keyProvider: keyProvider);
+    //   await keyProvider.setKey(args.e2eeKey!);
+    // }
+
+    return Room(
+      roomOptions: RoomOptions(
+        adaptiveStream: true,
+        dynacast: true,
+        defaultAudioPublishOptions: const AudioPublishOptions(
+          name: 'custom_audio_track_name',
+        ),
+        defaultAudioCaptureOptions: const AudioCaptureOptions(
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          stopAudioCaptureOnMute: false,
+        ),
+        defaultCameraCaptureOptions: const CameraCaptureOptions(
+            maxFrameRate: 30,
+            params: VideoParameters(
+              dimensions: VideoDimensions(1280, 720),
+            )),
+        defaultScreenShareCaptureOptions: const ScreenShareCaptureOptions(
+            useiOSBroadcastExtension: true,
+            params: VideoParameters(
+              dimensions: VideoDimensionsPresets.h1080_169,
+            )),
+        defaultVideoPublishOptions: VideoPublishOptions(
+          simulcast: false,
+          videoEncoding: cameraEncoding,
+          screenShareEncoding: screenEncoding,
+        ),
+      ),
+    );
+  }
+
+  /// [Timeouts] has no copyWith, so carry LiveKit's own defaults across and
+  /// override only the window we care about.
+  ConnectOptions _connectOptions(Duration timeout) {
+    const defaults = Timeouts.defaultTimeouts;
+    return ConnectOptions(
+      timeouts: Timeouts(
+        connection: timeout,
+        debounce: defaults.debounce,
+        publish: defaults.publish,
+        subscribe: defaults.subscribe,
+        peerConnection: defaults.peerConnection,
+        iceRestart: defaults.iceRestart,
+      ),
+    );
+  }
+
+  /// True when signalling worked but media didn't — the only case a media-free
+  /// retry can rescue. A signalling failure (rejected token, server
+  /// unreachable) would fail exactly the same way the second time.
+  bool _isMediaPathFailure(Object error) =>
+      error is MediaConnectException || error is NegotiationError;
+
+  Future<void> _enterMeeting(
+    Room room,
+    EventsListener<RoomEvent> listener, {
+    required String livekitToken,
+    required bool joinedWithoutMedia,
+  }) async {
+    //NOTE:: Storing guest name in cache
+    StorageHelper().setGuestUserName(name.trim());
+
+    meetingDetails = MeetingDetails(
+        meetingUid: widget.meetingId,
+        authorizationToken: hostToken,
+        livekitToken: livekitToken,
+        features: features,
+        meetingBasicDetails: widget.basicMeetingDetails,
+        // Guests must never trigger notifyParticipantJoinedStatus: that call
+        // marks a pre-registered participant email as joined, so forwarding
+        // a guest-entered email would let a guest impersonate/mark a real
+        // invited participant as joined just by typing their address.
+        participantEmail: _joinAsGuest ? null : _participantEmail);
+
+    if (!mounted) {
+      // Nobody is going to take ownership of this room, so don't leak it.
+      await _disposeRoom(room, listener);
+      return;
+    }
+
+    final navigator = Navigator.of(context);
+    await navigator.push<void>(
+      MaterialPageRoute(
+          builder: (_) => RoomPage(room, listener, meetingDetails,
+              fastConnection: true,
+              sdkConfiguration: widget.configuration,
+              joinNotice: joinedWithoutMedia ? _weakConnectionNotice : null)),
+    );
+    if (mounted && navigator.canPop()) {
+      navigator.pop();
+    }
+  }
+
+  /// A [Room] that never connected still owns a signal client, listeners and
+  /// native peer connections. Without this every failed attempt leaked one.
+  Future<void> _disposeRoom(
+      Room room, EventsListener<RoomEvent> listener) async {
+    try {
+      await listener.dispose();
+    } catch (_) {}
+    try {
+      await room.dispose();
+    } catch (_) {}
+  }
+
+  /// Drops the preview tracks after a failed connect.
+  ///
+  /// A failed connect can take them down with it: once fast-connect has
+  /// published them, the room's cleanup unpublishes everything, and
+  /// `stopLocalTrackOnUnpublish` (LiveKit's default) stops the very
+  /// [LocalAudioTrack] / [LocalVideoTrack] this screen created and still holds.
+  /// Handing those to the next [Room] would join the user with a dead mic and a
+  /// black preview — and they'd still carry a transceiver bound to the discarded
+  /// peer connection. Whether or not the publish got that far is a race, so
+  /// always let them go here and rebuild from intent instead.
+  Future<void> _discardLocalMedia() async {
+    try {
+      await _audioTrack?.stop();
+    } catch (_) {}
+    try {
+      await _videoTrack?.stop();
+    } catch (_) {}
+    _audioTrack = null;
+    _videoTrack = null;
+    _enableAudio = false;
+    _enableVideo = false;
+    if (mounted) setState(() {});
+  }
+
+  /// Rebuilds the preview the user had before a failed attempt, so they aren't
+  /// left staring at a dead camera while deciding whether to retry.
+  Future<void> _restoreLocalMedia(bool wantAudio, bool wantVideo) async {
+    if (wantAudio && !_isMicDisabledByHost) {
+      try {
+        await _setEnableAudio(true);
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    if (wantVideo && !_isCameraDisabledByHost) {
+      try {
+        await _setEnableVideo(true);
+      } catch (_) {}
+    }
+    if (mounted) setState(() {});
+  }
+
+  /// Translates whatever LiveKit threw into something a participant can act on
+  /// and offers them the retry.
+  Future<void> _reportJoinFailure(
+    Object? error, {
+    required String livekitUrl,
+    required String livekitToken,
+    required bool wantedAudio,
+    required bool wantedVideo,
+    required Function stopLoading,
+  }) async {
+    if (error == null || !mounted) {
+      _stopJoinLoading(stopLoading);
+      return;
+    }
+
+    // Diagnosing probes the network, so the join button stays in its loading
+    // state until we actually have something to say.
+    final failure = await JoinFailure.diagnose(error, livekitUrl: livekitUrl);
+
+    // The one that matters: the user did not get in. The network diagnosis
+    // rides along because the exception alone can't tell a blocked office
+    // Wi-Fi from a phone that had already lost signal.
+    DaakiaVcLogger.logError(
+      'Meeting join failed: ${failure.title}',
+      error: error,
+      attributes: {
+        'meeting_uid': widget.meetingId,
+        'error_type': error.runtimeType.toString(),
+        'error': error.toString(),
+        'network_status': failure.diagnosis.status.name,
+        'network_transport': failure.diagnosis.transport,
+        'network_latency_ms': failure.diagnosis.latency?.inMilliseconds,
+      },
+    );
+
+    if (!mounted) return;
+
+    await _restoreLocalMedia(wantedAudio, wantedVideo);
+    if (!mounted) return;
+
+    // The skip-prejoin screen has no UI of its own behind a dialog — it renders
+    // the message inline, with its own Retry button, and only once the loader
+    // has stopped.
+    if (_shouldSkipPreJoin) {
+      _skipJoinErrorMessage = '${failure.title}\n\n${failure.summary}';
+      _stopJoinLoading(stopLoading);
+      return;
+    }
+
+    final retry = await showJoinFailureDialog(context, failure);
+    if (!mounted) return;
+
+    if (!retry) {
+      _stopJoinLoading(stopLoading);
+      return;
+    }
+
+    isNeedToCancelApiCall = false;
+    _join(context, stopLoading,
+        livekitUrl: livekitUrl, livekitToken: livekitToken);
   }
 
   @override
@@ -1330,6 +1635,7 @@ class _PreJoinState extends State<PreJoinScreen> {
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (isLoading) ...[
                   const CircularProgressIndicator(color: themeColor),
@@ -1340,10 +1646,29 @@ class _PreJoinState extends State<PreJoinScreen> {
                   ),
                 ],
                 if (!isLoading && hasError) ...[
-                  Text(
-                    _skipJoinErrorMessage,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.red, fontSize: 14),
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: themeColor.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.wifi_tethering_error_rounded,
+                        color: themeColor, size: 32),
+                  ),
+                  const SizedBox(height: 16),
+                  // The message can run to a few lines of guidance, and this
+                  // screen is all there is when the pre-join page is skipped —
+                  // let it scroll rather than clip on a short viewport.
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Text(
+                        _skipJoinErrorMessage,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            color: Colors.black87, fontSize: 14, height: 1.4),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -1387,6 +1712,22 @@ class _PreJoinState extends State<PreJoinScreen> {
     _subscription?.cancel();
     _participantTimer?.cancel();
     _nameController?.dispose();
+    // Leaving this screen without joining must release the camera and mic —
+    // otherwise the device's in-use indicator stays lit after the user backs
+    // out, which reads as the SDK spying on them. On the join path these were
+    // handed to the Room, which has already stopped them by now.
+    final audioTrack = _audioTrack;
+    final videoTrack = _videoTrack;
+    _audioTrack = null;
+    _videoTrack = null;
+    unawaited(() async {
+      try {
+        await audioTrack?.stop();
+      } catch (_) {}
+      try {
+        await videoTrack?.stop();
+      } catch (_) {}
+    }());
     super.dispose();
   }
 
