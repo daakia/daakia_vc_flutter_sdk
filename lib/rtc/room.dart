@@ -64,12 +64,18 @@ class RoomPage extends StatefulWidget {
   final bool fastConnection;
   final DaakiaMeetingConfiguration? sdkConfiguration;
 
+  /// Shown once the meeting UI is up, to explain something about the join the
+  /// user would otherwise have to guess at — currently only that a weak
+  /// connection forced them in with mic and camera off.
+  final String? joinNotice;
+
   const RoomPage(
     this.room,
     this.listener,
     this.meetingDetails, {
     this.fastConnection = false,
     this.sdkConfiguration,
+    this.joinNotice,
     super.key,
   });
 
@@ -162,6 +168,7 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
       if (!fastConnection) {
         _askPublish();
       }
+      _showJoinNotice();
       meetingManager = MeetingManager(
           endDate: viewModel?.getMeetingEndDate(),
           isAutoMeetingEnd: viewModel?.isAutoMeetingEndEnable(),
@@ -1721,15 +1728,29 @@ class _RoomPageState extends State<RoomPage> with WidgetsBindingObserver {
     );
   }
 
+  /// Surfaces [RoomPage.joinNotice], once the meeting UI has settled enough
+  /// for the banner to be seen rather than swallowed by the join animation.
+  void _showJoinNotice() {
+    final notice = widget.joinNotice;
+    if (notice == null || notice.isEmpty) return;
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) {
+        showSnackBar(message: notice, duration: const Duration(seconds: 6));
+      }
+    });
+  }
+
   void showSnackBar({
     required String message,
     String? actionText,
     Function? actionCallBack,
+    Duration? duration,
   }) {
     _notificationKey.currentState?.show(
       message: message,
       actionText: actionText,
       actionCallback: actionCallBack != null ? () => actionCallBack() : null,
+      duration: duration,
     );
   }
 
